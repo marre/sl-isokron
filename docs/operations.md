@@ -39,6 +39,11 @@ npm run build
 
 Hämtningens officiella endpoint är konfigurerad för `opendata.samtrafiken.se/gtfs/sl/sl.zip`. Den har inte testats med en giltig nyckel här. Aktuell leverantörsdokumentation och kontoåtkomst måste kontrolleras innan automatisering aktiveras.
 
+GTFS Regional kräver `Accept-Encoding: gzip` enligt [leverantörens OpenAPI-specifikation](https://github.com/trafiklab/openApi-docs/blob/master/gtfsRegionalStatic.yaml). Hämtaren annonserar gzip, avkodar HTTP-komprimeringen strömmande och validerar därefter ZIP-arkivet innan en tidigare fil ersätts. Utan gzip-header kan Trafiklab svara HTTP 406. Varken råa felsvar eller begärans URL loggas, eftersom leverantörens feltext kan innehålla nyckeln.
+
+Efter en kodfix: välj **Run workflow** på senaste `main`, inte **Re-run jobs** för den gamla körningen; den senare använder den gamla committen. Behåll `inventory_only=true`. Om föregående körning sparade kvotledger används `initialize_quota_ledger=false`. Saknad ledger kräver uttrycklig initiering efter kvotkontroll.
+
+
 ## Daglig pipeline
 
 `data.yml` är schemalagd 03.17 UTC, villkorad av `SLISO_DATA_ENABLED`. Manuella körningar kan göras separat i inventeringsläge enligt ovan. Den återställer kvotledger och föregående paket, hämtar högst en gång per UTC-datum, bygger gångpar och tidtabell, testar och bygger appen samt sparar ett kortlivat dist-artefakt. Kvotledger sparas med `always()` även efter misslyckad hämtning. Saknad ledger stoppar nätanrop i stället för att skapa en ny kvot tyst. Cacheförlust kräver en uttrycklig ny initiering efter kontroll av kontots kvarvarande kvot.

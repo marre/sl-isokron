@@ -3,6 +3,8 @@ Ledger initialization is explicit: --init-ledger. Restore it on every CI run. No
 A missing ledger stops automated downloads rather than resetting the quota silently.
 """
 import argparse
+import contextlib
+import gzip
 import hashlib
 import json
 import os
@@ -11,6 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -38,13 +41,25 @@ def fetch(output, ledger, initialize=False):
     state['attempts'] += 1
     ledger.write_text(json.dumps(state))  # Count failed attempts too, before network access.
     url='https://opendata.samtrafiken.se/gtfs/sl/sl.zip?' + urllib.parse.urlencode({'key':key})
+    # Trafiklab requires client-side gzip support (GTFS Regional OpenAPI).
+    # urllib otherwise sends Accept-Encoding: identity, which can cause HTTP 406.
+    request = urllib.request.Request(url, headers={
+        'Accept-Encoding': 'gzip',
+        'Accept': 'application/zip',
+        'User-Agent': 'sliso/0.1 GTFS data builder',
+    })
     output.parent.mkdir(parents=True,exist_ok=True)
     temp = None
     try:
-        with urllib.request.urlopen(url,timeout=120) as response:
-            with tempfile.NamedTemporaryFile(dir=output.parent,delete=False) as f:
-                temp=Path(f.name)
-                while chunk:=response.read(1024*1024):f.write(chunk)
+        with urllib.request.urlopen(request,timeout=120) as response:
+            encoding = response.headers.get('Content-Encoding', '').strip().lower()
+            if encoding not in ('', 'identity', 'gzip', 'x-gzip'):
+                raise ValueError('Unsupported HTTP content encoding; archive was not used.')
+            stream = gzip.GzipFile(fileobj=response) if encoding in ('gzip', 'x-gzip') else contextlib.nullcontext(response)
+            with stream as body:
+                with tempfile.NamedTemporaryFile(dir=output.parent,delete=False) as f:
+                    temp=Path(f.name)
+                    while chunk:=body.read(1024*1024):f.write(chunk)
         with zipfile.ZipFile(temp) as z:
             if z.testzip() or 'stops.txt' not in z.namelist():
                 raise ValueError('GTFS archive failed integrity check')
@@ -52,6 +67,8 @@ def fetch(output, ledger, initialize=False):
         state.update(successDate=day,sha256=hashlib.sha256(output.read_bytes()).hexdigest())
         ledger.write_text(json.dumps(state))
         print('GTFS downloaded and ZIP integrity verified.')
+    except (gzip.BadGzipFile, EOFError, zlib.error):
+        raise ValueError('GTFS HTTP gzip integrity check failed; archive was not used.') from None
     except urllib.error.HTTPError as e:
         raise ValueError(f'Trafiklab HTTP {e.code}; credentials and request URL withheld.') from None
     except urllib.error.URLError:
