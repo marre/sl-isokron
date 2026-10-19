@@ -48,6 +48,7 @@ def inventory(feed, output):
             'agencies': agencies, 'feedInfo': feed_info,
             'counts': {'stops':len(stops),'boardingStops':len(boarding),'routes':len(routes),'trips':len(trips),'stopTimes':count,'transferRows':len(transfers),'pathways':len(pathways)},
             'rawRouteTypes': dict(Counter(r['route_type'] for r in routes)),
+            'agencyInventory': [dict(id=a['agency_id'], name=a['agency_name'], routes=sum(r.get('agency_id', '') == a['agency_id'] for r in routes), trips=sum(by_route[r['route_id']] for r in routes if r.get('agency_id', '') == a['agency_id'])) for a in agencies],
             'unmappedRouteTypes': sorted({r['gtfsType'] for r in route_inventory if r['suggestedMode']=='UNMAPPED'}),
             'validFrom': min(days), 'validTo': max(days), 'activeServicesPerDate':dict(sorted(days.items())),
             'over24StopTimes':over_24,'maximumGtfsSeconds':maximum,'missingStopTimes':missing_times,

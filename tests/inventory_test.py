@@ -16,6 +16,7 @@ class InventoryTests(unittest.TestCase):
             report=inventory(feed,output)
             self.assertEqual(report['counts']['boardingStops'],2)
             self.assertEqual(report['counts']['trips'],1)
+            self.assertEqual(report['agencyInventory'][0],{'id':'sl','name':'SL','routes':1,'trips':1})
             self.assertEqual(report['over24StopTimes'],2)
             self.assertEqual(report['validFrom'],'2026-10-19')
             self.assertEqual(report['validTo'],'2026-10-20')

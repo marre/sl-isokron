@@ -65,7 +65,7 @@ Riktning sparas. Inga implicita omvända kanter skapas av importören. ID och ko
 - Stationer expanderas för `transfers.txt`, utan att skapa gångkanter. Barnläge väljs uttryckligen i appen.
 - `transfer_type` 0–3 med trip-/route-villkor stöds. Resor ska uppfylla både fysisk gång och regelns tid. Trip-specifika regler har företräde framför route- och hållplatsregler; lika specifika motstridiga regler tolkas konservativt.
 - Olika trip_id räknas som olika fordon. `transfer_type` 4/5 (in-seat) stoppas uttryckligen för vidare modellarbete; de ignoreras inte.
-- `frequencies.txt`, saknade hållplatstider och okända trafikslag stoppar importen för explicit expansion/klassificering. Ingen tyst utelämning. Nuvarande standardtyper: 0/900 spårvagn, 1/400 metro, 2/100/109 tåg, 3/700 buss, 4/1000 båt. **Lokalbanornas produktgruppering måste granskas mot verkliga route_id:n**; en GTFS-typ i sig bevisar inte SL-produkt.
+- `frequencies.txt`, saknade hållplatstider och okända trafikslag stoppar importen för explicit expansion/klassificering. Ingen tyst utelämning. Nuvarande standardtyper: 0/900 spårvagn, 1/400/401 metro, 2/100/109 tåg, 3/700 buss, 4/1000 båt. **Lokalbanornas produktgruppering måste granskas mot verkliga route_id:n**; en GTFS-typ i sig bevisar inte SL-produkt.
 - Hela den importerade feeden behandlas; kartutsnittet beskär aldrig söknätet. Importera bara avsedd SL-feed, annars kan även andra operatörer komma med.
 - Saknad gång mellan olika stopp tillåts aldrig. Ett byte på exakt samma hållplatsläge behöver ingen fysisk förflyttning, men eventuella minsta bytestider gäller fortfarande. Inga generella extra påstigningsmarginaler införs utöver datareglerna.
 
@@ -78,3 +78,5 @@ En manifestversion refererar endast oföränderliga filer under `/data/<version>
 Dygnspaket sorteras på faktisk UTC-avgång. Alla dygn som berör `t0 … t0 + avgångsfönster + maxtid` måste finnas. Därför kan en nattresa från sista valbara dagen behöva nästa dygn. Importören håller en extra servicedag och begränsar valbar giltighet därefter. Föregående trafikdygn med tider över 24.00 ingår också. Vald lokal tid konverteras oberoende av besökarens tidszon. Tvetydiga/ogiltiga lokala klockslag avvisas med förklaring.
 
 Byggaren skriver alla filer innan manifestet atomiskt ersätts. Ett misslyckat bygge lämnar föregående manifest orört. Den ersätter inga källfiler och tar inte bort tidigare publicerade versioner. CI:s cache bevarar tidigare paket inför nästa Pages-deploy, så att pågående klienter kan hämta sin version. Driftansvarig måste rensa gamla versioner och hålla koll på totalkvoten; inga filer över 25 MiB publiceras. Vid för stora filer stoppas bygget för partitioneringsarbete, inte förlust av giltiga förbindelser. Full regional skala är ännu inte mätt.
+
+Den första verkliga feedens inventering finns i [SL-feed 2026-10-19](sl-feed-2026-10-19.md). Den innehåller flera trafikaktörer och får inte likställas med en redan granskad avgränsning av SL:s utbud.

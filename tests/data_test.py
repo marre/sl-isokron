@@ -40,11 +40,11 @@ class DataTests(unittest.TestCase):
         w=self.walks();edges,_=validate_walks(w,self.stops());self.assertEqual(edges[0]['seconds'],240)
         w['edges'][0]['source']=''
         with self.assertRaises(ValueError):validate_walks(w,self.stops())
-    def fixture(self, root, broken=False):
+    def fixture(self, root, broken=False, route_type='3'):
         tables={
         'agency.txt':[['agency_id','agency_name','agency_url','agency_timezone'],['sl','SL','https://sl.se','Europe/Stockholm']],
         'stops.txt':[['stop_id','stop_name','stop_lat','stop_lon','location_type','parent_station'],['a','Start','59','18','0',''],['b','Mål','59.1','18','0','']],
-        'routes.txt':[['route_id','route_short_name','route_type'],['r','1','3']],
+        'routes.txt':[['route_id','route_short_name','route_type','agency_id'],['r','1',route_type,'sl']],
         'trips.txt':[['route_id','service_id','trip_id'],['r','s','t']],
         'stop_times.txt':[['trip_id','arrival_time','departure_time','stop_id','stop_sequence'],['t','25:00:00','25:00:00','a','1'],['t','25:10:00','25:10:00','b','2']],
         'calendar_dates.txt':[['service_id','date','exception_type'],['s','20261019','1'],['s','20261020','1']],
@@ -56,6 +56,14 @@ class DataTests(unittest.TestCase):
                 b=io.StringIO();csv.writer(b).writerows(rows);z.writestr(name,b.getvalue())
         walkfile=root/'walk.json';walkfile.write_text(json.dumps(self.walks()))
         return path,walkfile
+    def test_sl_metro_401_compiles_as_metro(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);feed,w=self.fixture(root,route_type='401');out=root/'out'
+            compile_feed(feed,w,out,date(2026,10,19))
+            manifest=json.loads((out/'manifest.json').read_text())
+            routes=json.loads((out/manifest['routes']['url'].removeprefix('/data/')).read_text())
+            self.assertEqual(routes[0]['mode'],'metro')
+
     def test_complete_compile_checksum_midnight_and_atomic_failure(self):
         import hashlib
         with tempfile.TemporaryDirectory() as tmp:

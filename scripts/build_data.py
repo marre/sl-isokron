@@ -17,7 +17,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo('Europe/Stockholm')
-MODE_TYPES = {0: 'tram', 1: 'metro', 2: 'rail', 3: 'bus', 4: 'boat', 100: 'rail', 109: 'rail', 400: 'metro', 700: 'bus', 900: 'tram', 1000: 'boat'}
+MODE_TYPES = {0: 'tram', 1: 'metro', 2: 'rail', 3: 'bus', 4: 'boat', 100: 'rail', 109: 'rail', 400: 'metro', 401: 'metro', 700: 'bus', 900: 'tram', 1000: 'boat'}
 
 def parse_date(s):
     return datetime.strptime(s.replace('-', ''), '%Y%m%d').date()
