@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "version": "sl-21e8115c144a3775b34c",
+  "sourceVersion": "2026-10-19",
+  "validFrom": "2026-10-19",
+  "validTo": "2026-10-26",
+  "url": "https://github.com/marre/sl-isokron/releases/download/data-sl-21e8115c144a3775b34c/sliso-data.zip",
+  "sha256": "e46ba497db70298ad156d2f810e7e2b015cddb8596ab693e1c48c18af37edbe9",
+  "bytes": 154377679,
+  "unpackedBytes": 449557928
+}
