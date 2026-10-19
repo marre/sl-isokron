@@ -7,7 +7,7 @@ Kravkälla: [version 0.6](kravspec.md). Detta är implementationens status, inte
 - TypeScript-kontroll och Vite-produktionsbygge.
 - 24 TypeScript-tester: restidsmodell, gångbudget per sträcka, avgångsfönster, transferregler, på-/avstigning, natt, sommartid, delningsformat, tidszoner och datumgränser.
 - En oberoende uttömmande eventgrafsökning jämförs med sökmotorn i 60 deterministiskt slumpade små nät. Oraklet använder ingen produktionsdominans och går ett fordonssegment i taget.
-- 10 Python-tester: kalenderundantag, GTFS-tidsförankring, fysisk gång, stängda passager, koordinatmatchning, checksummor, atomisk manifestersättning och kvotspärr/återanvändning utan autentiserad nättrafik.
+- 11 Python-tester: kalenderundantag, GTFS-tidsförankring, fysisk gång, stängda passager, koordinatmatchning, checksummor, atomisk manifestersättning och kvotspärr/återanvändning utan autentiserad nättrafik.
 - 14 Chromium-integrationstester (7 per mobil-/datorvy): verklig Web Worker och datahämtning, hållplatssökning med tangentbord, lägesval, resultat/filter, delning, annan tidszon, avbrytning, försvunnet ID och datum utan täckning. Bakgrundstiles blockeras avsiktligt i testerna så att de inte belastar extern karttjänst.
 - `npm ci` prövad med låsfilen och skrivbar cache. `npm audit --omit=dev` rapporterar inga kända runtime-sårbarheter vid körningen.
 - 120 syntetiska referenssökningar: 20 startplatser × 30/60/120 minuter × 30/120 minuters avgångsfönster. Maskin, dataset, råa tider, minnesobservation och storlekar finns i [benchmark.json](benchmark.json). Kör om med `node --import tsx scripts/benchmark.ts`.
@@ -35,7 +35,7 @@ Mätningen gäller ett litet nät med 25 hållplatslägen. Container-CPU är int
 
 ## Produktionsblockerare / datagap
 
-1. **SL-feed saknas.** Trafiklab-konto finns enligt beställaren, men ingen nyckel eller GTFS-fil är tillförd. Ingen feedhämtning med konto har gjorts. Ingen faktisk linje-, lokalbane-, båt- eller gränsöverskridande täckning har bekräftats.
+1. **SL-feed saknas.** Trafiklab-konto finns enligt beställaren, men nyckeln är enligt beställaren inlagd som Actions-hemligheten TRAFIKLAB_GTFS_KEY i GitHub-repot. Den finns inte i molnprocessen. Ingen feedhämtning med konto har ännu kunnat verifieras här; GitHubs API blockeras av miljöns nätpolicy. Ett separat manuellt inventeringsläge finns nu utan krav på gånggraf. Ingen faktisk linje-, lokalbane-, båt- eller gränsöverskridande täckning har bekräftats.
 2. **Verifierat gångunderlag saknas.** Offlinebyggaren behöver en granskad gånggraf och uttryckliga plattformsbindningar eller ett verifierat gångpar-index. Den bygger inte ett regionalt OSM-PBF-utdrag eller tolkar stationernas verkliga entréer själv.
 3. **Täckningsgranskning saknas.** De 30 referensfallen i `review-cases.csv` är föreslagna och märkta EJ_GRANSKAD. Ingen tid eller gångväg får fyllas i som verifierad utan verkligt underlag. Mörby station–Danderyds sjukhus är särskilt utpekat.
 4. **Verklig storlek och prestanda saknas.** Paket över 25 MiB stoppar bygget; ytterligare partitionering krävs om en regional fil blir större. Minnes-/tidsbudget på faktisk regional data måste mätas innan frontendarkitekturen godkänns.

@@ -49,6 +49,6 @@ En gångsträcka summeras över flera kanter och återställs först vid påstig
 
 Se [dataflöde och filformat](docs/data.md), [drift och kvoter](docs/operations.md), [verifiering och öppna datagap](docs/verification.md) och [ursprunglig kravspecifikation](docs/kravspec.md).
 
-Cloudflare Pages: bygg `npm run build`, utdatamapp `dist`. Riktiga datapaket måste först vara byggda i `public/data`. Kontrollworkflow bygger demo enbart för tester; det publicerar inget. Datapipelinen är avstängd tills driftansvarig uttryckligen konfigurerar data, kvotledger och CI-variabler. Ingen ändring av repots synlighet eller publicering har gjorts.
+Cloudflare Pages: bygg `npm run build`, utdatamapp `dist`. Riktiga datapaket måste först vara byggda i `public/data`. Kontrollworkflow bygger demo enbart för tester; det publicerar inget. Automatiska datakörningar är avstängda tills driftansvarig konfigurerar data, kvotledger och CI-variabler. Ett manuellt inventeringsläge kan köras med enbart Trafiklab-hemligheten och kvotinitiering; se driftinstruktionerna. Ingen ändring av repots synlighet eller publicering har gjorts.
 
 Bakgrundskartan använder OSM standardtiles som utbytbar pilotinställning. Granska aktuell användningspolicy innan pilot. `.env.example` visar konfigurationen; `VITE_TILE_URL=none` stänger av externa tiles utan att påverka sökningen. Typsnitt levereras med appen. Inga hemligheter får ligga i `VITE_`-variabler, delningslänkar eller apppaketet.

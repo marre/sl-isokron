@@ -2,6 +2,10 @@ name: Prepare SL data (opt-in)
 on:
   workflow_dispatch:
     inputs:
+      inventory_only:
+        description: Inspect traffic data without walking graph or deployment
+        type: boolean
+        default: true
       initialize_quota_ledger:
         description: Initialize only after checking remaining Trafiklab quota
         type: boolean
@@ -17,7 +21,7 @@ jobs:
   build:
     # Enabling this does NOT deploy or make the repository public.
     # A download ledger must be retained for monthly quota protection.
-    if: vars.SLISO_DATA_ENABLED == 'true'
+    if: github.event_name == 'workflow_dispatch' || vars.SLISO_DATA_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -32,6 +36,7 @@ jobs:
           key: sliso-data-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: sliso-data-
       - name: Require audited pedestrian graph
+        if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: test -f data/walking-graph.json
       - name: Initialize quota ledger explicitly
         if: github.event_name == 'workflow_dispatch' && inputs.initialize_quota_ledger
@@ -42,22 +47,36 @@ jobs:
         env:
           TRAFIKLAB_GTFS_KEY: ${{ secrets.TRAFIKLAB_GTFS_KEY }}
         run: python scripts/fetch_gtfs.py --output .data-build/sl.zip --ledger .data-build/quota.json
-      - run: python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
-      - run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --output .data-build/published
-      - run: mkdir -p public/data && cp -R .data-build/published/. public/data/
-      - uses: actions/setup-node@v4
+      - name: Inspect traffic feed without inventing walking data
+        run: python scripts/inventory_gtfs.py --gtfs .data-build/sl.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sliso-gtfs-inventory
+          path: .data-build/inventory/
+          retention-days: 7
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --output .data-build/published
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: mkdir -p public/data && cp -R .data-build/published/. public/data/
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci
-      - run: npm test && npm run test:python && npm run build
-      - uses: actions/upload-artifact@v4
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: npm ci
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: npm test && npm run test:python && npm run build
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        uses: actions/upload-artifact@v4
         with:
           name: sliso-validated-data
           path: dist/
           retention-days: 3
       - name: Publish on Cloudflare Pages only after explicit opt-in
-        if: vars.SLISO_DEPLOY_ENABLED == 'true'
+        if: vars.SLISO_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || !inputs.inventory_only)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

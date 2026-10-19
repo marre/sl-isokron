@@ -10,6 +10,20 @@ Inget har driftsatts, betalprodukt aktiverats, repo gjorts publikt eller hemligh
 - `SLISO_DEPLOY_ENABLED=true`: separat opt-in för Cloudflare-publicering. Kräver `CLOUDFLARE_API_TOKEN` som repository secret och `CLOUDFLARE_ACCOUNT_ID` som repository variable. Projektet `sliso` måste finnas i Pages. Ingen repository-hemlighet får checkas in.
 - `VITE_TILE_URL`, `VITE_TILE_ATTRIBUTION`: publika byggvariabler för utbytbara karttiles. Standard är OSM standardtiles. `none` stänger av bakgrundskartan. Inget adress-API används.
 
+## Inventera feeden innan gångunderlag finns
+
+När `TRAFIKLAB_GTFS_KEY` finns som Actions-hemlighet kan enbart trafikdata hämtas och inventeras. Öppna **Actions → Prepare SL data (opt-in) → Run workflow** på `main`. Låt `inventory_only=true`. För den första körningen: kontrollera återstående Trafiklab-kvot och välj `initialize_quota_ledger=true`. Senare körningar använder den sparade bokföringen och behöver normalt inte initieras.
+
+Detta manuella inventeringsläge kräver varken `SLISO_DATA_ENABLED` eller en gånggraf. Det kör ingen deployment, även om deploymentvariabeln skulle vara aktiv. Resultatet sparas som `sliso-gtfs-inventory` med `report.json`, `stops.json` och `routes.json`. Rå GTFS ligger i CI-cachen; API-nyckeln skrivs inte till artefakt eller logg. Rapporten skiljer faktiska bytestidsregler från ännu ej verifierad fysisk gång. Den kartlägger trafikdatum, tider över 24.00, råa trafikslag och plattformar inför gångbindningar och linjegranskning.
+
+Kör lokalt med en redan hämtad fil:
+
+```sh
+python scripts/inventory_gtfs.py --gtfs .data-build/sl.zip --output .data-build/inventory
+```
+
+Välj `inventory_only=false` först när det verifierade gångunderlaget finns. Schemalagd körning kräver fortsatt `SLISO_DATA_ENABLED=true` och bygger hela datasetet. Att lägga till API-nyckeln aktiverar inte ett schema eller en publicering.
+
 ## Första riktiga databyggningen
 
 Verifiera först återstående Trafiklab-kvot och licens/distributionsrätt. Kör lokalt med nyckeln säkert tillförd i processen, eller välj det manuella CI-flödets `initialize_quota_ledger` efter att gånggrafen lagts till. Ange aldrig nyckeln som kommandoradsargument eller i en URL i loggar.
@@ -27,7 +41,7 @@ Hämtningens officiella endpoint är konfigurerad för `opendata.samtrafiken.se/
 
 ## Daglig pipeline
 
-`data.yml` är schemalagd 03.17 UTC, villkorad av `SLISO_DATA_ENABLED`. Den återställer kvotledger och föregående paket, hämtar högst en gång per UTC-datum, bygger gångpar och tidtabell, testar och bygger appen samt sparar ett kortlivat dist-artefakt. Kvotledger sparas med `always()` även efter misslyckad hämtning. Saknad ledger stoppar nätanrop i stället för att skapa en ny kvot tyst. Cacheförlust kräver en uttrycklig ny initiering efter kontroll av kontots kvarvarande kvot.
+`data.yml` är schemalagd 03.17 UTC, villkorad av `SLISO_DATA_ENABLED`. Manuella körningar kan göras separat i inventeringsläge enligt ovan. Den återställer kvotledger och föregående paket, hämtar högst en gång per UTC-datum, bygger gångpar och tidtabell, testar och bygger appen samt sparar ett kortlivat dist-artefakt. Kvotledger sparas med `always()` även efter misslyckad hämtning. Saknad ledger stoppar nätanrop i stället för att skapa en ny kvot tyst. Cacheförlust kräver en uttrycklig ny initiering efter kontroll av kontots kvarvarande kvot.
 
 Publicering görs bara om **även** `SLISO_DEPLOY_ENABLED=true`. Fram till dess är CI-resultatet ett artefakt för granskning. Misslyckad hämtning, validering eller byggning når inte publiceringssteget. Den befintliga Pages-versionen fortsätter då att fungera inom sin datagiltighet, med synlig varning för äldre data. Utgången data går inte att söka på; datum ändras inte automatiskt.
 
