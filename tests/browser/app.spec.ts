@@ -96,3 +96,13 @@ test('changed settings terminate old data loading before it can publish',async({
  await expect(page.locator('#legend')).toBeHidden();
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
 });
+test('driver-coordinated stops are routable and show a rider notice',async({page})=>{
+ await init(page);await page.locator('#stop-search').fill('Slussen');await page.locator('#stop-search').press('Enter');
+ await page.locator('#platform').selectOption({label:'Testläge B'});
+ await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
+ for(const c of await page.locator('[name=mode]').all())if(await c.getAttribute('value')!=='bus')await c.uncheck();
+ await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await expect(page.locator('#legend')).toContainText('Stopp på signal');
+ await page.getByRole('button',{name:'Nacka strand · Testläge A',exact:true}).press('Enter');
+ await expect(page.locator('.stop-popup')).toContainText('meddela föraren');
+});

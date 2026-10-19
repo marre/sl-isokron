@@ -1,0 +1,1233 @@
+{
+  "measuredAt": "2026-10-19T20:34:56.016Z",
+  "dataset": "sl-3af37dd04a0d09e142b4",
+  "synthetic": false,
+  "walkingCoverage": {
+    "totalStops": 14219,
+    "boundStops": 1041,
+    "pairs": 10460,
+    "reviewed": false
+  },
+  "runtime": "v24.19.0",
+  "system": "linux x64 AMD EPYC 9V74 80-Core Processor",
+  "note": "Container measurement. Not a physical laptop/mobile or browser memory/transfer benchmark. Gzip computed offline; actual HTTP encoding depends on hosting.",
+  "stops": 14219,
+  "cases": 120,
+  "medianMs": 41.79,
+  "p95Ms": 351.42,
+  "maxMs": 1517.85,
+  "within3Seconds": 120,
+  "within30Seconds": 120,
+  "maxSelectedUncompressedBytes": 23439302,
+  "maxSelectedGzipBytes": 4194029,
+  "nodeProcessMemory": {
+    "rss": 634085376,
+    "heapTotal": 373850112,
+    "heapUsed": 263223168,
+    "external": 5617064,
+    "arrayBuffers": 3161151
+  },
+  "totalMs": 52527,
+  "results": [
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 78.5,
+      "labels": 775,
+      "reachable": 20
+    },
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 204.67,
+      "labels": 1318,
+      "reachable": 37
+    },
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 329.02,
+      "labels": 2766,
+      "reachable": 100
+    },
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 125.67,
+      "labels": 2860,
+      "reachable": 21
+    },
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 346.92,
+      "labels": 4914,
+      "reachable": 39
+    },
+    {
+      "start": "T-Centralen",
+      "startId": "9022001001051003",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 802.69,
+      "labels": 9416,
+      "reachable": 100
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 39.04,
+      "labels": 759,
+      "reachable": 19
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 118.28,
+      "labels": 1411,
+      "reachable": 37
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 367.2,
+      "labels": 2886,
+      "reachable": 100
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 140.1,
+      "labels": 2752,
+      "reachable": 20
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 351.42,
+      "labels": 5054,
+      "reachable": 39
+    },
+    {
+      "start": "Slussen",
+      "startId": "9022001001011001",
+      "platform": "Läge 1 · Tunnelbana mot Alvik / Hässelby strand …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 866.7,
+      "labels": 9406,
+      "reachable": 100
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 53.15,
+      "labels": 2215,
+      "reachable": 146
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 118.33,
+      "labels": 8908,
+      "reachable": 593
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 429,
+      "labels": 20762,
+      "reachable": 1329
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 94.9,
+      "labels": 7671,
+      "reachable": 181
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 346.69,
+      "labels": 28897,
+      "reachable": 674
+    },
+    {
+      "start": "Odenplan",
+      "startId": "9022001010151003",
+      "platform": "Läge C · Buss mot Blockhusudden / Frihamnen …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 1517.85,
+      "labels": 65588,
+      "reachable": 1467
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 24.02,
+      "labels": 199,
+      "reachable": 14
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 45.52,
+      "labels": 711,
+      "reachable": 43
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 113.03,
+      "labels": 1016,
+      "reachable": 68
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 42.76,
+      "labels": 975,
+      "reachable": 18
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 106.92,
+      "labels": 2654,
+      "reachable": 47
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "startId": "9022001002251001",
+      "platform": "Läge 1 · Tunnelbana mot Mörby centrum",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 279.26,
+      "labels": 3699,
+      "reachable": 68
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 24.73,
+      "labels": 185,
+      "reachable": 45
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 32.32,
+      "labels": 701,
+      "reachable": 73
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 53.53,
+      "labels": 1294,
+      "reachable": 77
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 37.33,
+      "labels": 673,
+      "reachable": 49
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 78.28,
+      "labels": 2494,
+      "reachable": 74
+    },
+    {
+      "start": "Mörby",
+      "startId": "9022001007141001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta via Vallentuna / Lindholmen via Vallentuna …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 115.87,
+      "labels": 4336,
+      "reachable": 77
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 24.59,
+      "labels": 239,
+      "reachable": 23
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 36.71,
+      "labels": 631,
+      "reachable": 39
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 76.48,
+      "labels": 1075,
+      "reachable": 56
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 50.4,
+      "labels": 908,
+      "reachable": 24
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 66.94,
+      "labels": 2369,
+      "reachable": 39
+    },
+    {
+      "start": "Alvik",
+      "startId": "9022001004525001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Bromma flygplats / Johannesfred …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 201.32,
+      "labels": 4083,
+      "reachable": 56
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 19.35,
+      "labels": 164,
+      "reachable": 15
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 32.07,
+      "labels": 512,
+      "reachable": 36
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 67.69,
+      "labels": 948,
+      "reachable": 56
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 42.92,
+      "labels": 622,
+      "reachable": 18
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 70.33,
+      "labels": 1824,
+      "reachable": 39
+    },
+    {
+      "start": "Liljeholmen",
+      "startId": "9022001004515001",
+      "platform": "Läge 5 · Spårvagn/lokalbana mot Johannesfred / Solna station",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 189.22,
+      "labels": 3408,
+      "reachable": 56
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 18.15,
+      "labels": 34,
+      "reachable": 26
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 26.13,
+      "labels": 142,
+      "reachable": 64
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 41.79,
+      "labels": 777,
+      "reachable": 300
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 28.59,
+      "labels": 156,
+      "reachable": 60
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 39.55,
+      "labels": 542,
+      "reachable": 181
+    },
+    {
+      "start": "Norrtälje busstation",
+      "startId": "9022001060050003",
+      "platform": "Läge N · Buss mot Färsna / Norrtälje …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 53.43,
+      "labels": 1874,
+      "reachable": 367
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 17.95,
+      "labels": 11,
+      "reachable": 9
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 29.72,
+      "labels": 46,
+      "reachable": 21
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 37.72,
+      "labels": 308,
+      "reachable": 77
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 28.77,
+      "labels": 41,
+      "reachable": 9
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 38.81,
+      "labels": 175,
+      "reachable": 21
+    },
+    {
+      "start": "Nynäshamn",
+      "startId": "9022001006251002",
+      "platform": "Läge 1 · Tåg mot Bålsta / Kallhäll …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 61.65,
+      "labels": 1195,
+      "reachable": 77
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 18.22,
+      "labels": 8,
+      "reachable": 7
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 21.92,
+      "labels": 45,
+      "reachable": 18
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 53.38,
+      "labels": 312,
+      "reachable": 72
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 32.06,
+      "labels": 29,
+      "reachable": 7
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 34.14,
+      "labels": 165,
+      "reachable": 18
+    },
+    {
+      "start": "Bålsta",
+      "startId": "9022001006101001",
+      "platform": "Läge 3 · Tåg mot Bålsta / Nynäshamn …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 59.24,
+      "labels": 1188,
+      "reachable": 72
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 18.05,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 27.15,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 34.45,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 28.03,
+      "labels": 11,
+      "reachable": 6
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 33.07,
+      "labels": 11,
+      "reachable": 6
+    },
+    {
+      "start": "Gnesta",
+      "startId": "9022001005271001",
+      "platform": "Läge 1 · Tåg mot Gnesta / Södertälje centrum",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 44.43,
+      "labels": 29,
+      "reachable": 10
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 22.53,
+      "labels": 6,
+      "reachable": 6
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 27.63,
+      "labels": 38,
+      "reachable": 34
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 38.21,
+      "labels": 240,
+      "reachable": 93
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 38.1,
+      "labels": 20,
+      "reachable": 8
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 34.13,
+      "labels": 143,
+      "reachable": 64
+    },
+    {
+      "start": "Uppsala centralstation",
+      "startId": "9022001068779003",
+      "platform": "Läge C1 · Buss mot Norrtälje",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 75.65,
+      "labels": 691,
+      "reachable": 119
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 18.43,
+      "labels": 106,
+      "reachable": 32
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 33.95,
+      "labels": 456,
+      "reachable": 69
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 91.76,
+      "labels": 5726,
+      "reachable": 1389
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 33.79,
+      "labels": 348,
+      "reachable": 52
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 51.87,
+      "labels": 1416,
+      "reachable": 99
+    },
+    {
+      "start": "Vaxholm",
+      "startId": "9022001000401005",
+      "platform": "Läge 5 · Båt mot Elgö via Saxaröarna Mjölkö / Elgö via Stegesund Saxaröarna Timrarö Fåglarö …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 237.46,
+      "labels": 19900,
+      "reachable": 1539
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 31.6,
+      "labels": 19,
+      "reachable": 9
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 27.95,
+      "labels": 166,
+      "reachable": 50
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 86.7,
+      "labels": 3753,
+      "reachable": 744
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 34.39,
+      "labels": 52,
+      "reachable": 11
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 42.7,
+      "labels": 455,
+      "reachable": 62
+    },
+    {
+      "start": "Nybroplan",
+      "startId": "9022001008000001",
+      "platform": "Nybroplan · Båt mot Nacka Strand / Nybroplan …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 139.84,
+      "labels": 9468,
+      "reachable": 775
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 33.06,
+      "labels": 60,
+      "reachable": 17
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 28.65,
+      "labels": 428,
+      "reachable": 46
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 51.02,
+      "labels": 1107,
+      "reachable": 103
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 29.76,
+      "labels": 217,
+      "reachable": 17
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 49.8,
+      "labels": 1433,
+      "reachable": 47
+    },
+    {
+      "start": "Handen",
+      "startId": "9022001006151002",
+      "platform": "Läge 2 · Tåg mot Bro / Bålsta …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 104.16,
+      "labels": 3934,
+      "reachable": 103
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 37.56,
+      "labels": 85,
+      "reachable": 16
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 25.38,
+      "labels": 425,
+      "reachable": 47
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 45.23,
+      "labels": 1023,
+      "reachable": 76
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 37.14,
+      "labels": 252,
+      "reachable": 16
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 39.97,
+      "labels": 1186,
+      "reachable": 47
+    },
+    {
+      "start": "Täby centrum",
+      "startId": "9022001007001002",
+      "platform": "Läge 2 · Spårvagn/lokalbana mot Mörby / Stockholms östra",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 83.54,
+      "labels": 2615,
+      "reachable": 76
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 20.01,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 22.97,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 29.19,
+      "labels": 1,
+      "reachable": 1
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 30.61,
+      "labels": 21,
+      "reachable": 9
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 37.9,
+      "labels": 128,
+      "reachable": 24
+    },
+    {
+      "start": "Kårsta",
+      "startId": "9022001006911001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Kårsta / Mörby …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 44.78,
+      "labels": 548,
+      "reachable": 66
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 21,
+      "labels": 47,
+      "reachable": 14
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 23.97,
+      "labels": 181,
+      "reachable": 32
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 42.81,
+      "labels": 554,
+      "reachable": 76
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 50.9,
+      "labels": 162,
+      "reachable": 14
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 42.03,
+      "labels": 625,
+      "reachable": 32
+    },
+    {
+      "start": "Österskär",
+      "startId": "9022001006791001",
+      "platform": "Läge 1 · Spårvagn/lokalbana mot Mörby / Stockholms östra …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 76.29,
+      "labels": 1757,
+      "reachable": 76
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 23.47,
+      "labels": 55,
+      "reachable": 11
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 27.06,
+      "labels": 267,
+      "reachable": 27
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 53.72,
+      "labels": 624,
+      "reachable": 64
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 29.63,
+      "labels": 201,
+      "reachable": 11
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 47.36,
+      "labels": 1001,
+      "reachable": 27
+    },
+    {
+      "start": "Tumba",
+      "startId": "9022001005191002",
+      "platform": "Läge 4 · Tåg mot Märsta / Stockholm C …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 127.45,
+      "labels": 2428,
+      "reachable": 64
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 21.76,
+      "labels": 2,
+      "reachable": 2
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 25.43,
+      "labels": 8,
+      "reachable": 7
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 34.14,
+      "labels": 29,
+      "reachable": 21
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 34.22,
+      "labels": 6,
+      "reachable": 5
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 32.01,
+      "labels": 20,
+      "reachable": 17
+    },
+    {
+      "start": "Stavsnäs",
+      "startId": "9022001000101001",
+      "platform": "Stavsnäs · Båt mot Hagede via Styrsvik Långvik Sandhamn / Mörtö via Styrsvik Nämdö …",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 43.25,
+      "labels": 45,
+      "reachable": 31
+    }
+  ]
+}

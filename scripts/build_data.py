@@ -36,6 +36,17 @@ def gtfs_epoch(day, seconds):
     noon = datetime.combine(day, datetime.min.time().replace(hour=12), TZ)
     return int(noon.timestamp()) - 43200 + seconds
 
+def boarding_flags(row, kind):
+    """GTFS 3 is driver coordination, not advance phone booking (2)."""
+    field = 'pickup_type' if kind == 'pickup' else 'drop_off_type'
+    booking = 'pickup_booking_rule_id' if kind == 'pickup' else 'drop_off_booking_rule_id'
+    value = row.get(field) or '0'
+    if value not in ('0','1','2','3'):
+        raise ValueError('Unknown ' + field)
+    if row.get(booking) or row.get('start_pickup_drop_off_window') or row.get('end_pickup_drop_off_window'):
+        return 0
+    return 3 if value == '3' else 1 if value == '0' else 0
+
 def rows(z, name, required=False):
     if name not in z.namelist():
         if required:
@@ -88,8 +99,20 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
     staging = Path(tempfile.mkdtemp(prefix='.sliso-', dir=output))
     compact = lambda x: json.dumps(x, ensure_ascii=False, separators=(',', ':')).encode()
     try:
+        time_files = {}
+        day_files = {}
+        for day, records in days.items():
+            groups = defaultdict(list)
+            for r in sorted(records,key=lambda r:r[2]):
+                groups[r[2]//3600*3600].append(r)
+            day_files[day] = []
+            for hour, entries in sorted(groups.items()):
+                for part in range(0,len(entries),100_000):
+                    name=f"{day}-{(hour%86400)//3600:02d}-{part//100_000}.bin"
+                    time_files[name]=b"".join(struct.pack("<9I",*r) for r in entries[part:part+100_000])
+                    day_files[day].append((name,hour,hour+3600))
         files = {'trips.json': compact(trips), 'stops.json': compact(stops), 'routes.json': compact(routes), 'walks.json': compact(walks), 'transfers.json': compact(transfers)}
-        files.update({day + '.bin': b''.join(struct.pack('<9I', *r) for r in sorted(records, key=lambda r: r[2])) for day, records in days.items()})
+        files.update(time_files)
         fingerprint = hashlib.sha256(compact(meta) + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
         version = ('demo-' if meta['demo'] else 'sl-') + fingerprint
         refs = {}
@@ -101,159 +124,204 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
         report['packageBytes'] = sum(len(x) for x in files.values())
         report['connections'] = sum(len(x) for x in days.values())
         report['version'] = version
+        report['generator'] = 'sliso-data-v2'
         (staging / 'report.json').write_bytes(compact(report))
         dest = output / version
         if not dest.exists():
             staging.rename(dest)
-        manifest = dict(schema=1, version=version, **meta, trips=refs['trips.json'], days={d: refs[d + '.bin'] for d in days}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
+        manifest = dict(schema=2, version=version, **meta, trips=refs['trips.json'], days={d:[{**refs[n],'from':a,'until':b} for n,a,b in parts] for d,parts in day_files.items()}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
         pending = output / '.manifest.tmp'
         pending.write_bytes(compact(manifest))
         os.replace(pending, output / 'manifest.json')
-        print(json.dumps(report, ensure_ascii=False, indent=2))
+        print(json.dumps({k:v for k,v in report.items() if k not in ('routeInventory',)}, ensure_ascii=False, indent=2))
     finally:
         if staging.exists():
             shutil.rmtree(staging)
 
-def compile_feed(feed, walking, output, start=None):
+def compile_feed(feed, walking, output, start=None, scope=None):
+    from feed_scope import select_routes
     with zipfile.ZipFile(feed) as z:
         raw_stops = rows(z, 'stops.txt', True)
-        routes_raw = rows(z, 'routes.txt', True)
-        trips_raw = rows(z, 'trips.txt', True)
-        times = rows(z, 'stop_times.txt', True)
+        all_routes = rows(z, 'routes.txt', True)
+        all_trips = rows(z, 'trips.txt', True)
         rules = rows(z, 'transfers.txt')
         calendar, exceptions = rows(z, 'calendar.txt'), rows(z, 'calendar_dates.txt')
         agencies = rows(z, 'agency.txt', True)
+        feed_info = rows(z, 'feed_info.txt')
         if any(a['agency_timezone'] != 'Europe/Stockholm' for a in agencies):
             raise ValueError('Only Europe/Stockholm GTFS supported')
         if rows(z, 'frequencies.txt'):
             raise ValueError('Frequency-based trips require expansion before import')
         if not calendar and not exceptions:
             raise ValueError('No actual service dates')
+        if isinstance(scope, (str, Path)):
+            scope = json.loads(Path(scope).read_text())
+        routes_raw, scope_report = select_routes(all_routes, agencies, scope)
+        route_ids = {r['route_id']: i for i,r in enumerate(routes_raw)}
+        all_trip_ids = {t['trip_id'] for t in all_trips}
+        trip_meta = {t['trip_id']: t for t in all_trips if t['route_id'] in route_ids}
+        raw_times = defaultdict(list)
+        types_by_stop, heads_by_stop = defaultdict(set), defaultdict(set)
+        route_types = {r['route_id']: int(r['route_type']) for r in routes_raw}
+        used_stops = set()
+        max_secs, time_rows = 0, 0
+        # Stream 1.6M+ CSV rows; retain compact tuples only for selected services.
+        with io.TextIOWrapper(z.open('stop_times.txt'), encoding='utf-8-sig', newline='') as f:
+            for st in csv.DictReader(f):
+                if st['trip_id'] not in all_trip_ids:
+                    raise ValueError('stop_times references unknown trip')
+                if st['trip_id'] not in trip_meta:
+                    continue
+                if not st.get('arrival_time') or not st.get('departure_time'):
+                    raise ValueError('Untimed stop requires explicit interpolation policy')
+                arr, dep = gtfs_seconds(st['arrival_time']), gtfs_seconds(st['departure_time'])
+                raw_times[st['trip_id']].append((st['stop_id'], arr, dep, int(st['stop_sequence']), boarding_flags(st,'pickup'), boarding_flags(st,'dropoff')))
+                used_stops.add(st['stop_id'])
+                types_by_stop[st['stop_id']].add(route_types[trip_meta[st['trip_id']]['route_id']])
+                headsign=st.get('stop_headsign') or trip_meta[st['trip_id']].get('trip_headsign')
+                if headsign: heads_by_stop[st['stop_id']].add(headsign)
+                max_secs = max(max_secs, arr, dep)
+                time_rows += 1
     parents = {s['stop_id']: s for s in raw_stops}
     stops = []
     for s in raw_stops:
-        if s.get('location_type', '0') not in ('', '0'):
+        if (len(routes_raw)!=len(all_routes) and s['stop_id'] not in used_stops) or s.get('location_type','0') not in ('','0'):
             continue
         parent = parents.get(s.get('parent_station'), s)
-        stops.append(dict(id=s['stop_id'], name=s['stop_name'], station=parent['stop_name'], platform=s.get('platform_code') or s['stop_name'] + ' · ' + s['stop_id'], lat=float(s['stop_lat']), lon=float(s['stop_lon'])))
+        names={'bus':'Buss','metro':'Tunnelbana','rail':'Tåg','tram':'Spårvagn/lokalbana','boat':'Båt'}
+        modes=sorted({MODE_TYPES[t] for t in types_by_stop[s['stop_id']] if t in MODE_TYPES})
+        platform=('Läge '+s['platform_code'] if s.get('platform_code') else s['stop_name'])
+        if modes: platform+=' · '+', '.join(names[m] for m in modes)
+        heads=sorted(heads_by_stop[s['stop_id']])
+        if heads: platform+=' mot '+' / '.join(heads[:2])+(' …' if len(heads)>2 else '')
+        if not modes and not s.get('platform_code'): platform+=f" ({float(s['stop_lat']):.4f}, {float(s['stop_lon']):.4f})"
+        stops.append(dict(id=s['stop_id'], name=s['stop_name'], station=parent['stop_name'], stationId=s.get('parent_station') or s['stop_id'], platform=platform, lat=float(s['stop_lat']), lon=float(s['stop_lon'])))
     if not stops or any(not -90 <= s['lat'] <= 90 or not -180 <= s['lon'] <= 180 for s in stops):
         raise ValueError('Missing or invalid boarding stops')
-    stop_ids = {s['id']: i for i, s in enumerate(stops)}
-    if len(stop_ids) != len(stops):
-        raise ValueError('Duplicate stop IDs')
+    stop_ids = {s['id']:i for i,s in enumerate(stops)}
+    if len(stop_ids) != len(stops) or used_stops - stop_ids.keys():
+        raise ValueError('Duplicate or unknown boarding stop IDs')
     routes = []
     for r in routes_raw:
         rt = int(r['route_type'])
         if rt not in MODE_TYPES:
             raise ValueError('Unmapped route_type ' + str(rt) + '; audit before import')
-        routes.append(dict(id=r['route_id'], name=r.get('route_short_name') or r.get('route_long_name') or r['route_id'], mode=MODE_TYPES[rt]))
-    route_ids = {r['id']: i for i, r in enumerate(routes)}
-    trip_meta = {t['trip_id']: t for t in trips_raw}
-    if any(t.get('service_id') is None or t['route_id'] not in route_ids for t in trips_raw):
-        raise ValueError('Invalid trip metadata')
-    trip_times = defaultdict(list)
-    for st in times:
-        if st['trip_id'] not in trip_meta or st['stop_id'] not in stop_ids:
-            raise ValueError('stop_times references unknown trip or stop')
-        if not st.get('arrival_time') or not st.get('departure_time'):
-            raise ValueError('Untimed stop requires explicit interpolation policy')
-        trip_times[st['trip_id']].append(st)
-    for tid, tt in trip_times.items():
-        tt.sort(key=lambda s: int(s['stop_sequence']))
-        if len({int(s['stop_sequence']) for s in tt}) != len(tt):
+        short, long = r.get('route_short_name',''), r.get('route_long_name','')
+        routes.append(dict(id=r['route_id'], name=(short+' · '+long if short and long else long or short or r['route_id']), mode=MODE_TYPES[rt]))
+    trip_times = {}
+    for tid, tt in raw_times.items():
+        tt.sort(key=lambda s:s[3])
+        if len({s[3] for s in tt}) != len(tt):
             raise ValueError('Duplicate stop_sequence')
         prev = -1
-        for s in tt:
-            arr, dep = gtfs_seconds(s['arrival_time']), gtfs_seconds(s['departure_time'])
+        converted = []
+        for sid,arr,dep,seq,pick,drop in tt:
             if arr < prev or dep < arr:
                 raise ValueError('Non-monotonic trip ' + tid)
             prev = dep
+            converted.append((stop_ids[sid],arr,dep,seq,pick,drop))
+        trip_times[tid] = converted
+    del raw_times
     with open(walking) as f:
         walk_meta = json.load(f)
-    walks, excluded = validate_walks(walk_meta, stops)
+    validate_walks(walk_meta,[dict(id=s['stop_id'],lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in raw_stops if s.get('location_type','0') in ('','0')])
+    scope_walks = {**walk_meta, 'edges':[e for e in walk_meta['edges'] if e['from'] in stop_ids and e['to'] in stop_ids]}
+    walks, excluded = validate_walks(scope_walks, stops)
+    outgoing={w['from'] for w in walks}
+    for i,stop in enumerate(stops):stop['walking']='available' if i in outgoing else 'missing'
     expanded = []
+    child_index = defaultdict(list)
+    for s in raw_stops:
+        if s['stop_id'] in stop_ids:
+            child_index[s.get('parent_station','')].append(stop_ids[s['stop_id']])
     def children(sid):
         if sid in stop_ids:
             return [stop_ids[sid]]
         if sid not in parents:
             raise ValueError('Unknown transfer stop')
-        return [stop_ids[s['stop_id']] for s in raw_stops if s.get('parent_station') == sid and s['stop_id'] in stop_ids]
+        return child_index[sid]
     for r in rules:
+        if any(r.get(k) and r[k] not in trip_meta for k in ('from_trip_id','to_trip_id')):
+            if any(r.get(k) and r[k] not in all_trip_ids for k in ('from_trip_id','to_trip_id')):
+                raise ValueError('Unknown scoped transfer trip')
+            continue
+        if any(r.get(k) and r[k] not in route_ids for k in ('from_route_id','to_route_id')):
+            continue
         typ = int(r.get('transfer_type') or 0)
-        if typ not in (0, 1, 2, 3):
+        if typ not in (0,1,2,3):
             raise ValueError('In-seat transfer types 4/5 require explicit vehicle-continuity support')
         for a in children(r['from_stop_id']):
             for b in children(r['to_stop_id']):
-                rule = {'from': a, 'to': b, 'type': typ, 'seconds': int(r.get('min_transfer_time') or 0)}
-                for src, dst in [('from_trip_id','fromTrip'),('to_trip_id','toTrip'),('from_route_id','fromRoute'),('to_route_id','toRoute')]:
+                rule = {'from':a,'to':b,'type':typ,'seconds':int(r.get('min_transfer_time') or 0)}
+                if rule['seconds'] < 0:
+                    raise ValueError('Negative transfer time')
+                for src,dst in [('from_trip_id','fromTrip'),('to_trip_id','toTrip'),('from_route_id','fromRoute'),('to_route_id','toRoute')]:
                     if r.get(src):
-                        if r[src] not in (trip_meta if 'trip' in src else route_ids):
-                            raise ValueError('Unknown scoped transfer trip/route')
                         rule[dst] = r[src]
                 expanded.append(rule)
-    services = active_services(calendar, exceptions)
-    active_days = [d for d, ids in services.items() if ids]
+    # Rules reference GTFS base trip IDs, not a Cartesian product of service-day instances.
+    used_services = {t['service_id'] for t in trip_meta.values()}
+    services = {d:ids & used_services for d,ids in active_services(calendar,exceptions).items()}
+    active_days = [d for d,ids in services.items() if ids]
     if not active_days:
         raise ValueError('No active services')
-    first, last = min(active_days), max(active_days)
-    begin = max(first, start or datetime.now(TZ).date())
-    end = min(last, begin + timedelta(days=8))
+    first, last = min(active_days),max(active_days)
+    begin = max(first,start or datetime.now(TZ).date())
+    end = min(last,begin+timedelta(days=8))
     if begin >= end:
         raise ValueError('Feed does not cover an upcoming search day plus following traffic day')
-    # Retain up to 7 previous service days for GTFS hour values >24 (reject larger).
-    max_secs = max(gtfs_seconds(s['departure_time']) for s in times)
-    if max_secs > 7 * 86400:
+    if max_secs > 7*86400:
         raise ValueError('Unsupported GTFS time beyond seven days')
     days = {}
-    bucket = datetime.combine(begin, datetime.min.time(), TZ).astimezone(timezone.utc).date()
-    bucket_end = datetime.combine(end + timedelta(days=1), datetime.min.time(), TZ).astimezone(timezone.utc).date()
+    bucket = datetime.combine(begin,datetime.min.time(),TZ).astimezone(timezone.utc).date()
+    bucket_end = datetime.combine(end+timedelta(days=1),datetime.min.time(),TZ).astimezone(timezone.utc).date()
     while bucket <= bucket_end:
         days[bucket.isoformat()] = []
         bucket += timedelta(days=1)
-    trip_keys, trip_indexes = [], {}
-    for day, active in sorted(services.items()):
-        if not begin - timedelta(days=7) <= day <= end:
+    trip_keys = []
+    trips_by_service = defaultdict(list)
+    for tid,t in trip_meta.items():
+        trips_by_service[t['service_id']].append((tid,t))
+    lookback = max_secs//86400+2
+    for day,active in sorted(services.items()):
+        if not begin-timedelta(days=lookback) <= day <= end:
             continue
-        for tid, t in trip_meta.items():
-            if t['service_id'] not in active:
-                continue
-            key = day.isoformat() + ':' + tid
-            idx = len(trip_keys)
-            trip_indexes[key] = idx
-            trip_keys.append(key)
-            tt = trip_times.get(tid, [])
-            for a, b in zip(tt, tt[1:]):
-                dep = gtfs_epoch(day, gtfs_seconds(a['departure_time']))
-                arr = gtfs_epoch(day, gtfs_seconds(b['arrival_time']))
-                bucket = datetime.fromtimestamp(dep, timezone.utc).date().isoformat()
-                if bucket in days:
-                    days[bucket].append((stop_ids[a['stop_id']], stop_ids[b['stop_id']], dep, arr, idx, route_ids[t['route_id']], int(a['stop_sequence']), int(a.get('pickup_type', '0') in ('', '0')), int(b.get('drop_off_type','0') in ('','0'))))
-    # Scoped rules refer to trip instances, not repeated service-day trip IDs.
-    instance_rules = []
-    for rule in expanded:
-        if 'fromTrip' not in rule and 'toTrip' not in rule:
-            instance_rules.append(rule)
-        else:
-            # Both previous and next service-day variants, including cross-midnight transfers.
-            from_keys = [k for k in trip_keys if k.endswith(':' + rule['fromTrip'])] if 'fromTrip' in rule else [None]
-            to_keys = [k for k in trip_keys if k.endswith(':' + rule['toTrip'])] if 'toTrip' in rule else [None]
-            for fk in from_keys:
-                for tk in to_keys:
-                    instance_rules.append({**rule, **({'fromTrip': fk} if fk else {}), **({'toTrip': tk} if tk else {})})
-    gaps = len(stops) - len({w['from'] for w in walks})
-    warnings = list(walk_meta.get('warnings', []))
+        origin = gtfs_epoch(day,0)
+        for service in sorted(active):
+            for tid,t in trips_by_service[service]:
+                tt = trip_times.get(tid,[])
+                legs = []
+                for a,b in zip(tt,tt[1:]):
+                    dep,arr = origin+a[2],origin+b[1]
+                    bucket = datetime.fromtimestamp(dep,timezone.utc).date().isoformat()
+                    if bucket in days:
+                        legs.append((bucket,(a[0],b[0],dep,arr,0,route_ids[t['route_id']],a[3],a[4],b[5])))
+                if legs:
+                    idx = len(trip_keys);trip_keys.append(day.isoformat()+':'+tid)
+                    for bucket,record in legs:
+                        days[bucket].append((*record[:4],idx,*record[5:]))
+    boarding_by_route=Counter(r[5] for records in days.values() for r in records if r[7]&1)
+    unsupported_routes=[r['id'] for i,r in enumerate(routes) if not boarding_by_route[i]]
+    gaps = len(stops)-len({w['from'] for w in walks})
+    warnings = list(walk_meta.get('warnings',[]))
     if gaps:
         warnings.append(f'{gaps} hållplatslägen saknar utgående fysisk gånganslutning. Inga genvägar har skapats.')
-    warnings.append('Olika trip_id räknas konservativt som olika fordon. Beställningstrafik (pickup/drop_off 2–3) används inte.')
-    meta = dict(demo=False, updated=datetime.now(timezone.utc).isoformat(), validFrom=begin.isoformat(), validTo=(end - timedelta(days=1)).isoformat(), walkingMaxMinutes=walk_meta['maxMinutes'], walkingSpeedKmh=4.8, walkingVersion=walk_meta['version'], warnings=warnings, attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL'] + walk_meta.get('attribution', []))
-    report = dict(stops=len(stops), routes=len(routes), routeInventory=routes, modes=dict(Counter(r['mode'] for r in routes)), transfersByType=dict(Counter(int(r.get('transfer_type') or 0) for r in rules)), transferRows=len(rules), expandedRules=len(instance_rules), walkingEdges=len(walks), excludedRestricted=excluded, stopsWithoutOutgoingWalk=gaps, review='Not manually verified. Complete docs/review-cases.csv before pilot.')
-    publish(output, stops, routes, walks, instance_rules, trip_keys, days, meta, report)
+    if unsupported_routes: warnings.append(f'{len(unsupported_routes)} linjeposter saknar stödd påstigning inom det byggda tidsintervallet. Kalender- och bokningsvillkor redovisas i byggrapporten.')
+    warnings.append('Trafikurval: '+scope_report['description'])
+    warnings.append('Olika trip_id räknas konservativt som olika fordon. Telefonbokning (typ 2) och bokningsregler används inte. Typ 3 ingår: samordna med föraren/signalera för på- och avstigning.')
+    source_version=feed_info[0].get('feed_version','') if feed_info else ''
+    try: source_updated=parse_date(source_version).isoformat()
+    except ValueError: source_updated=None
+    meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
+    report = dict(stops=len(stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
+    publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report)
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--gtfs', required=True)
-    p.add_argument('--walks', required=True)
-    p.add_argument('--output', default='public/data')
-    p.add_argument('--from-date', type=parse_date)
-    a = p.parse_args()
-    compile_feed(a.gtfs, a.walks, a.output, a.from_date)
+    p.add_argument('--gtfs',required=True)
+    p.add_argument('--walks',required=True)
+    p.add_argument('--scope')
+    p.add_argument('--output',default='public/data')
+    p.add_argument('--from-date',type=parse_date)
+    a=p.parse_args()
+    compile_feed(a.gtfs,a.walks,a.output,a.from_date,a.scope)

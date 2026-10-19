@@ -4,6 +4,7 @@ No implicit snapping: a stop must bind to an explicitly verified walk node.
 """
 import argparse
 import hashlib
+import gzip
 import heapq
 import json
 import math
@@ -58,7 +59,7 @@ def build(graph, max_minutes=30):
                     distances[target] = new
                     heapq.heappush(queue, (new, target))
     canonical = json.dumps(graph,sort_keys=True,separators=(',',':')).encode()
-    return {'version': graph['version'] + '-' + hashlib.sha256(canonical).hexdigest()[:16], 'speedKmh':4.8, 'maxMinutes':max_minutes, 'stops':[{k:s[k] for k in ('id','lat','lon')} for s in bindings], 'edges':edges, 'attribution':graph['attribution'], 'warnings':[f'{omitted} kända tids-/tillträdesbegränsade kanter uteslutna. Okända öppettider och ej inventerade hållplatser är databegränsningar.']}
+    return {'version': graph['version'] + '-' + hashlib.sha256(canonical).hexdigest()[:16], 'speedKmh':4.8, 'maxMinutes':max_minutes, 'stops':[{k:s[k] for k in ('id','lat','lon')} for s in bindings], 'edges':edges, 'attribution':graph['attribution'], 'reviewed':graph.get('reviewed',False), 'coverage':{'boundStops':len(bindings),'reviewed':graph.get('reviewed',False)}, 'warnings':[f'{omitted} kända tids-/tillträdesbegränsade kanter uteslutna. Okända öppettider och ej inventerade hållplatser är databegränsningar.']}
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser(description=__doc__)
@@ -66,6 +67,7 @@ if __name__ == '__main__':
     p.add_argument('--output',required=True)
     p.add_argument('--max-minutes',type=int,default=30)
     a=p.parse_args()
-    result=build(json.loads(Path(a.graph).read_text()),a.max_minutes)
+    raw=gzip.open(a.graph,'rt',encoding='utf-8').read() if a.graph.endswith('.gz') else Path(a.graph).read_text()
+    result=build(json.loads(raw),a.max_minutes)
     Path(a.output).write_text(json.dumps(result,ensure_ascii=False,separators=(',',':')))
     print(f"Built {len(result['edges'])} directed walking pairs; no network APIs used")

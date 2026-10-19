@@ -1,0 +1,20 @@
+{
+  "osmSha256": "8eec0fde9724b332e737a018ccd4de5e689cb699ddd9e0d01b0aa21b17bc602e",
+  "bounds": [
+    16.878996,
+    58.693850000000005,
+    19.222317,
+    60.729478
+  ],
+  "nodes": 2622248,
+  "segments": 2741639,
+  "walkingWays": 356333,
+  "excludedWays": 200709,
+  "blockedNodes": 25637,
+  "gtfsStops": 14219,
+  "boundStops": 6,
+  "unboundStops": 14213,
+  "elapsedSeconds": 150.54,
+  "profile": "4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.",
+  "version": "geofabrik-sweden-8eec0fde9724b332e737-conservative-v1"
+}

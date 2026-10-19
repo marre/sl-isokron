@@ -36,7 +36,7 @@ def generate(output):
                     for seq,(a,b,duration) in enumerate(zip(nodes,nodes[1:],mins)):
                         arr = t + duration*60
                         bucket = datetime.fromtimestamp(t,timezone.utc).date().isoformat()
-                        days.setdefault(bucket,[]).append((a,b,t,arr,trip,route,seq,1,1))
+                        days.setdefault(bucket,[]).append((a,b,t,arr,trip,route,seq,3 if route==5 else 1,3 if route==5 else 1))
                         t = arr + 30
     meta = dict(demo=True,updated=datetime.now(timezone.utc).isoformat(),validFrom=today.isoformat(),validTo=(today+timedelta(days=7)).isoformat(),walkingMaxMinutes=30,walkingSpeedKmh=4.8,walkingVersion='synthetic-1',warnings=['Endast syntetiska avgångar och gångtider. Använd inte för reseplanering. Verklig SL-täckning och gångvägar har inte verifierats.'],attribution=['Syntetisk testdata · ortnamn för orientering'])
     publish(output,stops,routes,walks,[],trips,days,meta,{'stops':len(stops),'walkingEdges':len(walks),'synthetic':True})

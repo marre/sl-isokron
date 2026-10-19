@@ -1,0 +1,10 @@
+{
+  "surfaceCandidates": 11181,
+  "boundStops": 1041,
+  "totalStops": 14219,
+  "directedPairs": 10460,
+  "matrixErrors": 0,
+  "elapsedSeconds": 6.4,
+  "profile": "geofabrik-sweden-8eec0fde9724b332e737-conservative-v1 / Valhalla 3.9.1 / endpoint precision <=1m; unreviewed stations omitted",
+  "reviewed": false
+}

@@ -4,7 +4,7 @@ export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
   const response = await fetch('/data/manifest.json', { cache: 'no-cache', signal });
   if (!response.ok) throw new Error('Tidtabell saknas. Data kunde inte laddas från servern.');
   const m = await response.json() as Manifest;
-  if (m.schema !== 1 || !m.version || !m.days || !m.stops || m.walkingMaxMinutes < 5) throw new Error('Dataversionen stöds inte.');
+  if (m.schema !== 2 || !m.version || !m.days || !m.stops || m.walkingMaxMinutes < 5) throw new Error('Dataversionen stöds inte.');
   return m;
 }
 export async function verified(ref: FileRef, signal?: AbortSignal): Promise<ArrayBuffer> {
@@ -35,7 +35,7 @@ export function decodeConnections(buffer: ArrayBuffer, trips: string[]): Connect
   for (let at = 0; at < view.byteLength; at += 36) {
     const v = Array.from({ length: 9 }, (_, i) => view.getUint32(at + i * 4, true));
     if (!trips[v[4]]) throw new Error('Turindex saknas i dataversionen.');
-    result.push({ from: v[0], to: v[1], departure: v[2], arrival: v[3], trip: trips[v[4]], route: v[5], sequence: v[6], pickup: !!v[7], dropoff: !!v[8] });
+    result.push({ from: v[0], to: v[1], departure: v[2], arrival: v[3], trip: trips[v[4]], route: v[5], sequence: v[6], pickup: !!(v[7]&1), dropoff: !!(v[8]&1), pickupRequest: !!(v[7]&2), dropoffRequest: !!(v[8]&2) });
   }
   return result;
 }
@@ -46,7 +46,7 @@ export async function loadNetwork(m: Manifest, t0: number, end: number, signal?:
   const selected = Object.entries(m.days).filter(([d]) => d >= first && d <= last);
   const wanted = Math.round((Date.parse(last) - Date.parse(first)) / 86400000) + 1;
   if (selected.length !== wanted) throw new Error('Tidtabell saknas för hela resan, inklusive trafik efter midnatt. Välj ett annat datum.');
-  const connections = (await Promise.all(selected.map(async ([, ref]) => decodeConnections(await verified(ref, signal), trips)))).flat().filter(c => c.departure >= t0 && c.departure <= end);
+  const connections = (await Promise.all(selected.flatMap(([, refs]) => refs.filter(ref => ref.from <= end && ref.until > t0)).map(async ref => decodeConnections(await verified(ref, signal), trips)))).flat().filter(c => c.departure >= t0 && c.departure <= end);
   return { stops, walks, routes, transfers, connections };
 }
 export async function cacheAvailable(): Promise<boolean> {
@@ -55,7 +55,7 @@ export async function cacheAvailable(): Promise<boolean> {
 export async function pruneCache(m: Manifest): Promise<void> {
   try {
     const cache = await caches.open('sliso-data-v1');
-    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days)].map(f => new URL(f.url, location.origin).href));
+    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days).flat()].map(f => new URL(f.url, location.origin).href));
     for (const req of await cache.keys()) if (!keep.has(req.url)) await cache.delete(req);
   } catch { /* Cache access is optional. */ }
 }

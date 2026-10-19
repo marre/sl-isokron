@@ -1,0 +1,9 @@
+{
+  "sourceGraph": "geofabrik-sweden-8eec0fde9724b332e737-conservative-v1",
+  "nodes": 2622248,
+  "ways": 359309,
+  "elapsedSeconds": 42.27,
+  "valhallaVersion": "3.9.1",
+  "pbfBytes": 20474326,
+  "tileBytes": 120726872
+}

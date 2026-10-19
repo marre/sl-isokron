@@ -2,6 +2,10 @@ name: Prepare SL data (opt-in)
 on:
   workflow_dispatch:
     inputs:
+      deploy:
+        description: Publish this manual build (also requires SLISO_DEPLOY_ENABLED)
+        type: boolean
+        default: false
       export_source:
         description: Export the validated cached CC0 GTFS source for local processing (one-day retention)
         type: boolean
@@ -39,9 +43,9 @@ jobs:
           path: .data-build/
           key: sliso-data-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: sliso-data-
-      - name: Require audited pedestrian graph
+      - name: Require versioned physical walking input
         if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
-        run: test -f data/walking-graph.json
+        run: test -f data/walking-index.json || test -f data/walking-graph.json
       - name: Initialize quota ledger explicitly
         if: github.event_name == 'workflow_dispatch' && inputs.initialize_quota_ledger
         env:
@@ -66,9 +70,16 @@ jobs:
           path: .data-build/inventory/
           retention-days: 7
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
-        run: python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
+        run: |
+          if test -f data/walking-index.json; then
+            cp data/walking-index.json .data-build/walks.json
+          else
+            python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
+          fi
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
-        run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --output .data-build/published
+        run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --scope data/feed-scope.json --output .data-build/published
+      - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
+        run: python scripts/prune_data.py --root .data-build/published --keep 3
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: mkdir -p public/data && cp -R .data-build/published/. public/data/
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
@@ -87,7 +98,7 @@ jobs:
           path: dist/
           retention-days: 3
       - name: Publish on Cloudflare Pages only after explicit opt-in
-        if: vars.SLISO_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || !inputs.inventory_only)
+        if: vars.SLISO_DEPLOY_ENABLED == 'true' && (github.event_name != 'workflow_dispatch' || inputs.deploy) && (github.event_name != 'workflow_dispatch' || !inputs.inventory_only)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

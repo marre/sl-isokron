@@ -27,3 +27,16 @@ test('binary corruption and nonexistent trip indices are explicit errors',()=>{
  assert.throws(()=>decodeConnections(new ArrayBuffer(35),[]),/skadat/);
  assert.throws(()=>decodeConnections(new ArrayBuffer(36),[]),/Turindex/);
 });
+test('hourly shards outside the query interval are not fetched',async()=>{
+ const oldFetch=globalThis.fetch,urls:string[]=[];
+ try{
+  const empty=await refFor('/data/shards/core.json','[]');
+  const unused=await refFor('/data/shards/outside.bin','');
+  const inside=await refFor('/data/shards/inside.bin','');
+  globalThis.fetch=async(input)=>{const url=String(input);urls.push(url);return new Response(url.endsWith('.json')?'[]':'');};
+  const t0=Date.parse('2026-10-19T08:00Z')/1000;
+  const m={stops:empty,routes:empty,walks:empty,transfers:empty,trips:empty,days:{'2026-10-19':[{...unused,from:t0-7200,until:t0-3600},{...inside,from:t0,until:t0+3600}]}} as unknown as Manifest;
+  await loadNetwork(m,t0,t0+1800);
+  assert.ok(urls.includes(inside.url));assert.ok(!urls.includes(unused.url));
+ }finally{globalThis.fetch=oldFetch;}
+});

@@ -52,3 +52,33 @@ function oracle(n:Network,s:Settings):(number|null)[]{
  visit({stop:0,time:t0,anchor:null,walk:0,boards:0,on:null,seq:-1});return best;
 }
 test('optimized labels match independent exhaustive oracle on 60 seeded networks',()=>{let seed=1701;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32;};for(let round=0;round<60;round++){const n=net(5);for(let i=0;i<10;i++){const from=Math.floor(random()*4),to=from+1+Math.floor(random()*(4-from));const dep=Math.floor(random()*40),duration=1+Math.floor(random()*12);leg(n,from,to,dep,dep+duration,'t'+i);}for(let from=0;from<4;from++)if(random()<.5)walk(n,from,from+1,3+Math.floor(random()*7));const s=settings(n,{maxTransfers:2});assert.deepEqual(search(n,s).values.map(v=>v?.seconds??null),oracle(n,s),`seeded network ${round}`);}});
+test('base GTFS trip constraints apply to dated instances across midnight',()=>{
+ for(const prefix of ['', '2026-10-18:']){
+  const n=net();leg(n,0,1,0,10,'2026-10-18:first');leg(n,1,2,12,15,'2026-10-19:second');
+  n.transfers.push({from:1,to:1,type:3,seconds:0,fromTrip:prefix+'first',toTrip:'second'});
+  assert.equal(result(n)[2],null);
+  leg(n,0,1,0,10,'2026-10-18:other');
+  assert.equal(result(n)[2]?.seconds,15*60,'unrestricted trip must survive dominance');
+ }
+});
+test('merging generic transfer contexts preserves the earlier alighting margin',()=>{
+ const n=net();leg(n,0,1,0,10,'a');leg(n,0,1,5,12,'b');leg(n,1,2,17,20,'c');
+ n.transfers.push({from:1,to:1,type:2,seconds:420});
+ // Late first boarding has a smaller display cost but misses the 7-minute transfer margin.
+ assert.equal(result(n)[2]?.seconds,20*60);
+});
+test('optimized transfer contexts match unpruned search with scoped and minimum-time rules',()=>{
+ let seed=9022;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32;};
+ for(let round=0;round<100;round++){
+  const n=net(5);
+  for(let i=0;i<12;i++){const from=Math.floor(random()*4),to=from+1+Math.floor(random()*(4-from)),dep=Math.floor(random()*40);leg(n,from,to,dep,dep+2+Math.floor(random()*10),'t'+i,i%2);}
+  for(let i=0;i<3;i++){const from=Math.floor(random()*4),to=Math.floor(random()*4);n.transfers.push({from,to,type:random()<.3?3:2,seconds:Math.floor(random()*8)*60,...(random()<.5?{fromTrip:'t'+Math.floor(random()*12)}:{}),...(random()<.3?{fromRoute:'bus'}:{})});}
+  for(let i=0;i<4;i++)if(random()<.4)walk(n,i,i+1,3+Math.floor(random()*8));
+  const s=settings(n,{maxTransfers:2});
+  assert.deepEqual(search(n,s).values.map(v=>v?.seconds??null),search(n,s,{prune:false}).values.map(v=>v?.seconds??null),`network ${round}`);
+ }
+});
+test('request-stop pickup/dropoff remains usable and carries a rider notice',()=>{
+ const n=net();leg(n,0,1,10,20,'bus');n.connections[0].pickupRequest=true;n.connections[0].dropoffRequest=true;
+ const r=result(n);assert.equal(r[1]?.seconds,600);assert.equal(r[1]?.requestStop,true);
+});

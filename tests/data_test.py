@@ -70,7 +70,7 @@ class DataTests(unittest.TestCase):
             root=Path(tmp);feed,w=self.fixture(root);out=root/'out'
             compile_feed(feed,w,out,date(2026,10,19))
             m=json.loads((out/'manifest.json').read_text());self.assertFalse(m['demo'])
-            ref=m['days']['2026-10-19'];raw=(out/ref['url'].removeprefix('/data/')).read_bytes()
+            ref=m['days']['2026-10-19'][0];raw=(out/ref['url'].removeprefix('/data/')).read_bytes()
             self.assertEqual(hashlib.sha256(raw).hexdigest(),ref['sha256'])
             self.assertEqual(struct.unpack('<9I',raw)[2],gtfs_epoch(date(2026,10,19),90000))
             walkref=out/m['walks']['url'].removeprefix('/data/')
@@ -91,5 +91,16 @@ class WalkGraphTests(unittest.TestCase):
         self.assertEqual(build(graph,5)['edges'],[])
         graph['stops'][0]['verified']=False
         with self.assertRaises(ValueError):build(graph)
+
+
+class BoardingTests(unittest.TestCase):
+    def test_driver_coordination_is_distinct_from_phone_booking(self):
+        from build_data import boarding_flags
+        self.assertEqual(boarding_flags({'pickup_type':'3'},'pickup'),3)
+        self.assertEqual(boarding_flags({'drop_off_type':'3'},'dropoff'),3)
+        self.assertEqual(boarding_flags({'pickup_type':'2'},'pickup'),0)
+        self.assertEqual(boarding_flags({'pickup_type':'1'},'pickup'),0)
+        self.assertEqual(boarding_flags({'pickup_type':'3','pickup_booking_rule_id':'advance'},'pickup'),0)
+        self.assertEqual(boarding_flags({'pickup_type':'0'},'pickup'),1)
 
 if __name__=='__main__':unittest.main()

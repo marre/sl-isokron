@@ -1,0 +1,37 @@
+{
+  "gtfs": {
+    "feed": "SE-sl",
+    "feedVersion": "2026-10-19",
+    "license": "CC0-1.0",
+    "run": "https://github.com/marre/sl-isokron/actions/runs/39314795436"
+  },
+  "osm": {
+    "source": "https://download.geofabrik.de/europe/sweden-261018.osm.pbf",
+    "providerMd5": "8b54713edd9d278b19f7009767658786",
+    "sha256": "8eec0fde9724b332e737a018ccd4de5e689cb699ddd9e0d01b0aa21b17bc602e",
+    "license": "ODbL-1.0"
+  },
+  "method": [
+    "scripts/osm_walks.py",
+    "scripts/prepare_pedestrian_tiles.py",
+    "scripts/valhalla_walks.py"
+  ],
+  "requirements": "scripts/requirements-walking.txt",
+  "profile": {
+    "walkingSpeedKmh": 4.8,
+    "maxMinutes": 30,
+    "endpointToleranceMetres": 1,
+    "railPlatformAutoBinding": false,
+    "knownTimeRestrictedWaysExcluded": true
+  },
+  "quality": {
+    "surfaceCandidates": 11181,
+    "boundStops": 1041,
+    "totalStops": 14219,
+    "directedPairs": 10460,
+    "matrixErrors": 0,
+    "elapsedSeconds": 6.4,
+    "profile": "geofabrik-sweden-8eec0fde9724b332e737-conservative-v1 / Valhalla 3.9.1 / endpoint precision <=1m; unreviewed stations omitted",
+    "reviewed": false
+  }
+}
