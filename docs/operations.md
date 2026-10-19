@@ -1,6 +1,6 @@
 # Drift och kvoter
 
-Tjänsten är en utvecklingsversion. Ingen webbdeployment eller automatisk schemaläggning har aktiverats av implementationen. Riktiga tidtabellspaket och ett partiellt gångindex har byggts; gångluckor märks i appen. Repot är publikt enligt GitHub, men dess synlighet har inte ändrats av agenten.
+Tjänsten är en utvecklingsversion. Beställaren har publicerat appen via Cloudflares Git-integration till `sliso.markus-eriksson.workers.dev`. Automatisk daglig datahämtning är fortfarande avstängd. Riktiga tidtabellspaket och ett partiellt gångindex har byggts; gångluckor märks i appen. Repot är publikt enligt GitHub, men dess synlighet har inte ändrats av agenten.
 
 ## GitHub Actions
 
@@ -14,6 +14,7 @@ Tjänsten är en utvecklingsversion. Ingen webbdeployment eller automatisk schem
 | `inventory_only=false` | Kompilera riktig tidtabell med `data/feed-scope.json` och det medföljande partiella `data/walking-index.json`, testa och bygg appen. |
 | `initialize_quota_ledger=false` | Återanvänd sparad bokföring. Välj true endast första gången eller efter bekräftad cacheförlust och kontroll av kvarvarande Trafiklab-kvot. |
 | `export_source=false` | Normalläge. True exporterar validerad rå GTFS som ett separat artefakt för lokal bearbetning; retention 1 dag. |
+| `publish_release=false` | True publicerar kompilerade data som en versionsmärkt GitHub Release och uppdaterar den lilla `data/release.json` i Git. Det triggar Cloudflares befintliga Git-integration. Kräver `inventory_only=false`. |
 | `deploy=false` | Bygg för granskning utan att publicera. True kräver dessutom `SLISO_DEPLOY_ENABLED=true` och Cloudflare-inställningarna nedan. |
 
 Artefakten `sliso-gtfs-inventory` innehåller rapport, hållplatser och linjer (7 dagars retention). Ett fullt bygge ger `sliso-validated-data` med `dist/` (3 dagar). Check-workflowens demo är separat och publiceras inte.
@@ -30,7 +31,34 @@ Kvotledger och source-ZIP återställs från CI-cache. Samma validerade ZIP åte
 
 Efter en kodfix: **Run workflow** på senaste `main`, inte **Re-run jobs** på en äldre commit. Om API-nyckeln ändrats efter ett misslyckat försök gör nästa körning ett nytt försök; ingen ny secret behövs.
 
-## Cloudflare Pages
+## Cloudflare Workers med befintlig Git-integration
+
+Cloudflare kan bara bygga de filer som finns i en ny utcheckning. `public/data` är avsiktligt ignorerad i Git. Actions-artefakter följer inte med en Git-utcheckning och är heller ingen permanent anonym nedladdningsadress.
+
+Datakedjan är därför:
+
+1. **Prepare SL data** med `inventory_only=false`, `publish_release=true`, `initialize_quota_ledger=false` och `deploy=false` hämtar eller återanvänder GTFS, bygger och testar riktiga data.
+2. Ett separat jobb med `contents: write` packar data till `sliso-data.zip` och publicerar en versionsmärkt GitHub Release. Arkivet ligger utanför Git; källa, gånglicenser och begränsningar följer med manifestet och repo-dokumentationen.
+3. Jobbet uppdaterar endast den lilla `data/release.json` i `main`, med en fast versionsadress, SHA-256 och storlek. Det utlöser Cloudflares Git-integration. Releases skrivs inte över. Skyddad huvudbranch måste tillåta denna botuppdatering eller få pekaren uppdaterad via PR.
+4. `npm run build` kör `prebuild`, som hämtar paketet om lokalt manifest saknas. Hela arkivets checksumma/storlek och manifestets samtliga filreferenser verifieras före installation. Fel stoppar bygget; ingen demo skapas som reserv. Därefter kopierar Vite data från `public/data` till `dist/data`.
+5. `wrangler.jsonc` publicerar `dist` som statiska Workers Assets. `/data/manifest.json` blir riktig JSON. Saknade filer ger 404 i stället för att returnera appens HTML.
+
+I **sliso → Settings → Build** i Cloudflare används:
+
+| Inställning | Värde |
+| --- | --- |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | repots rot |
+| Production branch | `main` |
+
+Cloudflares befintliga integration sköter autentiseringen. Ingen ny Cloudflare- eller Trafiklab-hemlighet behövs för detta flöde, och ingen R2-bucket krävs. Det publika datapaketet hämtas under bygget; besökare hämtar data från samma Cloudflare-origin som appen.
+
+`npm run data:pull` tvingar en verifierad hämtning av den versionslåsta releasen även när lokal data finns. Vanligt `npm run build` bevarar befintlig lokal data, inklusive uttryckligt skapade testfixturer. Stora dataarkiv och `public/data` ska aldrig checkas in. Arkivet är cirka 77 MB komprimerat i första releasen; största uppackade datafilen är cirka 9,6 MB. Total storlek hindrar inte statisk publicering eftersom varje fil ligger under 25 MiB. Aktuell och tidigare sparade versioner paketeras tillsammans för redan öppna klienter.
+
+Daglig hämtning aktiveras inte av detta. Kör ovanstående manuella flöde för en ny datarelease. För avsiktlig daglig uppdatering via Git-integrationen behövs både `SLISO_DATA_ENABLED=true` (bygga) och `SLISO_RELEASE_ENABLED=true` (publicera release och uppdatera pekaren). Ingendera aktiveras av kodändringen. Gamla GitHub Releases ligger kvar tills ägaren väljer en separat retentionspolicy; de är skilda från Actions-artefakternas korta retention.
+
+## Alternativ: Cloudflare Pages från Actions
 
 Appen är statisk: `npm run build`, utdatamapp `dist`. Alla riktiga data ska först finnas under `public/data`. För manuell deployment via Actions behövs:
 

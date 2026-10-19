@@ -2,7 +2,7 @@
 
 Svensk restidskarta för SL-hållplatslägen. Statisk TypeScript-app med Leaflet och sökning i en Web Worker. Ingen backend, inloggning, adressökning eller betald reservtjänst.
 
-**Status: körbar utvecklingsversion med riktig GTFS-import och ett partiellt OSM-gångindex.** Trafikurvalet omfattar enligt beställarens val samtliga linjer i SL-feeden, även UL, Waxholmsbolaget och närtrafiken. Gångindexet kopplar 1 041 av 14 219 hållplatslägen; stationers entréer/plattformar och de 30 verkliga referensresorna behöver fortsatt granskning. Appen märker därför realdata som utvecklingsläge och visar osäker nåbarhet där gångunderlaget saknas. Ingen pilot eller webbpublicering har genomförts.
+**Status: körbar utvecklingsversion med riktig GTFS-import och ett partiellt OSM-gångindex.** Trafikurvalet omfattar enligt beställarens val samtliga linjer i SL-feeden, även UL, Waxholmsbolaget och närtrafiken. Gångindexet kopplar 1 041 av 14 219 hållplatslägen; stationers entréer/plattformar och de 30 verkliga referensresorna behöver fortsatt granskning. Appen märker därför realdata som utvecklingsläge och visar osäker nåbarhet där gångunderlaget saknas. Webbversionen är publicerad av beställaren via Cloudflare; den är fortfarande en utvecklingsversion.
 
 ## Kör lokalt
 
@@ -10,11 +10,11 @@ Node 24 (se `.node-version`) och Python 3.12+ med systemets tidszonsdatabas beh�
 
 ```sh
 npm ci
-npm run data:demo
+npm run data:pull
 npm run dev
 ```
 
-Ovanstående startar uttryckligen **syntetisk demo** om du saknar en GTFS-fil. Kör inte `data:demo` ovanpå ett riktigt dataset. För riktiga data:
+Ovanstående hämtar den versionslåsta riktiga datareleasen från GitHub, verifierar SHA-256 och startar appen. Ingen API-nyckel behövs. För en uttrycklig **syntetisk demo** kan du i stället köra `npm run data:demo`; gör inte det ovanpå ett riktigt dataset. För att kompilera egen GTFS:
 
 ```sh
 python scripts/build_data.py --gtfs .data-build/source/sl.zip \
@@ -59,7 +59,7 @@ En gångsträcka summeras över flera kanter och återställs först vid påstig
 
 Se [dataflöde och filformat](docs/data.md), [drift och kvoter](docs/operations.md), [verifiering och öppna datagap](docs/verification.md) och [ursprunglig kravspecifikation](docs/kravspec.md).
 
-Cloudflare Pages: bygg `npm run build`, utdatamapp `dist`. Riktiga datapaket måste först vara byggda i `public/data`. Kontrollworkflow bygger demo enbart för tester; det publicerar inget. Automatiska datakörningar är avstängda tills driftansvarig konfigurerar data, kvotledger och CI-variabler. Ett manuellt inventeringsläge kan köras med Trafiklab-hemligheten och kvotinitiering; se driftinstruktionerna. Ingen ändring av repots synlighet eller publicering har gjorts.
+Cloudflare Workers Git-integration: bygg `npm run build`, deploy `npx wrangler deploy`. `prebuild` hämtar den verifierade datareleasen när `public/data/manifest.json` saknas. Bara `data/release.json` ligger i Git; det stora arkivet ligger i GitHub Releases. Se [driftinstruktionerna](docs/operations.md). Cloudflare Pages kan också publicera samma `dist`. Kontrollworkflow bygger demo enbart för tester; det publicerar inget. Automatiska datakörningar är avstängda tills driftansvarig konfigurerar data, kvotledger och CI-variabler. Ett manuellt inventeringsläge kan köras med Trafiklab-hemligheten och kvotinitiering; se driftinstruktionerna. Repots synlighet har inte ändrats.
 
 Bakgrundskartan använder OSM standardtiles som utbytbar pilotinställning. Granska aktuell användningspolicy innan pilot. `.env.example` visar konfigurationen; `VITE_TILE_URL=none` stänger av externa tiles utan att påverka sökningen. Typsnitt levereras med appen. Inga hemligheter får ligga i `VITE_`-variabler, delningslänkar eller apppaketet.
 

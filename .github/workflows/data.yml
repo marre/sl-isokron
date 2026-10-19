@@ -2,6 +2,10 @@ name: Prepare SL data (opt-in)
 on:
   workflow_dispatch:
     inputs:
+      publish_release:
+        description: Publish compiled data to a GitHub Release and update the Cloudflare build pointer
+        type: boolean
+        default: false
       deploy:
         description: Publish this manual build (also requires SLISO_DEPLOY_ENABLED)
         type: boolean
@@ -110,3 +114,42 @@ jobs:
         with:
           path: .data-build/
           key: sliso-data-${{ github.run_id }}-${{ github.run_attempt }}
+
+  publish-release:
+    if: (github.event_name == 'workflow_dispatch' && inputs.publish_release && !inputs.inventory_only) || (github.event_name == 'schedule' && vars.SLISO_RELEASE_ENABLED == 'true')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: sliso-validated-data
+          path: .release-build
+      - name: Package validated traffic and walking data outside Git
+        run: python scripts/release_data.py pack --root .release-build/data --output .data-build/sliso-data.zip --descriptor .data-build/release.json --repository "$GITHUB_REPOSITORY"
+      - name: Publish an immutable data release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          data_version=$(python -c "import json; print(json.load(open('.data-build/release.json'))['version'])")
+          gh release create "data-$data_version" .data-build/sliso-data.zip --target "$GITHUB_SHA" --latest=false --title "sliso data $data_version" --notes 'Compiled GTFS and partial OSM walking data. CC0 / ODbL; provenance and limitations in data/README.md. Download integrity is pinned in data/release.json.'
+      - name: Update the small data pointer for Cloudflare Git integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --ff-only origin main
+          cp .data-build/release.json data/release.json
+          git add data/release.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update pinned real-data release for Cloudflare'
+            git push origin HEAD:main
+          fi

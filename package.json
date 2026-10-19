@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Restidskartor för SL – utan initial väntan",
+  "description": "Restidskartor f\u00f6r SL \u2013 utan initial v\u00e4ntan",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build && python scripts/check_dist.py",
@@ -13,7 +13,9 @@
     "test:e2e": "python scripts/demo.py --output .data-build/browser-public/data && playwright test",
     "data:demo": "python scripts/demo.py",
     "data:build": "python scripts/build_data.py",
-    "benchmark": "tsx scripts/benchmark.ts"
+    "benchmark": "tsx scripts/benchmark.ts",
+    "prebuild": "python scripts/release_data.py fetch",
+    "data:pull": "python scripts/release_data.py fetch --force"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
