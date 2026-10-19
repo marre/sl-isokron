@@ -1,0 +1,987 @@
+{
+  "measuredAt": "2026-10-19T18:48:13.829Z",
+  "dataset": "demo-e32a5c729b9ed088620d",
+  "synthetic": true,
+  "runtime": "v24.19.0",
+  "system": "linux x64 INTEL(R) XEON(R) PLATINUM 8573C",
+  "note": "Container measurement. Not a physical laptop/mobile or browser memory/transfer benchmark. Gzip computed offline; actual HTTP encoding depends on hosting.",
+  "stops": 25,
+  "cases": 120,
+  "medianMs": 13.65,
+  "p95Ms": 285.34,
+  "maxMs": 423.48,
+  "within3Seconds": 120,
+  "within30Seconds": 120,
+  "maxSelectedUncompressedBytes": 540984,
+  "maxSelectedGzipBytes": 68863,
+  "nodeProcessMemory": {
+    "rss": 271147008,
+    "heapTotal": 164990976,
+    "heapUsed": 36887720,
+    "external": 15791133,
+    "arrayBuffers": 13331671
+  },
+  "totalMs": 8277,
+  "results": [
+    {
+      "start": "Slussen",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 7.15,
+      "labels": 482,
+      "reachable": 18
+    },
+    {
+      "start": "Slussen",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 28.13,
+      "labels": 2036,
+      "reachable": 23
+    },
+    {
+      "start": "Slussen",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 107.73,
+      "labels": 5910,
+      "reachable": 25
+    },
+    {
+      "start": "Slussen",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 13.65,
+      "labels": 1643,
+      "reachable": 18
+    },
+    {
+      "start": "Slussen",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 72.39,
+      "labels": 7064,
+      "reachable": 23
+    },
+    {
+      "start": "Slussen",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 400.95,
+      "labels": 20580,
+      "reachable": 25
+    },
+    {
+      "start": "Gamla stan",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 5.5,
+      "labels": 524,
+      "reachable": 19
+    },
+    {
+      "start": "Gamla stan",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 30.51,
+      "labels": 1972,
+      "reachable": 24
+    },
+    {
+      "start": "Gamla stan",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 116.57,
+      "labels": 5485,
+      "reachable": 25
+    },
+    {
+      "start": "Gamla stan",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 27.23,
+      "labels": 2093,
+      "reachable": 19
+    },
+    {
+      "start": "Gamla stan",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 101.86,
+      "labels": 7876,
+      "reachable": 24
+    },
+    {
+      "start": "Gamla stan",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 423.48,
+      "labels": 21892,
+      "reachable": 25
+    },
+    {
+      "start": "T-Centralen",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 4.34,
+      "labels": 533,
+      "reachable": 19
+    },
+    {
+      "start": "T-Centralen",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 15.46,
+      "labels": 2452,
+      "reachable": 24
+    },
+    {
+      "start": "T-Centralen",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 103.64,
+      "labels": 7285,
+      "reachable": 25
+    },
+    {
+      "start": "T-Centralen",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 23.72,
+      "labels": 1865,
+      "reachable": 19
+    },
+    {
+      "start": "T-Centralen",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 103.28,
+      "labels": 8812,
+      "reachable": 24
+    },
+    {
+      "start": "T-Centralen",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 420.4,
+      "labels": 26410,
+      "reachable": 25
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 1.47,
+      "labels": 286,
+      "reachable": 18
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 7.38,
+      "labels": 1220,
+      "reachable": 24
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 46.58,
+      "labels": 3425,
+      "reachable": 25
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 6.81,
+      "labels": 1138,
+      "reachable": 18
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 47.29,
+      "labels": 4850,
+      "reachable": 24
+    },
+    {
+      "start": "Östermalmstorg",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 261.23,
+      "labels": 13538,
+      "reachable": 25
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.68,
+      "labels": 202,
+      "reachable": 17
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 8.12,
+      "labels": 1243,
+      "reachable": 23
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 57.11,
+      "labels": 3905,
+      "reachable": 25
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 4.47,
+      "labels": 724,
+      "reachable": 17
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 34.32,
+      "labels": 4336,
+      "reachable": 23
+    },
+    {
+      "start": "Tekniska högskolan",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 213.18,
+      "labels": 13493,
+      "reachable": 25
+    },
+    {
+      "start": "Universitetet",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.54,
+      "labels": 125,
+      "reachable": 14
+    },
+    {
+      "start": "Universitetet",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 4.94,
+      "labels": 864,
+      "reachable": 21
+    },
+    {
+      "start": "Universitetet",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 39.43,
+      "labels": 3017,
+      "reachable": 25
+    },
+    {
+      "start": "Universitetet",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 3.97,
+      "labels": 497,
+      "reachable": 14
+    },
+    {
+      "start": "Universitetet",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 26.74,
+      "labels": 3453,
+      "reachable": 21
+    },
+    {
+      "start": "Universitetet",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 191.93,
+      "labels": 12065,
+      "reachable": 25
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 1.11,
+      "labels": 92,
+      "reachable": 14
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 4.27,
+      "labels": 844,
+      "reachable": 21
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 35.61,
+      "labels": 3004,
+      "reachable": 25
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 2.34,
+      "labels": 362,
+      "reachable": 14
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 25.03,
+      "labels": 3361,
+      "reachable": 21
+    },
+    {
+      "start": "Danderyds sjukhus",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 253.48,
+      "labels": 11920,
+      "reachable": 25
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.73,
+      "labels": 76,
+      "reachable": 11
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 3.59,
+      "labels": 699,
+      "reachable": 21
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 51.65,
+      "labels": 2632,
+      "reachable": 25
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 1.83,
+      "labels": 226,
+      "reachable": 11
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 16.67,
+      "labels": 2094,
+      "reachable": 21
+    },
+    {
+      "start": "Mörby centrum",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 127.81,
+      "labels": 7879,
+      "reachable": 25
+    },
+    {
+      "start": "Odenplan",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.83,
+      "labels": 222,
+      "reachable": 16
+    },
+    {
+      "start": "Odenplan",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 12.79,
+      "labels": 1278,
+      "reachable": 23
+    },
+    {
+      "start": "Odenplan",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 85.43,
+      "labels": 4443,
+      "reachable": 25
+    },
+    {
+      "start": "Odenplan",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 14.6,
+      "labels": 882,
+      "reachable": 16
+    },
+    {
+      "start": "Odenplan",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 66.11,
+      "labels": 5079,
+      "reachable": 23
+    },
+    {
+      "start": "Odenplan",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 330.03,
+      "labels": 17610,
+      "reachable": 25
+    },
+    {
+      "start": "Stockholm City",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 4.13,
+      "labels": 322,
+      "reachable": 19
+    },
+    {
+      "start": "Stockholm City",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 10.74,
+      "labels": 1460,
+      "reachable": 24
+    },
+    {
+      "start": "Stockholm City",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 76.98,
+      "labels": 4630,
+      "reachable": 25
+    },
+    {
+      "start": "Stockholm City",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 10.87,
+      "labels": 1225,
+      "reachable": 19
+    },
+    {
+      "start": "Stockholm City",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 44.7,
+      "labels": 4961,
+      "reachable": 24
+    },
+    {
+      "start": "Stockholm City",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 285.34,
+      "labels": 15064,
+      "reachable": 25
+    },
+    {
+      "start": "Solna station",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.31,
+      "labels": 63,
+      "reachable": 12
+    },
+    {
+      "start": "Solna station",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 3.13,
+      "labels": 565,
+      "reachable": 21
+    },
+    {
+      "start": "Solna station",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 27.94,
+      "labels": 2307,
+      "reachable": 25
+    },
+    {
+      "start": "Solna station",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 2.06,
+      "labels": 249,
+      "reachable": 12
+    },
+    {
+      "start": "Solna station",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 17.91,
+      "labels": 2257,
+      "reachable": 21
+    },
+    {
+      "start": "Solna station",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 124.23,
+      "labels": 9225,
+      "reachable": 25
+    },
+    {
+      "start": "Helenelund",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.18,
+      "labels": 27,
+      "reachable": 8
+    },
+    {
+      "start": "Helenelund",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 2.36,
+      "labels": 379,
+      "reachable": 22
+    },
+    {
+      "start": "Helenelund",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 23,
+      "labels": 2011,
+      "reachable": 25
+    },
+    {
+      "start": "Helenelund",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 1.42,
+      "labels": 105,
+      "reachable": 8
+    },
+    {
+      "start": "Helenelund",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 12.75,
+      "labels": 1513,
+      "reachable": 22
+    },
+    {
+      "start": "Helenelund",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 111.51,
+      "labels": 7867,
+      "reachable": 25
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.1,
+      "labels": 7,
+      "reachable": 3
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 0.76,
+      "labels": 184,
+      "reachable": 17
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 20.21,
+      "labels": 1815,
+      "reachable": 25
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 0.66,
+      "labels": 19,
+      "reachable": 3
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 4.98,
+      "labels": 550,
+      "reachable": 17
+    },
+    {
+      "start": "Södertälje centrum",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 72.12,
+      "labels": 5436,
+      "reachable": 25
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.91,
+      "labels": 175,
+      "reachable": 13
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 5.72,
+      "labels": 885,
+      "reachable": 22
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 36.05,
+      "labels": 2745,
+      "reachable": 25
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 4.69,
+      "labels": 523,
+      "reachable": 13
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 30.88,
+      "labels": 2649,
+      "reachable": 22
+    },
+    {
+      "start": "Liljeholmen",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 158.28,
+      "labels": 8223,
+      "reachable": 25
+    },
+    {
+      "start": "Alvik",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.33,
+      "labels": 79,
+      "reachable": 13
+    },
+    {
+      "start": "Alvik",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 4.04,
+      "labels": 706,
+      "reachable": 22
+    },
+    {
+      "start": "Alvik",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 41.1,
+      "labels": 2574,
+      "reachable": 25
+    },
+    {
+      "start": "Alvik",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 2.36,
+      "labels": 235,
+      "reachable": 13
+    },
+    {
+      "start": "Alvik",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 17.3,
+      "labels": 2116,
+      "reachable": 22
+    },
+    {
+      "start": "Alvik",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 127.98,
+      "labels": 7713,
+      "reachable": 25
+    },
+    {
+      "start": "Nacka strand",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.28,
+      "labels": 26,
+      "reachable": 11
+    },
+    {
+      "start": "Nacka strand",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 3.32,
+      "labels": 569,
+      "reachable": 21
+    },
+    {
+      "start": "Nacka strand",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 35.13,
+      "labels": 2648,
+      "reachable": 25
+    },
+    {
+      "start": "Nacka strand",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 1.2,
+      "labels": 80,
+      "reachable": 11
+    },
+    {
+      "start": "Nacka strand",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 12.51,
+      "labels": 1829,
+      "reachable": 21
+    },
+    {
+      "start": "Nacka strand",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 119.85,
+      "labels": 8642,
+      "reachable": 25
+    },
+    {
+      "start": "Nybroplan",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.49,
+      "labels": 110,
+      "reachable": 18
+    },
+    {
+      "start": "Nybroplan",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 6.87,
+      "labels": 790,
+      "reachable": 24
+    },
+    {
+      "start": "Nybroplan",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 28.79,
+      "labels": 2704,
+      "reachable": 25
+    },
+    {
+      "start": "Nybroplan",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 4.07,
+      "labels": 581,
+      "reachable": 18
+    },
+    {
+      "start": "Nybroplan",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 35.8,
+      "labels": 3853,
+      "reachable": 24
+    },
+    {
+      "start": "Nybroplan",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 185.85,
+      "labels": 12133,
+      "reachable": 25
+    },
+    {
+      "start": "Lidingö",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.09,
+      "labels": 4,
+      "reachable": 4
+    },
+    {
+      "start": "Lidingö",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 0.36,
+      "labels": 62,
+      "reachable": 18
+    },
+    {
+      "start": "Lidingö",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 4.85,
+      "labels": 599,
+      "reachable": 24
+    },
+    {
+      "start": "Lidingö",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 0.15,
+      "labels": 13,
+      "reachable": 4
+    },
+    {
+      "start": "Lidingö",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 1.85,
+      "labels": 245,
+      "reachable": 18
+    },
+    {
+      "start": "Lidingö",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 24.3,
+      "labels": 2393,
+      "reachable": 24
+    },
+    {
+      "start": "Vaxholm",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 0.08,
+      "labels": 3,
+      "reachable": 2
+    },
+    {
+      "start": "Vaxholm",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 0.17,
+      "labels": 15,
+      "reachable": 6
+    },
+    {
+      "start": "Vaxholm",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 8.38,
+      "labels": 723,
+      "reachable": 24
+    },
+    {
+      "start": "Vaxholm",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 0.13,
+      "labels": 6,
+      "reachable": 2
+    },
+    {
+      "start": "Vaxholm",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 0.31,
+      "labels": 36,
+      "reachable": 6
+    },
+    {
+      "start": "Vaxholm",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 15.51,
+      "labels": 1806,
+      "reachable": 24
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 30,
+      "window": 30,
+      "elapsedMs": 1.32,
+      "labels": 321,
+      "reachable": 16
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 60,
+      "window": 30,
+      "elapsedMs": 13.27,
+      "labels": 1591,
+      "reachable": 23
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 120,
+      "window": 30,
+      "elapsedMs": 61.88,
+      "labels": 4866,
+      "reachable": 25
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 30,
+      "window": 120,
+      "elapsedMs": 11.8,
+      "labels": 1275,
+      "reachable": 16
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 60,
+      "window": 120,
+      "elapsedMs": 54.29,
+      "labels": 6319,
+      "reachable": 23
+    },
+    {
+      "start": "Södermalmstorg",
+      "max": 120,
+      "window": 120,
+      "elapsedMs": 334.16,
+      "labels": 19218,
+      "reachable": 25
+    }
+  ]
+}

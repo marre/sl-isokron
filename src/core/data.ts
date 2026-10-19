@@ -1,0 +1,61 @@
+import type { Connection, FileRef, Manifest, Network } from './types';
+const memory = new Map<string, ArrayBuffer>();
+export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
+  const response = await fetch('/data/manifest.json', { cache: 'no-cache', signal });
+  if (!response.ok) throw new Error('Tidtabell saknas. Data kunde inte laddas från servern.');
+  const m = await response.json() as Manifest;
+  if (m.schema !== 1 || !m.version || !m.days || !m.stops || m.walkingMaxMinutes < 5) throw new Error('Dataversionen stöds inte.');
+  return m;
+}
+export async function verified(ref: FileRef, signal?: AbortSignal): Promise<ArrayBuffer> {
+  if (!/^\/data\/[a-zA-Z0-9._/-]+$/.test(ref.url) || ref.url.includes('..')) throw new Error('Ogiltig dataadress.');
+  const key = ref.url + ':' + ref.sha256;
+  const fromMemory = memory.get(key); if (fromMemory) return fromMemory;
+  let cache: Cache | undefined;
+  try { cache = await caches.open('sliso-data-v1'); } catch { /* In-memory fallback is intentional. */ }
+  let bytes: ArrayBuffer | undefined;
+  try { const saved = await cache?.match(ref.url); if (saved) bytes = await saved.arrayBuffer(); } catch { /* Cache is optional. */ }
+  const matches = async (b: ArrayBuffer) => b.byteLength === ref.bytes && Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', b)), b => b.toString(16).padStart(2, '0')).join('') === ref.sha256;
+  if (bytes && !await matches(bytes)) { try { await cache?.delete(ref.url); } catch { /* Storage may be revoked after reading. */ } bytes = undefined; }
+  if (!bytes) {
+    const response = await fetch(ref.url, { signal });
+    if (!response.ok) throw new Error(response.status === 429 ? 'Datakvoten är uppnådd. Försök senare; ingen betald reservtjänst används.' : 'Nätverksfel vid hämtning av trafikdata.');
+    bytes = await response.arrayBuffer();
+    if (!await matches(bytes)) throw new Error('Datakontrollen misslyckades. Versionerna får inte blandas.');
+    try { await cache?.put(ref.url, new Response(bytes)); } catch { /* Full/denied cache: continue without persistence. */ }
+  }
+  // Bound in-memory retention. A query owns its already loaded buffers independently.
+  if (memory.size > 24) memory.clear();
+  memory.set(key, bytes); return bytes;
+}
+export async function loadJSON<T>(ref: FileRef, signal?: AbortSignal): Promise<T> { return JSON.parse(new TextDecoder().decode(await verified(ref, signal))) as T; }
+export function decodeConnections(buffer: ArrayBuffer, trips: string[]): Connection[] {
+  if (buffer.byteLength % 36) throw new Error('Tidtabellspaketet är skadat.');
+  const view = new DataView(buffer), result: Connection[] = [];
+  for (let at = 0; at < view.byteLength; at += 36) {
+    const v = Array.from({ length: 9 }, (_, i) => view.getUint32(at + i * 4, true));
+    if (!trips[v[4]]) throw new Error('Turindex saknas i dataversionen.');
+    result.push({ from: v[0], to: v[1], departure: v[2], arrival: v[3], trip: trips[v[4]], route: v[5], sequence: v[6], pickup: !!v[7], dropoff: !!v[8] });
+  }
+  return result;
+}
+export async function loadNetwork(m: Manifest, t0: number, end: number, signal?: AbortSignal): Promise<Network> {
+  const [stops, walks, routes, transfers, trips] = await Promise.all([loadJSON<Network['stops']>(m.stops, signal), loadJSON<Network['walks']>(m.walks, signal), loadJSON<Network['routes']>(m.routes, signal), loadJSON<Network['transfers']>(m.transfers, signal), loadJSON<string[]>(m.trips, signal)]);
+  // Daily packages are bucketed by ACTUAL UTC departure, not service-day label.
+  const first = new Date(t0 * 1000).toISOString().slice(0,10), last = new Date(end * 1000).toISOString().slice(0,10);
+  const selected = Object.entries(m.days).filter(([d]) => d >= first && d <= last);
+  const wanted = Math.round((Date.parse(last) - Date.parse(first)) / 86400000) + 1;
+  if (selected.length !== wanted) throw new Error('Tidtabell saknas för hela resan, inklusive trafik efter midnatt. Välj ett annat datum.');
+  const connections = (await Promise.all(selected.map(async ([, ref]) => decodeConnections(await verified(ref, signal), trips)))).flat().filter(c => c.departure >= t0 && c.departure <= end);
+  return { stops, walks, routes, transfers, connections };
+}
+export async function cacheAvailable(): Promise<boolean> {
+  try { const cache = await caches.open('sliso-data-v1'); await cache.put('/data/cache-test', new Response('ok')); await cache.delete('/data/cache-test'); return true; } catch { return false; }
+}
+export async function pruneCache(m: Manifest): Promise<void> {
+  try {
+    const cache = await caches.open('sliso-data-v1');
+    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days)].map(f => new URL(f.url, location.origin).href));
+    for (const req of await cache.keys()) if (!keep.has(req.url)) await cache.delete(req);
+  } catch { /* Cache access is optional. */ }
+}

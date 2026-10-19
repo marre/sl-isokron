@@ -1,0 +1,32 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { cpus, platform, arch } from 'node:os';
+import { gzipSync } from 'node:zlib';
+import { decodeConnections } from '../src/core/data';
+import { defaults } from '../src/core/settings';
+import { search } from '../src/core/router';
+import { stockholmInstant } from '../src/core/time';
+import type { FileRef, Manifest, Network } from '../src/core/types';
+const m:Manifest=JSON.parse(readFileSync('public/data/manifest.json','utf8'));
+const bytes=(ref:FileRef)=>readFileSync('public'+ref.url);
+const json=<T>(ref:FileRef):T=>JSON.parse(bytes(ref).toString());
+const trips=json<string[]>(m.trips);
+const core:Omit<Network,'connections'>={stops:json(m.stops),routes:json(m.routes),walks:json(m.walks),transfers:json(m.transfers)};
+const cases:{start:string;max:number;window:number;elapsedMs:number;labels:number;reachable:number}[]=[];
+let maxInput=0,maxGzip=0;
+const allStart=performance.now();
+for(const start of core.stops.slice(0,20))for(const windowMinutes of [30,120])for(const maxMinutes of [30,60,120]){
+ const s={...defaults(start),date:m.validFrom,time:'08:00',maxMinutes,windowMinutes};
+ const t0=stockholmInstant(s.date,s.time),end=t0+(windowMinutes+maxMinutes)*60;
+ const first=new Date(t0*1000).toISOString().slice(0,10),last=new Date(end*1000).toISOString().slice(0,10);
+ const refs=Object.entries(m.days).filter(([d])=>d>=first&&d<=last).map(([,ref])=>ref);
+ const connections=refs.flatMap(ref=>{const b=bytes(ref);return decodeConnections(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),trips);}).filter(c=>c.departure>=t0&&c.departure<=end);
+ const selected=[m.stops,m.routes,m.walks,m.transfers,m.trips,...refs];
+ maxInput=Math.max(maxInput,selected.reduce((sum,r)=>sum+r.bytes,0));
+ maxGzip=Math.max(maxGzip,selected.reduce((sum,r)=>sum+gzipSync(bytes(r)).byteLength,0));
+ const r=search({...core,connections},s);
+ cases.push({start:start.name,max:maxMinutes,window:windowMinutes,elapsedMs:Math.round(r.elapsed*100)/100,labels:r.labels,reachable:r.values.filter(Boolean).length});
+}
+const ordered=cases.map(c=>c.elapsedMs).sort((a,b)=>a-b);
+const report={measuredAt:new Date().toISOString(),dataset:m.version,synthetic:m.demo,runtime:process.version,system:`${platform()} ${arch()} ${cpus()[0]?.model}`,note:'Container measurement. Not a physical laptop/mobile or browser memory/transfer benchmark. Gzip computed offline; actual HTTP encoding depends on hosting.',stops:core.stops.length,cases:cases.length,medianMs:ordered[Math.floor(ordered.length*.5)],p95Ms:ordered[Math.floor(ordered.length*.95)],maxMs:ordered.at(-1),within3Seconds:cases.filter(c=>c.elapsedMs<=3000).length,within30Seconds:cases.filter(c=>c.elapsedMs<=30000).length,maxSelectedUncompressedBytes:maxInput,maxSelectedGzipBytes:maxGzip,nodeProcessMemory:process.memoryUsage(),totalMs:Math.round(performance.now()-allStart),results:cases};
+writeFileSync('docs/benchmark.json',JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({...report,results:undefined},null,2));

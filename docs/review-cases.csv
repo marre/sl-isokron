@@ -1,0 +1,31 @@
+case,from,to,coverage,date_time,platform_ids,normalized_expected_seconds,observed_seconds,evidence,status
+1,T-Centralen,Slussen,"innerstad,metro",,,,,,EJ_GRANSKAD
+2,Slussen,Gamla stan,"innerstad,metro",,,,,,EJ_GRANSKAD
+3,Odenplan,Solna station,pendeltåg,,,,,,EJ_GRANSKAD
+4,Stockholm City,Bålsta,"ytterområde,pendeltåg",,,,,,EJ_GRANSKAD
+5,Stockholm City,Nynäshamn,"ytterområde,pendeltåg",,,,,,EJ_GRANSKAD
+6,Stockholm City,Södertälje centrum,"ytterområde,pendeltåg",,,,,,EJ_GRANSKAD
+7,Tekniska högskolan,Kårsta,lokalbana,,,,,,EJ_GRANSKAD
+8,Östra station,Österskär,lokalbana,,,,,,EJ_GRANSKAD
+9,Alvik,Nockeby,lokalbana,,,,,,EJ_GRANSKAD
+10,Ropsten,Gåshaga brygga,lokalbana,,,,,,EJ_GRANSKAD
+11,Liljeholmen,Sickla,spårvagn,,,,,,EJ_GRANSKAD
+12,Solna station,Alvik,spårvagn,,,,,,EJ_GRANSKAD
+13,Nybroplan,Nacka strand,båt,,,,,,EJ_GRANSKAD
+14,Slussen,Djurgården,båt,,,,,,EJ_GRANSKAD
+15,Nybroplan,Lidingö,båt,,,,,,EJ_GRANSKAD
+16,Danderyds sjukhus,Mörby station,"gång,vattenhinder,stationsanslutning",,,,,,EJ_GRANSKAD
+17,Mörby station,Danderyds sjukhus,"gång,riktning",,,,,,EJ_GRANSKAD
+18,Slussen,Södermalmstorg,plattformsgång,,,,,,EJ_GRANSKAD
+19,T-Centralen,Stockholm City,stationsbyte,,,,,,EJ_GRANSKAD
+20,Gullmarsplan,Årsta,buss,,,,,,EJ_GRANSKAD
+21,Danderyds sjukhus,Norrtälje,"ytterområde,buss",,,,,,EJ_GRANSKAD
+22,Tekniska högskolan,Vallentuna,lokalbana,,,,,,EJ_GRANSKAD
+23,Märsta,Stockholm City,natt,,,,,,EJ_GRANSKAD
+24,Södertälje centrum,T-Centralen,helg,,,,,,EJ_GRANSKAD
+25,Handen,Nynäshamn,"helg,natt",,,,,,EJ_GRANSKAD
+26,Uppsala,Stockholm City,"SL-avgränsning,gränsöverskridande",,,,,,EJ_GRANSKAD
+27,Gnesta,Södertälje centrum,gränsöverskridande,,,,,,EJ_GRANSKAD
+28,Slussen,Nacka strand,bussbyte,,,,,,EJ_GRANSKAD
+29,Universitetet,Solna centrum,trafikslagsbyte,,,,,,EJ_GRANSKAD
+30,Odenplan,Danderyds sjukhus,metrobyte,,,,,,EJ_GRANSKAD

@@ -1,0 +1,71 @@
+name: Prepare SL data (opt-in)
+on:
+  workflow_dispatch:
+    inputs:
+      initialize_quota_ledger:
+        description: Initialize only after checking remaining Trafiklab quota
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 3 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: sliso-daily-data
+  cancel-in-progress: false
+jobs:
+  build:
+    # Enabling this does NOT deploy or make the repository public.
+    # A download ledger must be retained for monthly quota protection.
+    if: vars.SLISO_DATA_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Cache quota ledger and once-daily source
+        uses: actions/cache/restore@v4
+        with:
+          path: .data-build/
+          key: sliso-data-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: sliso-data-
+      - name: Require audited pedestrian graph
+        run: test -f data/walking-graph.json
+      - name: Initialize quota ledger explicitly
+        if: github.event_name == 'workflow_dispatch' && inputs.initialize_quota_ledger
+        env:
+          TRAFIKLAB_GTFS_KEY: ${{ secrets.TRAFIKLAB_GTFS_KEY }}
+        run: python scripts/fetch_gtfs.py --output .data-build/sl.zip --ledger .data-build/quota.json --init-ledger
+      - name: Fetch at most once per day, enforce local monthly ceiling
+        env:
+          TRAFIKLAB_GTFS_KEY: ${{ secrets.TRAFIKLAB_GTFS_KEY }}
+        run: python scripts/fetch_gtfs.py --output .data-build/sl.zip --ledger .data-build/quota.json
+      - run: python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
+      - run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --output .data-build/published
+      - run: mkdir -p public/data && cp -R .data-build/published/. public/data/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test && npm run test:python && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sliso-validated-data
+          path: dist/
+          retention-days: 3
+      - name: Publish on Cloudflare Pages only after explicit opt-in
+        if: vars.SLISO_DEPLOY_ENABLED == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=sliso
+      - name: Persist quota even after a failed download or validation
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .data-build/
+          key: sliso-data-${{ github.run_id }}-${{ github.run_attempt }}

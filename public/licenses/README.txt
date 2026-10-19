@@ -1,0 +1,1 @@
+sliso bundles Leaflet (BSD 2-Clause) and locally served Manrope / DM Sans fonts (SIL Open Font License). Full notices accompany these files. Geographic/traffic data have separate dataset-specific licenses and attributions. No production traffic or walking data is bundled in the source repository.

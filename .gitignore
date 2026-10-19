@@ -1,0 +1,10 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+__pycache__/
+.env*
+!.env.example
+.data-build/
+public/data/*
+!public/data/.gitkeep

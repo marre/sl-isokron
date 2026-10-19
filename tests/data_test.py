@@ -1,0 +1,87 @@
+import csv
+import io
+import json
+import struct
+import sys
+import tempfile
+import unittest
+import zipfile
+from datetime import date, datetime, timezone
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from build_data import active_services, compile_feed, gtfs_epoch, gtfs_seconds, validate_walks
+
+class DataTests(unittest.TestCase):
+    def test_calendar_exception(self):
+        calendar=[dict(service_id='a',start_date='20261019',end_date='20261020',monday='1',tuesday='1',wednesday='0',thursday='0',friday='0',saturday='0',sunday='0')]
+        services=active_services(calendar,[dict(service_id='a',date='20261019',exception_type='2'),dict(service_id='b',date='20261019',exception_type='1')])
+        self.assertEqual(services[date(2026,10,19)],{'b'})
+        self.assertEqual(services[date(2026,10,20)],{'a'})
+    def test_gtfs_dst_and_over_24(self):
+        self.assertEqual(gtfs_seconds('25:30:00'),91800)
+        self.assertEqual(gtfs_epoch(date(2026,10,19),90000),int(datetime(2026,10,19,23,tzinfo=timezone.utc).timestamp()))
+        # Noon-minus-12h per GTFS, not naive local midnight on transition dates.
+        self.assertEqual(gtfs_epoch(date(2026,3,29),3*3600),int(datetime(2026,3,29,1,tzinfo=timezone.utc).timestamp()))
+        self.assertEqual(gtfs_epoch(date(2026,10,25),3*3600),int(datetime(2026,10,25,2,tzinfo=timezone.utc).timestamp()))
+        with self.assertRaises(ValueError):gtfs_seconds('00:70:00')
+    def walks(self):
+        return dict(version='v1',maxMinutes=30,speedKmh=4.8,stops=[dict(id='a',lat=59,lon=18),dict(id='b',lat=59.1,lon=18)],edges=[{'from':'a','to':'b','seconds':240,'source':'audited fixture'}])
+    def stops(self):
+        return self.walks()['stops']
+    def test_A20_known_time_restrictions_excluded(self):
+        w=self.walks();w['edges'][0]['restricted']=True
+        edges,excluded=validate_walks(w,self.stops());self.assertEqual(edges,[]);self.assertEqual(excluded,1)
+    def test_A22_stale_walking_binding_rejected(self):
+        stops=self.stops();stops[1]['lat']+=.001
+        with self.assertRaisesRegex(ValueError,'stale'):validate_walks(self.walks(),stops)
+        w=self.walks();w['edges'][0]['to']='missing'
+        with self.assertRaisesRegex(ValueError,'missing'):validate_walks(w,self.stops())
+    def test_walking_time_is_not_transfer_minimum(self):
+        w=self.walks();edges,_=validate_walks(w,self.stops());self.assertEqual(edges[0]['seconds'],240)
+        w['edges'][0]['source']=''
+        with self.assertRaises(ValueError):validate_walks(w,self.stops())
+    def fixture(self, root, broken=False):
+        tables={
+        'agency.txt':[['agency_id','agency_name','agency_url','agency_timezone'],['sl','SL','https://sl.se','Europe/Stockholm']],
+        'stops.txt':[['stop_id','stop_name','stop_lat','stop_lon','location_type','parent_station'],['a','Start','59','18','0',''],['b','Mål','59.1','18','0','']],
+        'routes.txt':[['route_id','route_short_name','route_type'],['r','1','3']],
+        'trips.txt':[['route_id','service_id','trip_id'],['r','s','t']],
+        'stop_times.txt':[['trip_id','arrival_time','departure_time','stop_id','stop_sequence'],['t','25:00:00','25:00:00','a','1'],['t','25:10:00','25:10:00','b','2']],
+        'calendar_dates.txt':[['service_id','date','exception_type'],['s','20261019','1'],['s','20261020','1']],
+        'transfers.txt':[['from_stop_id','to_stop_id','transfer_type','min_transfer_time'],['a','b','2','420']]}
+        if broken:tables['routes.txt'][1][2]='9999'
+        path=root/'feed.zip'
+        with zipfile.ZipFile(path,'w') as z:
+            for name,rows in tables.items():
+                b=io.StringIO();csv.writer(b).writerows(rows);z.writestr(name,b.getvalue())
+        walkfile=root/'walk.json';walkfile.write_text(json.dumps(self.walks()))
+        return path,walkfile
+    def test_complete_compile_checksum_midnight_and_atomic_failure(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);feed,w=self.fixture(root);out=root/'out'
+            compile_feed(feed,w,out,date(2026,10,19))
+            m=json.loads((out/'manifest.json').read_text());self.assertFalse(m['demo'])
+            ref=m['days']['2026-10-19'];raw=(out/ref['url'].removeprefix('/data/')).read_bytes()
+            self.assertEqual(hashlib.sha256(raw).hexdigest(),ref['sha256'])
+            self.assertEqual(struct.unpack('<9I',raw)[2],gtfs_epoch(date(2026,10,19),90000))
+            walkref=out/m['walks']['url'].removeprefix('/data/')
+            self.assertEqual(json.loads(walkref.read_text())[0]['seconds'],240)
+            before=(out/'manifest.json').read_bytes();feed,w=self.fixture(root,broken=True)
+            with self.assertRaises(ValueError):compile_feed(feed,w,out,date(2026,10,19))
+            self.assertEqual((out/'manifest.json').read_bytes(),before)
+
+
+class WalkGraphTests(unittest.TestCase):
+    def test_network_paths_and_closed_passage(self):
+        from build_walks import build
+        graph={'version':'test-osm','attribution':['fixture'], 'nodes':['a','b','c','d'], 'stops':[dict(id=x,node=x,lat=59,lon=18,source='survey',verified=True) for x in ['a','c','d']], 'edges':[{'from':'a','to':'b','metres':400,'source':'osm/1'},{'from':'b','to':'c','metres':400,'source':'osm/2'},{'from':'c','to':'d','metres':10,'source':'osm/3','openingHours':'06:00-23:00'}]}
+        data=build(graph,15)
+        self.assertEqual(len(data['edges']),2)
+        self.assertEqual(data['edges'][0]['seconds'],600)
+        self.assertFalse(any(e['to']=='d' for e in data['edges']))
+        self.assertEqual(build(graph,5)['edges'],[])
+        graph['stops'][0]['verified']=False
+        with self.assertRaises(ValueError):build(graph)
+
+if __name__=='__main__':unittest.main()
