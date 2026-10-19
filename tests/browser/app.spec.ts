@@ -24,8 +24,10 @@ test('local stop search, worker result, filters, share and marker detail',async(
  // A result click is a stop value, and its explicit action changes the origin.
  const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
  await marker.press('Enter');
- await expect(page.locator('.stop-popup')).toContainText('Färdig beräkning');
- await page.locator('.leaflet-popup-close-button').click();
+ await expect(page.locator('#journey-panel')).toContainText('Avgång');
+ await expect(page.locator('#journey-panel')).toContainText('Ankomst');
+ await expect(page.locator('.journey-line').first()).toBeAttached();
+ await page.getByRole('button',{name:'Stäng resedetaljer'}).click();
  // Restore mobile panel to modify filters.
  if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
@@ -104,5 +106,37 @@ test('driver-coordinated stops are routable and show a rider notice',async({page
  await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
  await expect(page.locator('#legend')).toContainText('Stopp på signal');
  await page.getByRole('button',{name:'Nacka strand · Testläge A',exact:true}).press('Enter');
- await expect(page.locator('.stop-popup')).toContainText('meddela föraren');
+ await expect(page.locator('#journey-panel')).toContainText('meddela föraren');
+});
+
+test('destination route previews on hover, pins on touch or click, and clears on origin change',async({page},info)=>{
+ await init(page);await select(page);await page.locator('#calculate').click();
+ await expect(page.locator('#legend')).toBeVisible();
+ const colors=await page.locator('#legend .bands i').evaluateAll(items=>items.map(e=>(e as HTMLElement).style.backgroundColor));
+ expect(colors[0]).toBe('rgb(217, 240, 163)');expect(colors.at(-1)).toBe('rgb(127, 0, 0)');
+ const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
+ if(info.project.name==='desktop'){
+  await marker.hover({force:true});
+  await expect(page.locator('#journey-panel')).toBeVisible();
+  await expect(page.locator('#journey-panel')).toContainText('Tunnelbana');
+  await expect(page.locator('.journey-line').first()).toBeAttached();
+  await page.mouse.move(20,10);
+  await expect(page.locator('#journey-panel')).toBeHidden();
+  await marker.hover({force:true});
+  await page.locator('#journey-pin').click();
+ }else await marker.tap({force:true});
+ await expect(page.locator('#journey-pin')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#journey-panel')).toContainText('Avgång');
+ await expect(page.locator('#journey-panel')).toContainText('Ankomst');
+ await expect(page.locator('#journey-panel')).toContainText('Schematisk resväg');
+ await page.locator('#journey-fit').click();
+ await expect(page.locator('#journey-panel')).toBeVisible();
+ const routeBox=await page.locator('.journey-line').first().boundingBox(),mapBox=await page.locator('#map').boundingBox();
+ expect(routeBox!.y).toBeGreaterThanOrEqual(mapBox!.y);expect(routeBox!.y+routeBox!.height).toBeLessThanOrEqual(mapBox!.y+mapBox!.height);
+ await page.screenshot({path:`test-results/${info.project.name}-journey.png`,fullPage:true});
+ await page.locator('#journey-start').click();
+ await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
+ await expect(page.locator('#journey-panel')).toBeHidden();
+ await expect(page.locator('.journey-line')).toHaveCount(0);
+ await expect(page.locator('#legend')).toBeHidden();
 });

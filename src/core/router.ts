@@ -1,9 +1,10 @@
-import type { Connection, Network, Reach, SearchResult, Settings, TransferRule } from './types';
+import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
 interface Label {
   stop: number; time: number; anchor: number | null; walk: number; boardings: number;
   requestStop: boolean; lastTrip: string; lastRoute: string; alightStop: number; alightTime: number;
+  previous: Label | null; via: Connection | Walk | null; alight: Connection | null;
 }
 function baseTrip(id: string): string { return /^\d{4}-\d{2}-\d{2}:/.test(id) ? id.slice(11) : id; }
 function applicable(r: TransferRule, l: Label, c: Connection, network: Network): boolean {
@@ -57,12 +58,16 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     return `${l.stop}|${l.boardings}|${trip}|${routeSpecific ? l.lastRoute : '*'}|${l.alightStop}`;
   }
   const values: (Reach | null)[] = network.stops.map(() => null);
+  const witnesses: (Label | null)[] = network.stops.map(() => null);
   const queue: Label[] = [], frontiers = new Map<string, Label[]>();
   function cost(l: Label): number { return l.time - (l.anchor ?? t0); }
   function push(l: Label): void {
     if (cost(l) > max || l.walk > maxWalk || l.time > latest) return;
     const old = values[l.stop], seconds = cost(l);
-    if (!old || seconds < old.seconds || (seconds === old.seconds && l.time < old.arrival)) values[l.stop] = { seconds, arrival: l.time, kind: l.boardings ? 'transit' : 'walk', boardings: l.boardings, requestStop: l.requestStop };
+    if (!old || seconds < old.seconds || (seconds === old.seconds && l.time < old.arrival)) {
+      values[l.stop] = { seconds, arrival: l.time, kind: l.boardings ? 'transit' : 'walk', boardings: l.boardings, requestStop: l.requestStop, journey: null };
+      witnesses[l.stop] = l;
+    }
     // Context must match: transfer constraints refer to the actual previous trip/alighting event.
     const key = contextKey(l);
     const list = frontiers.get(key) ?? [];
@@ -71,11 +76,11 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queue.push(l);
     if (queue.length > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
-  push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0 });
+  push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
   for (let head = 0; head < queue.length; head++) {
     const l = queue[head];
     if (options.prune !== false && !frontiers.get(contextKey(l))?.includes(l)) continue;
-    for (const w of walking[l.stop]) push({ ...l, stop: w.to, time: l.time + w.seconds, walk: l.walk + w.seconds });
+    for (const w of walking[l.stop]) push({ ...l, stop: w.to, time: l.time + w.seconds, walk: l.walk + w.seconds, previous: l, via: w, alight: null });
     if (l.boardings >= settings.maxTransfers + 1) continue;
     const ds = departures[l.stop];
     for (let k = lowerBound(ds, l.time); k < ds.length; k++) {
@@ -88,9 +93,29 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       if (l.lastTrip === c.trip) continue;
       for (const leg of trips.get(c.trip)!) {
         if (leg.sequence < c.sequence || leg.arrival - anchor > max || !leg.dropoff) continue;
-        push({ stop: leg.to, time: leg.arrival, anchor, walk: 0, boardings: l.boardings + 1, requestStop: l.requestStop || !!c.pickupRequest || !!leg.dropoffRequest, lastTrip: c.trip, lastRoute: network.routes[c.route].id, alightStop: leg.to, alightTime: leg.arrival });
+        push({ stop: leg.to, time: leg.arrival, anchor, walk: 0, boardings: l.boardings + 1, requestStop: l.requestStop || !!c.pickupRequest || !!leg.dropoffRequest, lastTrip: c.trip, lastRoute: network.routes[c.route].id, alightStop: leg.to, alightTime: leg.arrival, previous: l, via: c, alight: leg });
       }
     }
   }
-  return { values, labels: queue.length, elapsed: performance.now() - started, complete: true };
+  // Serialize only the predecessor chains that actually explain a displayed value.
+  // Shared nodes avoid copying a complete itinerary for every reachable destination.
+  const journeys: JourneyNode[] = [], ids = new Map<Label, number>();
+  witnesses.forEach((witness, stop) => {
+    if (!witness?.previous) return;
+    const pending: Label[] = [];
+    for (let l: Label | null = witness; l?.previous && !ids.has(l); l = l.previous) pending.push(l);
+    while (pending.length) {
+      const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
+      let node: JourneyNode;
+      if ('seconds' in via) {
+        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to] };
+      } else {
+        const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
+        node = { previous, kind: 'transit', from: via.from, to: l.stop, departure: via.departure, arrival: l.time, route: via.route, stops: [via.from, ...path.map(c => c.to)], requestStop: !!via.pickupRequest || !!l.alight!.dropoffRequest };
+      }
+      ids.set(l, journeys.length); journeys.push(node);
+    }
+    values[stop]!.journey = ids.get(witness)!;
+  });
+  return { values, journeys, routes: network.routes, labels: queue.length, elapsed: performance.now() - started, complete: true };
 }

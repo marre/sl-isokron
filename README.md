@@ -43,7 +43,8 @@ Webbläsartester skapar egna demofixturer i `.data-build/browser-public` och anv
 - Datum idag till idag + 7 i **Europe/Stockholm**, inom datatäckningen. Ogiltiga och tvetydiga tider vid sommartidsbyten avvisas uttryckligen.
 - Max restid 10–120 min, gång 5–30 min per sammanhängande sträcka, 0–4 byten, fem trafikslagsfilter, avgångsfönster 5–120 min (standard 30).
 - Beräkning i Web Worker, avbrytning genom att terminera processen, separata laddnings-/beräkningsstatusar och isolerade körnings-ID:n.
-- Diskreta 10-minutersband, klickvärden, färdig/okänd/ej nåbar, tangentbordsåtkomliga hållplatsmarkörer och delningslänk i URL-fragmentet.
+- Diskreta 10-minutersband från ljusgrönt till mörkrött, anpassade till vald maxtid. Hovra eller fokusera en destination för resväg; klicka/tryck för att fästa den med reselista, linjer, gång, byten samt avgångs-/ankomsttider i Stockholm. Resvägen är schematisk via turens hållplatser, inte exakt väg-/spårgeometri.
+- Färdig/okänd/ej nåbar, tangentbordsåtkomliga hållplatsmarkörer och delningslänk i URL-fragmentet.
 - Versionsbundna SHA-256-kontrollerade data, binära timblock och frivillig Cache API-lagring med minnesfallback.
 - GTFS-import, offlineförberäkning av gångpar från ett konservativt OSM-nät eller en granskad gånggraf och opt-in CI för dagliga databyggningar.
 

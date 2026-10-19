@@ -18,6 +18,13 @@ export function parseHash(hash: string): Settings | null {
   try { s = JSON.parse(decodeURIComponent(hash.slice(3))); } catch { throw new Error('Delningslänken kunde inte läsas.'); }
   validateSettings(s); return s;
 }
-export const BAND_COLORS = ['#2166ac', '#4393c3', '#80cdc1', '#dfc27d', '#bf812d', '#8c510a', '#7b3294', '#a36db3', '#cf9fcf', '#c94d65', '#a41636', '#67001f'];
+export const BAND_COLORS = ['#d9f0a3', '#c2df8a', '#d3da78', '#e6d16a', '#f3c35c', '#f8ad50', '#f89441', '#ef7535', '#df542c', '#c83526', '#a61c22', '#7f0000'];
 export function bandIndex(seconds: number): number { return Math.max(0, Math.ceil(seconds / 600) - 1); }
-export function colorFor(seconds: number): string { return BAND_COLORS[Math.min(BAND_COLORS.length - 1, bandIndex(seconds))]; }
+export function bandColors(maxMinutes = 120): string[] {
+  const count = Math.ceil(maxMinutes / 10);
+  return Array.from({ length: count }, (_, i) => BAND_COLORS[count === 1 ? 0 : Math.round(i * (BAND_COLORS.length - 1) / (count - 1))]);
+}
+export function colorFor(seconds: number, maxMinutes = 120): string {
+  const colors = bandColors(maxMinutes);
+  return colors[Math.min(colors.length - 1, bandIndex(seconds))];
+}

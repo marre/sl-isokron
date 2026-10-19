@@ -1,11 +1,12 @@
 import L from 'leaflet';
+import { JourneyView } from './journey-view';
 import { searchStations } from './core/stops';
 import 'leaflet/dist/leaflet.css';
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/dm-sans';
 import './style.css';
 import { cacheAvailable, loadJSON, loadManifest, pruneCache } from './core/data';
-import { BAND_COLORS, colorFor, defaults, parseHash, shareHash, validateSettings } from './core/settings';
+import { bandColors, colorFor, defaults, parseHash, shareHash, validateSettings } from './core/settings';
 import { addDays, dateBounds, stockholmNow, validateDate } from './core/time';
 import { MODES, MODE_NAMES, type Manifest, type SearchResult, type Settings, type Stop } from './core/types';
 
@@ -32,7 +33,7 @@ $('#app').innerHTML = `
 <div id="status" role="status" aria-live="polite">Välj en hållplats för att börja.</div>
 </form><div class="panel-foot"><span aria-hidden="true">◷</span> Planerad trafik · Ingen realtid <button id="data-open" class="text-button">Om datan</button></div>
 </aside>
-<section class="map-section" aria-label="Restidskarta"><div id="map"></div><div class="map-heading"><span class="map-heading-dot"></span><span id="map-label">STOCKHOLM & OMKRING</span></div><div id="map-demo" class="map-demo" hidden>TESTDATA · Ej för reseplanering</div><button id="mobile-toggle" class="mobile-toggle" aria-expanded="true">Dölj sökpanel ↓</button><div class="map-actions"><button id="fit" title="Visa hela trafiknätet" aria-label="Visa hela trafiknätet">⌖</button></div><div id="map-empty" class="map-tip"><span aria-hidden="true">◎</span><div><strong>Allt börjar någonstans.</strong><span>Sök en hållplats eller välj en punkt på kartan.</span></div></div><section id="legend" class="legend" aria-label="Restidsintervall" hidden></section><button id="share" class="share-button" disabled><span aria-hidden="true">${arrow}</span> Kopiera delningslänk</button><div class="map-source" id="source-note">Hållplatskarta · Inga nåbara markytor visas</div></section>
+<section class="map-section" aria-label="Restidskarta"><div id="map"></div><div class="map-heading"><span class="map-heading-dot"></span><span id="map-label">STOCKHOLM & OMKRING</span></div><div id="map-demo" class="map-demo" hidden>TESTDATA · Ej för reseplanering</div><button id="mobile-toggle" class="mobile-toggle" aria-expanded="true">Dölj sökpanel ↓</button><div class="map-actions"><button id="fit" title="Visa hela trafiknätet" aria-label="Visa hela trafiknätet">⌖</button></div><div id="map-empty" class="map-tip"><span aria-hidden="true">◎</span><div><strong>Allt börjar någonstans.</strong><span>Sök en hållplats eller välj en punkt på kartan.</span></div></div><aside id="journey-panel" class="journey-panel" aria-label="Resedetaljer" aria-labelledby="journey-title" hidden></aside><section id="legend" class="legend" aria-label="Restidsintervall" hidden></section><button id="share" class="share-button" disabled><span aria-hidden="true">${arrow}</span> Kopiera delningslänk</button><div class="map-source" id="source-note">Hållplatskarta · Inga nåbara markytor visas</div></section>
 </main>
 <dialog id="info-dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
 
@@ -51,6 +52,7 @@ let stops: Stop[] = [], manifest: Manifest, selected = -1, worker: Worker | unde
 let result: SearchResult | undefined, usedSettings: Settings | undefined, dirty = false;
 let settings: Settings, runTimer: ReturnType<typeof setTimeout>;
 let activeOption = -1;
+const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index); });
 const modeInputs = () => [...document.querySelectorAll<HTMLInputElement>('input[name=mode]')];
 function showError(message: string) { $('#form-error').textContent = message; $('#form-error').hidden = false; }
 function status(message: string) { $('#status').textContent = message; }
@@ -60,6 +62,7 @@ function terminate(message?: string) {
   if (message) status(message);
 }
 function clearResults() {
+  journeyView.reset(); map.closePopup();
   result = undefined; usedSettings = undefined; $('#legend').hidden = true; $('#map-empty').hidden = false;
   for (const marker of markers) marker.setStyle({ color: '#52766e', fillColor: '#f5f6f0', fillOpacity: .9, weight: 1.5, radius: 5 });
 }
@@ -107,13 +110,14 @@ function applySettings(s: Settings) {
   modeInputs().forEach(i=>i.checked=s.modes.includes(i.value as Settings['modes'][number]));
 }
 function renderResults(r: SearchResult,s: Settings) {
+  journeyView.setData(r,s,stops);
   result=r; usedSettings=s; dirty=false;$('#map-empty').hidden=true;
   let count=0;
   r.values.forEach((v,i)=>{
     if (v && i!==selected) count++;
-    markers[i].setStyle(v?{color:'#fff',fillColor:colorFor(v.seconds),fillOpacity:1,weight:2,radius:7}:{color:'#879c96',fillColor:'#d8e0db',fillOpacity:.4,weight:1,radius:4});
+    markers[i].setStyle(v?{color:'#fff',fillColor:colorFor(v.seconds,s.maxMinutes),fillOpacity:1,weight:2,radius:7}:{color:'#879c96',fillColor:'#d8e0db',fillOpacity:.4,weight:1,radius:4});
   });
-  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2>${count} nåbara hållplatslägen</h2></div><span class="complete-badge">Färdig</span></div><div class="bands">${Array.from({length:Math.ceil(s.maxMinutes/10)},(_,i)=>`<span><i style="background:${BAND_COLORS[i]}"></i>${i*10}–${Math.min((i+1)*10,s.maxMinutes)} min</span>`).join('')}</div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">${!manifest.demo&&!manifest.walkingCoverage?.reviewed?'Grå: ingen känd resa. Gångunderlaget är ofullständigt.':'Grå: ej nåbar inom valda gränser i tillgänglig data.'} Övre bandgränsen ingår.</p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}`;
+  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2>${count} nåbara hållplatslägen</h2></div><span class="complete-badge">Färdig</span></div><div class="bands">${Array.from({length:Math.ceil(s.maxMinutes/10)},(_,i)=>`<span><i style="background:${bandColors(s.maxMinutes)[i]}"></i>${i*10}–${Math.min((i+1)*10,s.maxMinutes)} min</span>`).join('')}</div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">${!manifest.demo&&!manifest.walkingCoverage?.reviewed?'Grå: ingen känd resa. Gångunderlaget är ofullständigt.':'Grå: ej nåbar inom valda gränser i tillgänglig data.'} Övre bandgränsen ingår.</p><p>Hovra för resväg · Klicka eller tryck för att fästa resan.</p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}`;
   $('#legend').hidden=false;
   status(count ? `Färdigt. ${count} hållplatslägen nås på högst ${s.maxMinutes} minuter. Beräkning: ${Math.round(r.elapsed)} ms.` : 'Inga andra hållplatslägen nås inom gränserna. Det kan saknas gånganslutningar i underlaget.');
   if (window.innerWidth<760) { document.body.classList.add('panel-collapsed'); updateMobile(); }
@@ -208,7 +212,7 @@ async function init(){
     if(!manifest.demo&&(manifest.sourceUpdated||manifest.updated.slice(0,10))<addDays(stockholmNow().date,-2))banner.textContent+=' · Äldre data: uppdateringen kan ha misslyckats.';
     if(manifest.warnings.length&&!manifest.demo)banner.textContent+=' · Databegränsningar finns, se Om datan.';
     if(!manifest.demo&&!manifest.walkingCoverage?.reviewed){banner.classList.add('demo');banner.textContent=`UTVECKLINGSLÄGE · Tidtabell ${manifest.sourceUpdated||manifest.updated.slice(0,10)}. Ofullständigt gångunderlag kan underskatta nåbarheten.`;$('#map-demo').hidden=false;$('#map-demo').textContent='UTVECKLING · Gångdata ofullständiga';}
-    stops.forEach((s,i)=>{const m=L.circleMarker([s.lat,s.lon],{radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('click',()=>{if(!result)setStart(i);popup(i);});const el=m.getElement();if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('keydown',e=>{if((e as KeyboardEvent).key==='Enter'){if(!result)setStart(i);popup(i);}});}markers.push(m);});
+    stops.forEach((s,i)=>{const m=L.circleMarker([s.lat,s.lon],{radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('click',()=>{if(result?.values[i]){map.closePopup();journeyView.pin(i);}else{journeyView.close();if(!result)setStart(i);popup(i);}});const el=m.getElement();if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>journeyView.hover(i));el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result)setStart(i);popup(i);}}});}markers.push(m);});
     $('#stop-search').removeAttribute('disabled');
     if(!await cacheAvailable()){const p=document.createElement('p');p.className='hint';p.textContent='Lokal lagring är inte tillgänglig. Data hämtas på nytt vid behov.';banner.after(p);}
     void pruneCache(manifest);
