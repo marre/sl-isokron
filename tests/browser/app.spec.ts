@@ -140,3 +140,43 @@ test('destination route previews on hover, pins on touch or click, and clears on
  await expect(page.locator('.journey-line')).toHaveCount(0);
  await expect(page.locator('#legend')).toBeHidden();
 });
+
+test('only known destinations remain after search; new search restores the map and retains filters',async({page})=>{
+ await init(page);await select(page);
+ const enabledMarkers=()=>page.locator('path.leaflet-interactive[role=button]').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
+ const before=await enabledMarkers();
+ await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
+ await page.locator('#walk').selectOption('5');
+ for(const c of await page.locator('[name=mode]').all())await c.uncheck();
+ await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ expect(await enabledMarkers()).toBeLessThan(before);
+ await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
+ await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
+ await expect(page.locator('.leaflet-walking-areas-pane canvas')).toBeVisible();
+ await page.locator('#walking-toggle').uncheck();await expect(page.locator('#walking-status')).toContainText('dolda');
+ await page.locator('#share').click();await expect(page).toHaveURL(/#s=/);
+ await page.locator('#reset-search').click();
+ await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
+ await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();
+ await expect(page.locator('#walk')).toHaveValue('5');await expect(page.locator('#time')).toHaveValue('08:00');
+ expect(new URL(page.url()).hash).toBe('');
+ expect(await enabledMarkers()).toBe(before);
+ await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).press('Enter');
+ await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
+ await expect(page.locator('#calculate')).toBeEnabled();
+});
+
+test('walking legs show network distance and reset cancels in-flight results',async({page})=>{
+ await init(page);await select(page);await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
+ for(const c of await page.locator('[name=mode]').all())await c.uncheck();
+ await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await page.getByRole('button',{name:'Stockholm City · Testläge A',exact:true}).press('Enter');
+ await expect(page.locator('#journey-panel')).toContainText('320 m');
+ await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');
+ await page.locator('#reset-search').click();await select(page);
+ await page.route('**/*.bin',async r=>{await new Promise(resolve=>setTimeout(resolve,800));await r.continue();});
+ await page.locator('#calculate').click();await page.locator('#reset-search').click();
+ await page.waitForTimeout(1000);
+ await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
+ await expect(page.locator('#stop-search')).toHaveValue('');
+});

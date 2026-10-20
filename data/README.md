@@ -42,3 +42,8 @@ Hämta en aktuell Geofabrik-Sverige-PBF och dess tillhörande `.md5` via HTTPS. 
 Inspektera rapport, ändrade kopplingar och referensfall innan det tidigare indexet ersätts. `--reviewed-bindings` till OSM-steget stöder uttryckliga nodbindningar för den separata grafbyggaren; ange `verified=true` endast efter faktisk kontroll, aldrig för att få bygget att passera. Valhalla-stegets automatiska stationsundantag kvarstår tills separata granskade plattforms-/entréregler implementerats.
 
 Mätprotokoll för nät, tilebygge och par finns under `docs/`. Gångbygget är separat från den dagliga tidtabellen. Flyttade/ändrade hållplatser upptäcks vid nästa GTFS-import; gamla gångtider får inte användas mot nya koordinater. Hållplats-/entréändringar i OSM kräver också nytt gångbygge, föreslaget månadsvis. Ingen stor OSM-PBF eller gatugraf laddas av slutanvändarens webbläsare.
+
+
+## Senare tillägg: längder och gångområden
+
+`valhalla_walks.py` sparar även nätets rapporterade längd i meter för varje riktat par. `walking_areas.py` använder samma filtrerade nät och automatiska hållplatsbindningar för konturer i steg om 1 minut, upp till 30 minuter. De senare är interpolerade, generaliserade polygoner och **inte** ett intyg om tillträde till all mark i dem. Plattformar utan granskad anslutning saknar fortfarande ytor. Konturer och färdiga appdata distribueras i GitHub Releases enligt `data/release.json`; de stora genererade filerna hör inte hemma i Git. OSM ODbL-attribution och samma käll-/programversion gäller även konturerna. `prepare_walking.py` är den reproducerbara CI-ingången; se `docs/operations.md`.

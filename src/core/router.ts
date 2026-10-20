@@ -1,4 +1,4 @@
-import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk } from './types';
+import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
 interface Label {
@@ -59,11 +59,18 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   }
   const values: (Reach | null)[] = network.stops.map(() => null);
   const witnesses: (Label | null)[] = network.stops.map(() => null);
+  const finalWalking: WalkSource[][] = network.stops.map(() => []);
   const queue: Label[] = [], frontiers = new Map<string, Label[]>();
   function cost(l: Label): number { return l.time - (l.anchor ?? t0); }
   function push(l: Label): void {
     if (cost(l) > max || l.walk > maxWalk || l.time > latest) return;
     const old = values[l.stop], seconds = cost(l);
+    if (network.stops[l.stop].walkingArea && seconds < max && l.walk < maxWalk) {
+      const list = finalWalking[l.stop];
+      if (!list.some(a => a.seconds <= seconds && a.walked <= l.walk)) {
+        finalWalking[l.stop] = [...list.filter(a => !(seconds <= a.seconds && l.walk <= a.walked)), { stop: l.stop, seconds, walked: l.walk }];
+      }
+    }
     if (!old || seconds < old.seconds || (seconds === old.seconds && l.time < old.arrival)) {
       values[l.stop] = { seconds, arrival: l.time, kind: l.boardings ? 'transit' : 'walk', boardings: l.boardings, requestStop: l.requestStop, journey: null };
       witnesses[l.stop] = l;
@@ -108,7 +115,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
       let node: JourneyNode;
       if ('seconds' in via) {
-        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to] };
+        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres };
       } else {
         const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
         node = { previous, kind: 'transit', from: via.from, to: l.stop, departure: via.departure, arrival: l.time, route: via.route, stops: [via.from, ...path.map(c => c.to)], requestStop: !!via.pickupRequest || !!l.alight!.dropoffRequest };
@@ -117,5 +124,5 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     }
     values[stop]!.journey = ids.get(witness)!;
   });
-  return { values, journeys, routes: network.routes, labels: queue.length, elapsed: performance.now() - started, complete: true };
+  return { values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels: queue.length, elapsed: performance.now() - started, complete: true };
 }

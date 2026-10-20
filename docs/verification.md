@@ -5,9 +5,9 @@ Kravkälla: [version 0.6](kravspec.md). Status 2026-10-19: körbar utvecklingsve
 ## Utfört
 
 - TypeScript-kontroll, Vite-produktionsbygge och filbudgetkontroll.
-- 36 TypeScript-tester av restidsmodell, gångbudget, avgångsfönster, transferkontext, daterade turer, på-/avstigning, natt, sommartid, hållplatssökning, delningsformat, reskedjor, tidsjusterad anslutningsgång och färgskalans gränser. Motorn jämförs med ett oberoende uttömmande orakel i 60 små slumpade nät och med en oprunad sökning i ytterligare 100 nät med villkorade bytesregler.
-- 26 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
-- 18 Chromium-integrationstester, 9 vardera för dator- och mobilvy: riktig worker och datahämtning, sökning/lägesval, resultat, förarsamordning, delning, tidszoner, avbrytning, dataluckor och resväg via hover, tangentbord och tryck. Kartinpassning och borttagning av inaktuella resvägar ingår. De använder isolerade syntetiska fixturer; riktiga data skrivs inte över. Bakgrundstiles blockeras avsiktligt.
+- 38 TypeScript-tester av restidsmodell, gångbudget, avgångsfönster, transferkontext, daterade turer, på-/avstigning, natt, sommartid, hållplatssökning, delningsformat, reskedjor, tidsjusterad anslutningsgång och färgskalans gränser. Motorn jämförs med ett oberoende uttömmande orakel i 60 små slumpade nät och med en oprunad sökning i ytterligare 100 nät med villkorade bytesregler.
+- 27 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
+- 22 Chromium-integrationstester, 11 vardera för dator- och mobilvy: riktig worker och datahämtning, sökning/lägesval, resultat, förarsamordning, delning, tidszoner, avbrytning, dataluckor och resväg via hover, tangentbord och tryck. Kartinpassning, dolda hållplatser utan känd resa, nollställning inklusive avbrytning/länk, gångavstånd och gångområdens på-/avslag ingår. De använder isolerade syntetiska fixturer; riktiga data skrivs inte över. Bakgrundstiles blockeras avsiktligt.
 - Riktig GTFS Regional SL, feedversion 2026-10-19, hämtad genom Actions och kompilerad lokalt: 611 linjeposter, 14 219 hållplatslägen och cirka 5,76 miljoner daterade förbindelser. Alla aktörer ingår enligt beställarens uttryckliga beslut. Schema 2 partitionerar trafiken i UTC-timblock; största filen är cirka 9,6 MB, under gränsen 25 MiB.
 - Riktigt OSM-gångnät filtrerat och routat lokalt med Valhalla. 1 041 lägen har konservativa geometriska anslutningar, och 10 460 riktade gångpar har beräknats. Underlaget är **inte manuellt granskat**, och stationernas plattforms-/entréförbindelser saknas. Se [datakällor och reproduktion](../data/README.md).
 - [120 referenssökningar med verkliga data](benchmark-real-partial-walk.json): 20 startlägen × 30/60/120 minuter × 30/120 minuters avgångsfönster. Median 42 ms, p95 351 ms, högst 1 518 ms på denna container. Partiell gång begränsar söknätet och gör detta otillräckligt som bevis för prestanda med full gångtäckning. De valda lägena anges i råprotokollet; vissa avgångsfönster saknar trafik.
@@ -16,6 +16,8 @@ Kravkälla: [version 0.6](kravspec.md). Status 2026-10-19: körbar utvecklingsve
 Resvägar sparas som föregångarkedjor för just den resa som gav destinationens visade restid. Turens mellanliggande hållplatser bevaras även när på-/avstigning är förbjuden. Ren gång och sammanhängande gång redovisas separat från färd; väntan vid byten syns i listan. Gång före första påstigning tidsplaceras direkt före avgången, så tidslinjen stämmer med modellen utan initial väntan. Kartlinjerna är schematiska och märks uttryckligen; exakt gatugång, spår och båtgeometri kräver ytterligare geometriunderlag.
 
 Benchmarkprocessens minne är inte webbläsarens peakminne. Beräknad gzipstorlek är inte uppmätt HTTP-överföring. Chromium med mobil skärm ersätter inte en fysisk iPhone eller Android. Äldre [benchmark.json](benchmark.json) gäller enbart det syntetiska nätet med 25 lägen.
+
+Beställaren utökade 2026-10-20 det tidigare A18-kravet: ungefärliga gångområden ska nu visas tillsammans med hållplatserna. Det ursprungliga kravdokumentet bevaras; denna uttryckliga senare instruktion ersätter förbudet mot nåbarhetsytor. Ytorna är nätbaserade approximationer med ofullständig anslutningstäckning och ger inga klickbara adressrestider.
 
 ## Acceptansmatris
 
@@ -26,7 +28,7 @@ Benchmarkprocessens minne är inte webbläsarens peakminne. Beräknad gzipstorle
 | A12–A14 | Körningsisolering, avbrytning, länk, datum och saknat ID verifierade. |
 | A15 | Kvotspärr och atomisk byggning testade; verklig Actions-hämtning lyckad. Webbdeployment och återhämtning i drift återstår. |
 | A16 | Regional containerbenchmark och Chromiumprov finns. Fysisk mobil, full gångtäckning, nätöverföring och peakminne återstår. |
-| A17–A18 | Avgångsfönster och klickvärden endast för hållplatslägen verifierade; inga restider för markytor. |
+| A17–A18 | Avgångsfönster och klickvärden för hållplatslägen verifierade; senare tillägg visar ungefärliga gångområden utan exakta punktrestider. |
 | A19 | 4 min gång och 7 min minsta bytestid kräver 7, verifierat. |
 | A20 | Kända begränsade kanter utesluts; verkliga passager och tillträden ej platsgranskade. |
 | A21 | Samma gångindex filtreras vid sökning; kedjad gång testad. Inget gång-API per fråga. |

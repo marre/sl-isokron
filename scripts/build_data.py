@@ -84,16 +84,20 @@ def validate_walks(data, stops):
             continue
         if not e.get('source') or not isinstance(e['seconds'], (int, float)) or e['seconds'] <= 0 or e['seconds'] > data['maxMinutes'] * 60:
             raise ValueError('Walking edge lacks source or valid physical duration')
+        if e.get('metres') is not None and (not isinstance(e['metres'], (int, float)) or not 0 <= e['metres'] < 100_000):
+            raise ValueError('Invalid physical walking distance')
         for sid in (e['from'], e['to']):
             if sid not in ids or sid not in bindings:
                 raise ValueError('Walking index references missing stop: ' + sid)
             stop, bound = stops[ids[sid]], bindings[sid]
             if abs(stop['lat'] - bound['lat']) > 0.000001 or abs(stop['lon'] - bound['lon']) > 0.000001:
                 raise ValueError('Walking index has stale coordinates: ' + sid)
-        edges.append(dict(from_=ids[e['from']], to=ids[e['to']], seconds=e['seconds'], source=e['source']))
+        edge = dict(from_=ids[e['from']], to=ids[e['to']], seconds=e['seconds'], source=e['source'])
+        if e.get('metres') is not None: edge['metres'] = e['metres']
+        edges.append(edge)
     return [{'from': e.pop('from_'), **e} for e in edges], excluded
 
-def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
+def publish(output, stops, routes, walks, transfers, trips, days, meta, report, areas=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix='.sliso-', dir=output))
@@ -113,7 +117,8 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
                     day_files[day].append((name,hour,hour+3600))
         files = {'trips.json': compact(trips), 'stops.json': compact(stops), 'routes.json': compact(routes), 'walks.json': compact(walks), 'transfers.json': compact(transfers)}
         files.update(time_files)
-        fingerprint = hashlib.sha256(compact(meta) + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
+        if areas: files.update(areas['files'])
+        fingerprint = hashlib.sha256(compact(meta) + (compact(areas['index']) if areas else b'') + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
         version = ('demo-' if meta['demo'] else 'sl-') + fingerprint
         refs = {}
         for name, raw in files.items():
@@ -130,6 +135,7 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
         if not dest.exists():
             staging.rename(dest)
         manifest = dict(schema=2, version=version, **meta, trips=refs['trips.json'], days={d:[{**refs[n],'from':a,'until':b} for n,a,b in parts] for d,parts in day_files.items()}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
+        if areas: manifest['walkingAreas'] = dict(stepMinutes=1, index=areas['index'], files=[refs[n] for n in areas['files']], reviewed=False)
         pending = output / '.manifest.tmp'
         pending.write_bytes(compact(manifest))
         os.replace(pending, output / 'manifest.json')
@@ -138,7 +144,7 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report):
         if staging.exists():
             shutil.rmtree(staging)
 
-def compile_feed(feed, walking, output, start=None, scope=None):
+def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=None):
     from feed_scope import select_routes
     with zipfile.ZipFile(feed) as z:
         raw_stops = rows(z, 'stops.txt', True)
@@ -229,6 +235,23 @@ def compile_feed(feed, walking, output, start=None, scope=None):
     walks, excluded = validate_walks(scope_walks, stops)
     outgoing={w['from'] for w in walks}
     for i,stop in enumerate(stops):stop['walking']='available' if i in outgoing else 'missing'
+    areas = None
+    if walking_areas:
+        area_root = Path(walking_areas)
+        area_index = json.loads((area_root/'index.json').read_text())
+        if area_index['version'] != walk_meta['version'] or area_index['stepMinutes'] != 1:
+            raise ValueError('Walking areas and physical walking index versions differ')
+        bindings = {s['id']:s for s in walk_meta['stops']}
+        originals = {s['stop_id']:s for s in raw_stops}
+        for s in area_index['stops']:
+            orig, bound = originals.get(s['id']), bindings.get(s['id'])
+            if not orig or not bound or any(abs(float(orig['stop_'+k])-s[k])>1e-6 or abs(bound[k]-s[k])>1e-6 for k in ('lat','lon')):
+                raise ValueError('Stale or unbound walking-area endpoint: '+s['id'])
+        names = area_index['files']
+        if any(Path(n).name != n or not n.startswith('areas-') or not n.endswith('.json') for n in names):
+            raise ValueError('Invalid walking-area file name')
+        areas = dict(files={n:(area_root/n).read_bytes() for n in names}, index={s['id']:names.index(s['file']) for s in area_index['stops'] if s['id'] in stop_ids})
+        for stop in stops: stop['walkingArea'] = stop['id'] in areas['index']
     expanded = []
     child_index = defaultdict(list)
     for s in raw_stops:
@@ -314,14 +337,15 @@ def compile_feed(feed, walking, output, start=None, scope=None):
     except ValueError: source_updated=None
     meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
     report = dict(stops=len(stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
-    publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report)
+    publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report,areas)
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--gtfs',required=True)
     p.add_argument('--walks',required=True)
     p.add_argument('--scope')
+    p.add_argument('--walking-areas')
     p.add_argument('--output',default='public/data')
     p.add_argument('--from-date',type=parse_date)
     a=p.parse_args()
-    compile_feed(a.gtfs,a.walks,a.output,a.from_date,a.scope)
+    compile_feed(a.gtfs,a.walks,a.output,a.from_date,a.scope,a.walking_areas)

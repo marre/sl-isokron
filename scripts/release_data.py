@@ -44,6 +44,7 @@ def validate(root):
         raise ValueError('A real schema-2 dataset is required for publication')
     refs = [manifest[k] for k in ('stops', 'walks', 'routes', 'transfers', 'trips')]
     refs += [ref for entries in manifest['days'].values() for ref in entries]
+    refs += manifest.get('walkingAreas', {}).get('files', [])
     for ref in refs:
         prefix = '/data/' + manifest['version'] + '/'
         if not ref['url'].startswith(prefix):
@@ -92,7 +93,7 @@ def pack(root, output, descriptor, repository):
     release = dict(schema=1, version=manifest['version'], sourceVersion=manifest.get('sourceVersion'),
                    validFrom=manifest['validFrom'], validTo=manifest['validTo'],
                    url=f"https://github.com/{repository}/releases/download/data-{manifest['version']}/sliso-data.zip",
-                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total)
+                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total, features={'walkingAreas':bool(manifest.get('walkingAreas'))})
     Path(descriptor).parent.mkdir(parents=True, exist_ok=True)
     Path(descriptor).write_text(json.dumps(release, indent=2) + '\n')
     return release

@@ -63,6 +63,20 @@ class DataTests(unittest.TestCase):
             manifest=json.loads((out/'manifest.json').read_text())
             routes=json.loads((out/manifest['routes']['url'].removeprefix('/data/')).read_text())
             self.assertEqual(routes[0]['mode'],'metro')
+    def test_area_publication_checks_bindings_and_keeps_network_distances(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);feed,w=self.fixture(root);out=root/'out';area=root/'areas';area.mkdir()
+            walks=json.loads(w.read_text());walks['edges'][0]['metres']=300;w.write_text(json.dumps(walks))
+            (area/'areas-0000.json').write_text(json.dumps({'a':[{'minutes':1,'geometry':{'type':'Polygon','coordinates':[[[18,59],[18.001,59],[18,59.001],[18,59]]]}}]}))
+            index=dict(version='v1',stepMinutes=1,files=['areas-0000.json'],stops=[dict(id='a',lat=59,lon=18,file='areas-0000.json')])
+            (area/'index.json').write_text(json.dumps(index))
+            compile_feed(feed,w,out,date(2026,10,19),walking_areas=area)
+            m=json.loads((out/'manifest.json').read_text());self.assertEqual(m['walkingAreas']['index'],{'a':0})
+            self.assertTrue((out/m['walkingAreas']['files'][0]['url'].removeprefix('/data/')).exists())
+            edges=json.loads((out/m['walks']['url'].removeprefix('/data/')).read_text());self.assertEqual(edges[0]['metres'],300)
+            previous=(out/'manifest.json').read_bytes();index['stops'][0]['lat']+=.001;(area/'index.json').write_text(json.dumps(index))
+            with self.assertRaisesRegex(ValueError,'Stale'):compile_feed(feed,w,out,date(2026,10,19),walking_areas=area)
+            self.assertEqual((out/'manifest.json').read_bytes(),previous)
 
     def test_complete_compile_checksum_midnight_and_atomic_failure(self):
         import hashlib

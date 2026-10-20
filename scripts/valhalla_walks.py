@@ -63,12 +63,12 @@ def build(config_file,feed,graph_report,output,max_minutes=30):
         for at in range(0,len(targets),100):
             chunk=targets[at:at+100]
             try:
-                result=actor.matrix({'sources':[loc(s)],'targets':[loc(t) for t in chunk],'costing':'pedestrian','costing_options':{'pedestrian':{'walking_speed':4.8,'step_penalty':0}},'expansion_max_distance':max_minutes*80,'verbose':False})
+                result=actor.matrix({'sources':[loc(s)],'targets':[loc(t) for t in chunk],'costing':'pedestrian','units':'kilometers','costing_options':{'pedestrian':{'walking_speed':4.8,'step_penalty':0}},'expansion_max_distance':max_minutes*80,'verbose':False})
             except valhalla.ValhallaError:
                 errors+=1;continue
-            for t,seconds in zip(chunk,result['sources_to_targets']['durations'][0]):
+            for t,seconds,kilometres in zip(chunk,result['sources_to_targets']['durations'][0],result['sources_to_targets']['distances'][0]):
                 if seconds is not None and 0<seconds<=max_minutes*60:
-                    pairs.append({'from':s['id'],'to':t['id'],'seconds':math.ceil(seconds),'source':source})
+                    pairs.append({'from':s['id'],'to':t['id'],'seconds':math.ceil(seconds),'metres':round(kilometres*1000),'source':source})
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
     data={'version':geo['version']+'-valhalla-precision1m-v1','maxMinutes':max_minutes,'speedKmh':4.8,'stops':[{k:s[k] for k in ('id','lat','lon')} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: endast entydiga buss-/båtlägen inom 1m av en modellerad gångväg. Inga fria anslutningslinjer har skapats. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}

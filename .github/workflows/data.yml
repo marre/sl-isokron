@@ -2,6 +2,10 @@ name: Prepare SL data (opt-in)
 on:
   workflow_dispatch:
     inputs:
+      prepare_walking:
+        description: Rebuild conservative OSM walking distances and one-minute area contours (optional, slower)
+        type: boolean
+        default: false
       publish_release:
         description: Publish compiled data to a GitHub Release and update the Cloudflare build pointer
         type: boolean
@@ -35,7 +39,7 @@ jobs:
     # A download ledger must be retained for monthly quota protection.
     if: github.event_name == 'workflow_dispatch' || vars.SLISO_DATA_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -73,15 +77,31 @@ jobs:
           name: sliso-gtfs-inventory
           path: .data-build/inventory/
           retention-days: 7
+      - name: Rebuild optional walking distances and network areas
+        if: github.event_name == 'workflow_dispatch' && inputs.prepare_walking && !inputs.inventory_only
+        run: |
+          python -m venv /tmp/sliso-walking-venv
+          /tmp/sliso-walking-venv/bin/pip install -r scripts/requirements-walking.txt
+          /tmp/sliso-walking-venv/bin/python scripts/prepare_walking.py --gtfs .data-build/sl.zip --output .data-build/prepared-walking
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: |
-          if test -f data/walking-index.json; then
+          if test -f .data-build/prepared-walking/walks.json; then
+            cp .data-build/prepared-walking/walks.json .data-build/walks.json
+          elif python -c "import json,pathlib,sys; p=pathlib.Path('data/release.json'); sys.exit(0 if p.exists() and json.loads(p.read_text()).get('features',{}).get('walkingAreas') else 1)"; then
+            echo '::error::Prepared walking cache missing. Run with prepare_walking=true to rebuild; refusing to silently drop walking areas.'
+            exit 1
+          elif test -f data/walking-index.json; then
             cp data/walking-index.json .data-build/walks.json
           else
             python scripts/build_walks.py --graph data/walking-graph.json --output .data-build/walks.json
           fi
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
-        run: python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --scope data/feed-scope.json --output .data-build/published
+        run: |
+          area_args=()
+          if test -f .data-build/prepared-walking/areas/index.json; then
+            area_args=(--walking-areas .data-build/prepared-walking/areas)
+          fi
+          python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --scope data/feed-scope.json --output .data-build/published "${area_args[@]}"
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: python scripts/prune_data.py --root .data-build/published --keep 3
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only

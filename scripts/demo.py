@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from build_data import TZ, gtfs_epoch, publish
 import argparse
+import json
 
 PLACES = [
  ('Slussen',59.3194,18.0725), ('Gamla stan',59.3230,18.0674), ('T-Centralen',59.3310,18.0592),
@@ -22,7 +23,7 @@ def generate(output):
     paths = [(0,[0,1,2,3,4,5,6,7],[3,3,3,4,4,6,3]), (1,[13,0,1,2,8,14],[6,3,3,4,10]), (2,[12,9,8,10,11,23],[34,4,6,7,18]),(3,[4,20,21],[15,25]),(4,[16,15,17,18],[14,12,20]),(5,[24,15],[16]),(2,[22,12],[37])]
     walks = []
     for a,b,sec in [(0,24,180),(0,19,120),(2,9,240),(3,16,300),(6,20,600)]:
-        for x,y in [(a,b),(b,a)]: walks.append({'from':x,'to':y,'seconds':sec,'source':'Syntetisk testkant – ej verifierad gångväg'})
+        for x,y in [(a,b),(b,a)]: walks.append({'from':x,'to':y,'seconds':sec,'metres':round(sec*4.8/3.6),'source':'Syntetisk testkant – ej verifierad gångväg'})
     days, trips = {}, []
     for offset in range(-1,10):
         day = today + timedelta(days=offset)
@@ -39,7 +40,15 @@ def generate(output):
                         days.setdefault(bucket,[]).append((a,b,t,arr,trip,route,seq,3 if route==5 else 1,3 if route==5 else 1))
                         t = arr + 30
     meta = dict(demo=True,updated=datetime.now(timezone.utc).isoformat(),validFrom=today.isoformat(),validTo=(today+timedelta(days=7)).isoformat(),walkingMaxMinutes=30,walkingSpeedKmh=4.8,walkingVersion='synthetic-1',warnings=['Endast syntetiska avgångar och gångtider. Använd inte för reseplanering. Verklig SL-täckning och gångvägar har inte verifierats.'],attribution=['Syntetisk testdata · ortnamn för orientering'])
-    publish(output,stops,routes,walks,[],trips,days,meta,{'stops':len(stops),'walkingEdges':len(walks),'synthetic':True})
+    # Explicitly synthetic polygons exercise the area renderer, not real walkability.
+    profiles={}
+    for index in (0,2,9):
+        stop=stops[index];stop['walkingArea']=True;profiles[stop['id']]=[]
+        for minute in range(1,31):
+            lat,lon=stop['lat'],stop['lon'];d=minute*.0004
+            profiles[stop['id']].append({'minutes':minute,'geometry':{'type':'Polygon','coordinates':[[[lon-d,lat-d],[lon+d,lat-d],[lon+d,lat+d],[lon-d,lat+d],[lon-d,lat-d]]]}})
+    areas={'files':{'areas-demo.json':json.dumps(profiles,separators=(',',':')).encode()},'index':{sid:0 for sid in profiles}}
+    publish(output,stops,routes,walks,[],trips,days,meta,{'stops':len(stops),'walkingEdges':len(walks),'synthetic':True},areas)
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser();p.add_argument('--output',default='public/data');generate(p.parse_args().output)

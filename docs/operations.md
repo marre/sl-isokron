@@ -14,6 +14,7 @@ Tjänsten är en utvecklingsversion. Beställaren har publicerat appen via Cloud
 | `inventory_only=false` | Kompilera riktig tidtabell med `data/feed-scope.json` och det medföljande partiella `data/walking-index.json`, testa och bygg appen. |
 | `initialize_quota_ledger=false` | Återanvänd sparad bokföring. Välj true endast första gången eller efter bekräftad cacheförlust och kontroll av kvarvarande Trafiklab-kvot. |
 | `export_source=false` | Normalläge. True exporterar validerad rå GTFS som ett separat artefakt för lokal bearbetning; retention 1 dag. |
+| `prepare_walking=false` | True bygger om gångavstånd och ungefärliga gångområden från den checksummebundna OSM-källan. Kör vid första aktivering, cacheförlust eller förnyat gångunderlag. PBF/tiles används temporärt; endast förberedda index och konturer cachas. |
 | `publish_release=false` | True publicerar kompilerade data som en versionsmärkt GitHub Release och uppdaterar den lilla `data/release.json` i Git. Det triggar Cloudflares befintliga Git-integration. Kräver `inventory_only=false`. |
 | `deploy=false` | Bygg för granskning utan att publicera. True kräver dessutom `SLISO_DEPLOY_ENABLED=true` och Cloudflare-inställningarna nedan. |
 
@@ -54,7 +55,9 @@ I **sliso → Settings → Build** i Cloudflare används:
 
 Cloudflares befintliga integration sköter autentiseringen. Ingen ny Cloudflare- eller Trafiklab-hemlighet behövs för detta flöde, och ingen R2-bucket krävs. Det publika datapaketet hämtas under bygget; besökare hämtar data från samma Cloudflare-origin som appen.
 
-`npm run data:pull` tvingar en verifierad hämtning av den versionslåsta releasen även när lokal data finns. Vanligt `npm run build` bevarar befintlig lokal data, inklusive uttryckligt skapade testfixturer. Stora dataarkiv och `public/data` ska aldrig checkas in. Arkivet är cirka 77 MB komprimerat i första releasen; största uppackade datafilen är cirka 9,6 MB. Total storlek hindrar inte statisk publicering eftersom varje fil ligger under 25 MiB. Aktuell och tidigare sparade versioner paketeras tillsammans för redan öppna klienter.
+För första releasen med gångområden körs `prepare_walking=true`, `inventory_only=false` och `publish_release=true`. Senare tidtabellsbyggen återanvänder förberedd gångdata från Actions-cache; ändrade hållplatskoordinater stoppar bygget för omgranskning/ombyggnad. Om en release redan har gångområden men förberedelsecachen saknas stoppas bygget i stället för att tyst ta bort funktionen.
+
+`npm run data:pull` tvingar en verifierad hämtning av den versionslåsta releasen även när lokal data finns. Vanligt `npm run build` bevarar befintlig lokal data, inklusive uttryckligt skapade testfixturer. Stora dataarkiv och `public/data` ska aldrig checkas in. En tidtabellsversion utan gångområden är cirka 77 MB komprimerad; gångkonturer och sparade tidigare versioner ökar arkivets storlek. Största uppackade datafilen är cirka 9,6 MB. Total storlek hindrar inte statisk publicering eftersom varje fil ligger under 25 MiB. Aktuell och tidigare sparade versioner paketeras tillsammans för redan öppna klienter.
 
 Daglig hämtning aktiveras inte av detta. Kör ovanstående manuella flöde för en ny datarelease. För avsiktlig daglig uppdatering via Git-integrationen behövs både `SLISO_DATA_ENABLED=true` (bygga) och `SLISO_RELEASE_ENABLED=true` (publicera release och uppdatera pekaren). Ingendera aktiveras av kodändringen. Gamla GitHub Releases ligger kvar tills ägaren väljer en separat retentionspolicy; de är skilda från Actions-artefakternas korta retention.
 
@@ -96,3 +99,12 @@ npm run build
 ```
 
 Gångkällor, licenser, checksummor, optional dependencies och ombyggnadsmetod finns i [data/README.md](../data/README.md). Nycklar får inte läggas i källfiler, URL-fragment, artefakter eller loggar. Delningslänkar innehåller användarens startval och inställningar, men ingen central sökhistorik lagras.
+
+
+## Gångavstånd och områden
+
+`prepare_walking.py` kör de befintliga OSM-/Valhalla-stegen och `walking_areas.py` med 30 konturer, 1–30 minuter, per automatiskt anslutet yttrafikläge. Första lokala körningen gav 1 041 lägen, 1 041 små filer och cirka 90 MB okomprimerade konturer på cirka 22 sekunder efter tilebygget. Inga konturarkiv, PBF-filer eller tiles ligger i Git. Manifestet refererar till checksummebundna filer; klienten hämtar bara filer för relevanta lägen med begränsad parallellitet. GeoJSON återanvänder samma gång-/tillträdesprofil som gångparen.
+
+En gångytas färg anger total restid inklusive föregående färd och byte. Tillåten sista gång är det minsta av återstående restid och återstående budget för sammanhängande gång. Motorn bevarar även alternativa ankomster med mindre förbrukad gångbudget. Konturtiden avrundas nedåt till hela minuter. Första väntan är fortsatt utesluten ur restidsmåttet.
+
+Konturer interpolerar räckvidden i gångnätet; de är **inte** en garanti för gångbarhet eller tillträde till varje punkt innanför polygonen. Även vatten, tomtmark och andra otillgängliga detaljer kan täckas av interpolation. Ytorna märks därför ungefärliga och täckningen ofullständig. Ingen cirkel eller fri plattformsanslutning används som ersättning. Gångområden ger inga klickbara adressrestider eller exakta resvägar till godtyckliga punkter. Gångavstånd i reselistan kommer från routningens faktiska nätlängd; tid multipliceras inte med en schablonhastighet för att skapa påstådda meter.
