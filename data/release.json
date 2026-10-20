@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "version": "sl-1c9cbc92348f17f00ef3",
+  "version": "sl-3674cd8b320a7639880d",
   "sourceVersion": "2026-10-20",
   "validFrom": "2026-10-20",
   "validTo": "2026-10-27",
-  "url": "https://github.com/marre/sl-isokron/releases/download/data-sl-1c9cbc92348f17f00ef3/sliso-data.zip",
-  "sha256": "9140c51d78fccf371067fb2eaaf8fbb12a2abbdc1a1549973346826cd58939f5",
-  "bytes": 257353044,
-  "unpackedBytes": 773797177,
+  "url": "https://github.com/marre/sl-isokron/releases/download/data-sl-3674cd8b320a7639880d/sliso-data.zip",
+  "sha256": "997c1680eea1a3643555ee2133e413882122d62692dfd71a92aede36a0f3e09d",
+  "bytes": 328340442,
+  "unpackedBytes": 1070065136,
   "features": {
     "walkingAreas": true
   }
