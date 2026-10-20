@@ -23,7 +23,7 @@ def prepare(gtfs, output):
         graph = root/'graph.json.gz'; tiles = root/'valhalla'; walks = output/'walks.json'
         run('osm_walks.py', '--pbf', pbf, '--gtfs', gtfs, '--output', graph)
         run('prepare_pedestrian_tiles.py', '--graph', graph, '--pbf', pbf, '--directory', tiles)
-        run('valhalla_walks.py', '--config', tiles/'config.json', '--gtfs', gtfs, '--graph-report', str(graph)+'.report.json', '--output', walks)
+        run('valhalla_walks.py', '--config', tiles/'config.json', '--gtfs', gtfs, '--graph-report', str(graph)+'.report.json', '--stop-features', str(graph)+'.bus-stops.json', '--output', walks)
         run('walking_areas.py', '--config', tiles/'config.json', '--anchors', str(walks)+'.anchors.json', '--walks', walks, '--output', output/'areas')
         for name, path in [('osm-report.json', Path(str(graph)+'.report.json')), ('tiles-report.json', tiles/'report.json')]:
             shutil.copyfile(path, output/name)

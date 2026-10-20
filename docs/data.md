@@ -6,7 +6,7 @@ Kompilerad GTFS följer inte med i Git. Ett verkligt men partiellt OSM-gånginde
 
 1. Skaffa **GTFS Regional SL**, inte en godtycklig regional feed. API-nyckeln används enbart i byggmiljön. Trafiklab-konto i sig ger inte åtkomst till filen här.
 2. Inventera feeden per linje/trafikslag och gränsöverskridande sträcka. Importören skriver `report.json` med samtliga linjer, trafikslagsfördelning, faktiska `transfers.txt`-rader per typ och antal gångluckor. Detta är en inventering, inte ett intyg att SL-täckningen är fullständig.
-3. Förbered ett granskat gångnät inklusive plattforms-/stationsanslutningar. Bind hållplatser uttryckligen till rätt gångnod. Det medföljande partiella indexet använder en konservativ projektion högst 1 meter till en unik väg för yttrafik; den är inte ett granskat plattformstillträde.
+3. Förbered ett granskat gångnät inklusive plattforms-/stationsanslutningar. Bind hållplatser uttryckligen till rätt gångnod. Det medföljande partiella indexet använder en konservativ projektion högst 1 meter till en unik väg för yttrafik; den är inte ett granskat plattformstillträde. Nya releasebyggen tillåter dessutom högst 5 meters koordinatavvikelse vid entydigt identifierade OSM-busshållplatser och räknar med anslutningstid/-längd; se [metod och begränsningar](../data/README.md).
 4. Bygg och validera datasetet. Granska stations-/resefallen och licenser före pilot/publicering.
 
 ```sh

@@ -23,3 +23,23 @@ test('area candidates retain a slower arrival with a fresh walking budget', () =
   assert.equal(walkingMinutes(r.walkSources,1800,900).get(1),15);
   assert.equal(distanceText(undefined),'avstånd saknas');assert.equal(distanceText(750),'750 m');assert.equal(distanceText(1250),'1,3 km');
 });
+
+// Regression for the missing Skorpvägen–Ankarstocksvägen walking links:
+// reaching one direction must also allow walking to the opposite platform.
+test('short network walks beat a long transit detour to a nearby destination', () => {
+  const stops=Array.from({length:4},(_,i)=>({id:String(i),name:['Skärvik','Skorpvägen','Ankarstocksvägen A','Ankarstocksvägen B'][i],station:String(i),platform:'',lat:59,lon:18}));
+  const t=stockholmInstant('2026-10-20','21:08');
+  const network:Network={stops,routes:[{id:'b',name:'112',mode:'bus'}],transfers:[],walks:[
+    {from:1,to:3,seconds:152,metres:201,source:'OSM network fixture'},
+    {from:2,to:3,seconds:22,metres:29,source:'OSM network fixture'},
+  ],connections:[
+    {from:0,to:1,departure:t,arrival:t+4060,trip:'fast',route:0,sequence:0,pickup:true,dropoff:true},
+    {from:1,to:2,departure:t+4060,arrival:t+4099,trip:'fast',route:0,sequence:1,pickup:true,dropoff:true},
+    {from:0,to:3,departure:t,arrival:t+5062,trip:'detour',route:0,sequence:0,pickup:true,dropoff:true},
+  ]};
+  const s={...defaults(stops[0]),date:'2026-10-20',time:'21:08',maxMinutes:120,walkMinutes:15};
+  assert.equal(search({...network,walks:[]},s).values[3]?.seconds,5062);
+  const r=search(network,s);
+  assert.equal(r.values[3]?.seconds,4121);
+  assert.ok(r.values[3]!.seconds <= r.values[1]!.seconds+152);
+});

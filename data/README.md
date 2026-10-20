@@ -36,6 +36,7 @@ Hämta en aktuell Geofabrik-Sverige-PBF och dess tillhörande `.md5` via HTTPS. 
 .data-build/venv/bin/python scripts/valhalla_walks.py \
   --config .data-build/valhalla/config.json --gtfs .data-build/source/sl.zip \
   --graph-report .data-build/walking-graph.json.gz.report.json \
+  --stop-features .data-build/walking-graph.json.gz.bus-stops.json \
   --output .data-build/valhalla-walks.json
 ```
 
@@ -47,3 +48,21 @@ Mätprotokoll för nät, tilebygge och par finns under `docs/`. Gångbygget är 
 ## Senare tillägg: längder och gångområden
 
 `valhalla_walks.py` sparar även nätets rapporterade längd i meter för varje riktat par. `walking_areas.py` använder samma filtrerade nät och automatiska hållplatsbindningar för konturer i steg om 1 minut, upp till 30 minuter. De senare är interpolerade, generaliserade polygoner och **inte** ett intyg om tillträde till all mark i dem. Plattformar utan granskad anslutning saknar fortfarande ytor. Konturer och färdiga appdata distribueras i GitHub Releases enligt `data/release.json`; de stora genererade filerna hör inte hemma i Git. OSM ODbL-attribution och samma käll-/programversion gäller även konturerna. `prepare_walking.py` är den reproducerbara CI-ingången; se `docs/operations.md`.
+
+## Rättning 2026-10-20: små koordinatavvikelser vid busshållplatser
+
+Git-indexet ovan bevaras som äldre basdata. Nya releasebyggen använder profilen
+`identified-bus5m-v2`: grundtoleransen är fortfarande 1 meter. För lägen som endast
+trafikeras med buss tillåts högst 5 meter om exakt en OSM-busshållplats inom
+10 meter har samma namn och, när GTFS anger lägeskod, samma lägeskod. Flera
+möjliga gångvägar eller identiska projicerade GTFS-lägen nekas fortfarande.
+Detta är en automatisk koordinatmatchning, inte en platsgranskning eller en
+allmän anslutning till närmaste väg. Båt-/spårplattformars tolerans utökas inte.
+
+Båda ändarnas koordinatavvikelser adderas till gånglängden och gångtiden med
+4,8 km/h innan gränsen 30 minuter tillämpas. Gångområdenas nätbudget minskas
+med startlägets anslutningstid. Gångsträckan mellan anslutningarna följer det
+filtrerade OSM-nätet. Kända tillträdeshinder och separerade nät kvarstår.
+
+Orsaken och det reproducerade användarfallet finns i
+[Skärvik–Skorpvägen–Ankarstocksvägen](../docs/walking-regression.md).

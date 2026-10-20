@@ -52,4 +52,29 @@ class EndpointTests(unittest.TestCase):
         self.assertIsNone(select_anchor(stop,{'edges':[edge,{**edge,'way_id':2}]}))
         self.assertIsNone(select_anchor(stop,{'edges':[{**edge,'correlated_lon':18.001}]}))
 
+    def test_bus_coordinate_tolerance_needs_unique_osm_identity(self):
+        from valhalla_walks import endpoint_tolerance, select_anchor
+        stop={'id':'a','name':'Skorpvägen','platform':'','busOnly':True,'lat':59.365035,'lon':17.932531}
+        feature={'lat':59.3650725,'lon':17.9325467,'tags':{'highway':'bus_stop','name':'Skorpvägen'}}
+        edge={'way_id':57869,'correlated_lat':59.365018,'correlated_lon':17.932498}
+        self.assertIsNone(select_anchor(stop, {'edges':[edge]}))
+        tolerance=endpoint_tolerance(stop,[feature])
+        self.assertEqual(tolerance,5)
+        self.assertIsNotNone(select_anchor(stop, {'edges':[edge]},tolerance))
+        for features in ([],[feature,feature],[{**feature,'tags':{'highway':'bus_stop','name':'Other'}}],[{**feature,'lat':59.366}]):
+            self.assertEqual(endpoint_tolerance(stop,features),1)
+        self.assertEqual(endpoint_tolerance({**stop,'busOnly':False},[feature]),1)
+        self.assertEqual(endpoint_tolerance({**stop,'platform':'B'},[feature]),1)
+        self.assertIsNone(select_anchor(stop,{'edges':[edge,{**edge,'way_id':123}]},5))
+        self.assertIsNone(select_anchor(stop,{'edges':[{**edge,'correlated_lon':17.933}]},5))
+
+    def test_network_walk_includes_both_endpoint_offsets_and_limit(self):
+        from valhalla_walks import walking_pair
+        a={'id':'a','offsetMetres':4}; b={'id':'b','offsetMetres':4}
+        pair=walking_pair(a,b,146,.195,'OSM',30)
+        self.assertEqual(pair['seconds'],152)
+        self.assertEqual(pair['metres'],203)
+        self.assertIsNone(walking_pair(a,b,1795,2.39,'OSM',30))
+        self.assertIsNone(walking_pair(a,b,None,None,'OSM',30))
+
 if __name__=='__main__':unittest.main()

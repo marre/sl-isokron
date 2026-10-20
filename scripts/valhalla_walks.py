@@ -1,6 +1,7 @@
 """Build walking pairs locally over filtered OSM geometry with conservative endpoint checks.
-Only surface bus/boat stops within 1m of one unambiguous pedestrian way are automatic.
-No invented access legs; rail platforms and ambiguous points remain explicit data gaps.
+Surface stops need an unambiguous pedestrian way. Bus coordinate tolerance up to
+5m additionally needs a unique, nearby, same-name OSM bus stop; access is timed.
+No broad nearest-road access; rail platforms and ambiguous points remain data gaps.
 """
 import argparse
 import csv
@@ -11,12 +12,23 @@ import time
 import zipfile
 from collections import Counter
 from pathlib import Path
-from osm_walks import distance,load_stops
+from osm_walks import distance,load_stops,normalize
 
-LOCATION = {'radius':1,'search_cutoff':30,'node_snap_tolerance':0,'minimum_reachability':0}
+LOCATION = {'radius':5,'search_cutoff':30,'node_snap_tolerance':0,'minimum_reachability':0}
 
-def select_anchor(stop,result):
-    edges=[e for e in result.get('edges') or [] if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= 1]
+def endpoint_tolerance(stop, features):
+    # Only a small coordinate mismatch at an identified surface bus stop. Never
+    # broaden boat/rail access or guess across a large gap to the nearest road.
+    if not stop.get('busOnly'): return 1
+    matches = [n for n in features if n['tags'].get('highway') == 'bus_stop'
+        and normalize(n['tags'].get('name', '')) == normalize(stop['name'])
+        and (not stop.get('platform') or stop['platform'] in (n['tags'].get('local_ref'), n['tags'].get('ref')))
+        and distance((stop['lat'], stop['lon']), (n['lat'], n['lon'])) <= 10]
+    return 5 if len(matches) == 1 else 1
+
+
+def select_anchor(stop,result,tolerance=1):
+    edges=[e for e in result.get('edges') or [] if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= tolerance]
     if not edges or len({e['way_id'] for e in edges}) != 1:
         return None
     edge=min(edges,key=lambda e:distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])))
@@ -30,20 +42,32 @@ def surface_stops(feed):
         modes={}
         with io.TextIOWrapper(z.open('stop_times.txt'),encoding='utf-8-sig',newline='') as f:
             for row in csv.DictReader(f):modes.setdefault(row['stop_id'],set()).add(trips[row['trip_id']])
-    return [s for s in load_stops(feed) if modes.get(s['id']) and modes[s['id']] <= {3,4,700,1000}]
+    return [{**s,'busOnly':modes[s['id']] <= {3,700}} for s in load_stops(feed) if modes.get(s['id']) and modes[s['id']] <= {3,4,700,1000}]
 
-def build(config_file,feed,graph_report,output,max_minutes=30):
+def walking_pair(source_stop, target_stop, seconds, kilometres, provenance, max_minutes):
+    if seconds is None or kilometres is None: return None
+    offset=source_stop['offsetMetres']+target_stop['offsetMetres']
+    duration=math.ceil(seconds+offset/(80/60))
+    if not 0<duration<=max_minutes*60: return None
+    return {'from':source_stop['id'],'to':target_stop['id'],'seconds':duration,
+        'metres':round(kilometres*1000+offset),'source':provenance}
+
+
+def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None):
     import valhalla
     if not 5<=max_minutes<=30:raise ValueError('Maximum walking minutes must be 5–30')
     started=time.monotonic();config=json.loads(Path(config_file).read_text())
     config['mjolnir']['max_cache_size']=128*1024*1024
     actor=valhalla.Actor(config)
     candidates=surface_stops(feed);anchors=[]
+    features=json.loads(Path(stop_features).read_text()) if stop_features else []
+    by_name={}
+    for feature in features: by_name.setdefault(normalize(feature['tags'].get('name','')),[]).append(feature)
     for at in range(0,len(candidates),100):
         chunk=candidates[at:at+100]
         result=actor.locate({'locations':[{**LOCATION,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian'})
         for s,r in zip(chunk,result):
-            anchor=select_anchor(s,r)
+            anchor=select_anchor(s,r,endpoint_tolerance(s,by_name.get(normalize(s['name']),[])))
             if anchor:anchors.append(anchor)
     # Distinct GTFS platform IDs at the same projected point require review; no free platform hops.
     key=lambda s:(round(s['anchorLat'],6),round(s['anchorLon'],6))
@@ -51,7 +75,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30):
     anchors=[s for s in anchors if counts[key(s)]==1]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
     geo=json.loads(Path(graph_report).read_text())
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / endpoint precision <=1m; unreviewed stations omitted"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / bus coordinate tolerance <=5m with OSM identity; timed endpoint offsets; other stops <=1m; unreviewed stations omitted"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -67,11 +91,11 @@ def build(config_file,feed,graph_report,output,max_minutes=30):
             except valhalla.ValhallaError:
                 errors+=1;continue
             for t,seconds,kilometres in zip(chunk,result['sources_to_targets']['durations'][0],result['sources_to_targets']['distances'][0]):
-                if seconds is not None and 0<seconds<=max_minutes*60:
-                    pairs.append({'from':s['id'],'to':t['id'],'seconds':math.ceil(seconds),'metres':round(kilometres*1000),'source':source})
+                pair=walking_pair(s,t,seconds,kilometres,source,max_minutes)
+                if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-precision1m-v1','maxMinutes':max_minutes,'speedKmh':4.8,'stops':[{k:s[k] for k in ('id','lat','lon')} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: endast entydiga buss-/båtlägen inom 1m av en modellerad gångväg. Inga fria anslutningslinjer har skapats. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-identified-bus5m-v2','maxMinutes':max_minutes,'speedKmh':4.8,'stops':[{k:s[k] for k in ('id','lat','lon')} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: entydiga yttrafiklägen inom 1m av gångnätet, eller identifierade OSM-busshållplatser inom 5m. Små koordinatavvikelser räknas in i gångtid och avstånd. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     Path(output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')))
     report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(pairs),'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
@@ -79,4 +103,4 @@ def build(config_file,feed,graph_report,output,max_minutes=30):
     print(json.dumps(report),flush=True)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True);p.add_argument('--gtfs',required=True);p.add_argument('--graph-report',required=True);p.add_argument('--output',required=True);p.add_argument('--max-minutes',type=int,default=30);a=p.parse_args();build(a.config,a.gtfs,a.graph_report,a.output,a.max_minutes)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True);p.add_argument('--gtfs',required=True);p.add_argument('--graph-report',required=True);p.add_argument('--output',required=True);p.add_argument('--max-minutes',type=int,default=30);p.add_argument('--stop-features');a=p.parse_args();build(a.config,a.gtfs,a.graph_report,a.output,a.max_minutes,a.stop_features)
