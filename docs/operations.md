@@ -57,7 +57,7 @@ Cloudflares befintliga integration sköter autentiseringen. Ingen ny Cloudflare-
 
 För första releasen med gångområden körs `prepare_walking=true`, `inventory_only=false` och `publish_release=true`. Senare tidtabellsbyggen återanvänder förberedd gångdata från Actions-cache; ändrade hållplatskoordinater stoppar bygget för omgranskning/ombyggnad. Om en release redan har gångområden men förberedelsecachen saknas stoppas bygget i stället för att tyst ta bort funktionen.
 
-`npm run data:pull` tvingar en verifierad hämtning av den versionslåsta releasen även när lokal data finns. Vanligt `npm run build` bevarar befintlig lokal data, inklusive uttryckligt skapade testfixturer. Stora dataarkiv och `public/data` ska aldrig checkas in. En tidtabellsversion utan gångområden är cirka 77 MB komprimerad; gångkonturer och sparade tidigare versioner ökar arkivets storlek. Största uppackade datafilen är cirka 9,6 MB. Total storlek hindrar inte statisk publicering eftersom varje fil ligger under 25 MiB. Aktuell och tidigare sparade versioner paketeras tillsammans för redan öppna klienter.
+`npm run data:pull` tvingar en verifierad hämtning av den versionslåsta releasen även när lokal data finns. Vanligt `npm run build` bevarar befintlig lokal data, inklusive uttryckligt skapade testfixturer. Stora dataarkiv och `public/data` ska aldrig checkas in. En tidtabellsversion utan gångområden är cirka 77 MB komprimerad; gångkonturer och sparade tidigare versioner ökar arkivets storlek. De större gångindexen ryms fortfarande under 25 MiB per fil. Total storlek hindrar inte statisk publicering eftersom varje fil ligger under 25 MiB. Aktuell och tidigare sparade versioner paketeras tillsammans för redan öppna klienter.
 
 Daglig hämtning aktiveras inte av detta. Kör ovanstående manuella flöde för en ny datarelease. För avsiktlig daglig uppdatering via Git-integrationen behövs både `SLISO_DATA_ENABLED=true` (bygga) och `SLISO_RELEASE_ENABLED=true` (publicera release och uppdatera pekaren). Ingendera aktiveras av kodändringen. Gamla GitHub Releases ligger kvar tills ägaren väljer en separat retentionspolicy; de är skilda från Actions-artefakternas korta retention.
 
@@ -72,14 +72,14 @@ Appen är statisk: `npm run build`, utdatamapp `dist`. Alla riktiga data ska fö
 
 Dessa värden har inte konfigurerats av agenten. Ingen Worker, R2, betalplan eller publik reposynlighetsändring krävs. En eventuell deployment visar fortfarande utvecklingsmärkning så länge gångindexet har `reviewed=false`. Att koden bygger är inte ett pilotgodkännande.
 
-CI behåller aktuell och två tidigare identifierade genererade dataversioner. `prune_data.py` tar bara bort kataloger med matchande generatorstämpel och version under angiven datarot; okända kataloger och symlänkar lämnas orörda. Klienter som hållits öppna länge och behöver en borttagen version måste ladda om; nya och gamla paket blandas aldrig.
+CI behåller aktuell och senast föregående identifierade genererade dataversion. Det utökade gångnätet gör att tre fulla versioner skulle överskrida arkivbudgeten 512 MiB vid kommande uppdateringar. Den redan publicerade övergångsreleasen med tre versioner är 524 355 920 byte, under gränsen 536 870 912 byte. `prune_data.py` tar bara bort kataloger med matchande generatorstämpel och version under angiven datarot; okända kataloger och symlänkar lämnas orörda. Klienter som hållits öppna länge och behöver en borttagen version måste ladda om; nya och gamla paket blandas aldrig.
 
 ## Mätt budget och kvarvarande kontokrav
 
 | Resurs | Observerat / stoppregel |
 | --- | --- |
 | Trafiklab Bronze | Dokumenterade 50 hämtningar/månad; lokal spärr 45 försök och högst en lyckad hämtning per UTC-dag. Normal daglig trafik 28–31 hämtningar. Delad kontokvot kan bara kontoinnehavaren verifiera. |
-| Statisk data | Cirka 225 MB okomprimerade index för 10 UTC-dygn i det första bygget; 5,76 miljoner förbindelser. Största filen cirka 9,6 MB. Aktuell + 2 föregående versioner begränsar tillväxten. |
+| Statisk data | Cirka 225 MB okomprimerade index för 10 UTC-dygn i det första bygget; 5,76 miljoner förbindelser. Största filen cirka 9,6 MB. Aktuell + föregående version behålls i kommande byggen för att begränsa tillväxten. |
 | Pages Free | Bygget stoppar vid 25 MiB per fil eller fler än 20 000 filer. Drygt 240 trafikblock per dataversion; ingen serverberäkning per fråga. Kontovillkor ska kontrolleras före deployment. |
 | Första dataurval | Uppmätt offline-gzip omkring 4,2 MB i referensfrågorna, cirka 23,4 MB före komprimering. Det är beräknad kompression, inte observerad HTTP-överföring på en telefon. |
 | Sökning | Lokal Web Worker. Minnesbudget 2 miljoner skapade tillstånd; ett överskridande ger ofärdigt resultat. Faktiska tider/configurationer finns i benchmarkprotokollet; mobil peakminne återstår. |

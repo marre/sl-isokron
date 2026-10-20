@@ -111,7 +111,7 @@ jobs:
           fi
           python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --scope data/feed-scope.json --output .data-build/published "${area_args[@]}"
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
-        run: python scripts/prune_data.py --root .data-build/published --keep 3
+        run: python scripts/prune_data.py --root .data-build/published --keep 2
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: mkdir -p public/data && cp -R .data-build/published/. public/data/
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
