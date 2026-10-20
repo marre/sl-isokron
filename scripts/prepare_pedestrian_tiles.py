@@ -28,12 +28,22 @@ def prepare(graph_path, original_pbf, directory):
             writer.add_node(osmium.osm.mutable.Node(id=ids[n.id],version=1,location=(n.location.lon,n.location.lat)))
             count+=1
         print(f'Physical walking nodes written: {count}',flush=True)
+        # Mark only newly admitted default-access streets. Existing mapped
+        # pedestrian geometry keeps priority when stop coordinates fit both.
+        urban_sources=set()
+        from osm_walks import walkable
+        roads=osmium.FileProcessor(str(original_pbf)).with_filter(osmium.filter.EntityFilter(osmium.osm.WAY)).with_filter(osmium.filter.TagFilter(('highway','tertiary'),('highway','tertiary_link')))
+        for road in roads:
+            tags=dict(road.tags)
+            explicit=tags.get('foot') in ('yes','designated','permissive') or tags.get('sidewalk') in ('yes','both','left','right')
+            if walkable(tags) and not explicit:urban_sources.add(f'OSM way/{road.id} version/{road.version}')
         way_id=0
         def flush(run,oneway,source):
             nonlocal way_id
             if len(run)<2:return
             way_id+=1
             tags={'highway':'footway','foot':'designated','source:geometry':source}
+            if source in urban_sources:tags['name']='sliso:urban-default'
             if oneway:tags['oneway:foot']='yes'
             writer.add_way(osmium.osm.mutable.Way(id=way_id,version=1,nodes=run,tags=tags))
         for key,entries in groupby(graph['edges'],key=lambda e:(e['source'],e.get('oneWay',False))):

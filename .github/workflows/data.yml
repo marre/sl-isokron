@@ -83,6 +83,14 @@ jobs:
           python -m venv /tmp/sliso-walking-venv
           /tmp/sliso-walking-venv/bin/pip install -r scripts/requirements-walking.txt
           /tmp/sliso-walking-venv/bin/python scripts/prepare_walking.py --gtfs .data-build/sl.zip --output .data-build/prepared-walking
+      - name: Save walking coverage and detour audit
+        if: always() && (github.event_name != 'workflow_dispatch' || !inputs.inventory_only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sliso-walking-audit
+          path: .data-build/prepared-walking/walks.json.audit.json
+          if-no-files-found: ignore
+          retention-days: 7
       - if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only
         run: |
           if test -f .data-build/prepared-walking/walks.json; then

@@ -26,18 +26,23 @@ def timed(tags):
 
 def walkable(tags):
     h = tags.get('highway')
-    if h not in SAFE | EXPLICIT or timed(tags) or tags.get('foot') in FORBIDDEN:
+    if h not in SAFE | EXPLICIT or timed(tags) or tags.get('foot') in FORBIDDEN | {'use_sidepath'}:
         return False
     if tags.get('access') in FORBIDDEN and tags.get('foot') not in ('yes','designated','permissive'):
         return False
-    if h in EXPLICIT and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
+    # Swedish ordinary urban tertiary streets permit walking by default.
+    # Known <=50 km/h limits bound this fallback; motorway/high-speed roads
+    # still require explicit pedestrian evidence or remain excluded.
+    speed=tags.get('maxspeed','')
+    urban_tertiary=h in {'tertiary','tertiary_link'} and (speed in {'SE:urban'} or (speed.isdigit() and 0<int(speed)<=50))
+    if h in EXPLICIT and not urban_tertiary and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
         return False
     if tags.get('construction') or tags.get('proposed') or tags.get('route') == 'ferry' or tags.get('conveying') in ('forward','backward','reversible','yes'):
         return False
     return True
 
 def blocked_node(tags):
-    if timed(tags) or tags.get('foot') in FORBIDDEN:
+    if timed(tags) or tags.get('foot') in FORBIDDEN | {'use_sidepath'}:
         return True
     if tags.get('access') in FORBIDDEN and tags.get('foot') not in ('yes','designated','permissive'):
         return True
@@ -132,7 +137,7 @@ def extract(pbf,feed,output,reviewed=None):
     digest=hashlib.sha256()
     with Path(pbf).open('rb') as f:
         while b:=f.read(4*1024*1024):digest.update(b)
-    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-conservative-v1'
+    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-urban-tertiary-v2'
     graph=dict(version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=[{'from':e.pop('from_'),**e} for e in edges])
     with gzip.open(output,'wt',encoding='utf-8') as f:json.dump(graph,f,ensure_ascii=False,separators=(',',':'))
     report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)

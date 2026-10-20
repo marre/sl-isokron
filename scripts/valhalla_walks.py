@@ -13,6 +13,7 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 from osm_walks import distance,load_stops,normalize,blocked_node
+from stop_matching import match_bus_stops, junction_edge, way_id
 
 LOCATION = {'radius':5,'search_cutoff':30,'node_snap_tolerance':0,'minimum_reachability':0}
 
@@ -27,19 +28,14 @@ def endpoint_tolerance(stop, features):
     return 5 if len(matches) == 1 else 1
 
 
-def identified_bus_stop(stop, features):
-    if not stop.get('busOnly'): return None
-    matches=[n for n in features if n['tags'].get('highway')=='bus_stop'
-        and not blocked_node(n['tags'])
-        and normalize(n['tags'].get('name',''))==normalize(stop['name'])
-        and (not stop.get('platform') or stop['platform'] in (n['tags'].get('local_ref'),n['tags'].get('ref')))
-        and distance((stop['lat'],stop['lon']),(n['lat'],n['lon']))<=25]
-    return matches[0] if len(matches)==1 else None
-
-
 def identified_anchor(stop, feature, result):
-    anchor=select_anchor({**stop,'lat':feature['lat'],'lon':feature['lon']},result,5)
-    if anchor is None:return None
+    position={**stop,'lat':feature['lat'],'lon':feature['lon']}
+    anchor=select_anchor(position,result,5)
+    if anchor is None:
+        edge=junction_edge(position,result)
+        if edge is None:return None
+        anchor=select_anchor(position,{'edges':[edge]},5)
+        anchor['junctionVerified']=True
     shift=distance((stop['lat'],stop['lon']),(feature['lat'],feature['lon']))
     return {**anchor,'lat':stop['lat'],'lon':stop['lon'],'osmNode':feature['id'],
         'binding':'identified-osm-bus-stop','coordinateShiftMetres':shift,
@@ -48,10 +44,12 @@ def identified_anchor(stop, feature, result):
 
 def select_anchor(stop,result,tolerance=1):
     edges=[e for e in result.get('edges') or [] if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= tolerance]
-    if not edges or len({e['way_id'] for e in edges}) != 1:
+    legacy=[e for e in edges if not any('sliso:urban-default' in str(n) for n in e.get('edge_info',{}).get('names',e.get('names',[])))]
+    if legacy:edges=legacy
+    if not edges or len({way_id(e) for e in edges}) != 1:
         return None
     edge=min(edges,key=lambda e:distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])))
-    return {**stop,'anchorLat':edge['correlated_lat'],'anchorLon':edge['correlated_lon'],'way':edge['way_id'],'offsetMetres':distance((stop['lat'],stop['lon']),(edge['correlated_lat'],edge['correlated_lon']))}
+    return {**stop,'anchorLat':edge['correlated_lat'],'anchorLon':edge['correlated_lon'],'way':way_id(edge),'offsetMetres':distance((stop['lat'],stop['lon']),(edge['correlated_lat'],edge['correlated_lon']))}
 
 def surface_stops(feed):
     from build_data import rows
@@ -84,20 +82,19 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     for feature in features: by_name.setdefault(normalize(feature['tags'].get('name','')),[]).append(feature)
     for at in range(0,len(candidates),100):
         chunk=candidates[at:at+100]
-        result=actor.locate({'locations':[{**LOCATION,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian'})
+        result=actor.locate({'locations':[{**LOCATION,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
         for s,r in zip(chunk,result):
             anchor=select_anchor(s,r,endpoint_tolerance(s,by_name.get(normalize(s['name']),[])))
             if anchor:anchors.append(anchor)
     # A GTFS point can lie between sidewalks. Match the actual named OSM bus
     # stop first, then locate that position, rather than widening road snapping.
-    matches={s['id']:identified_bus_stop(s,by_name.get(normalize(s['name']),[])) for s in candidates}
-    usage=Counter(n['id'] for n in matches.values() if n)
+    matches=match_bus_stops(candidates,features)
     bound={s['id'] for s in anchors}
-    pending=[(s,matches[s['id']]) for s in candidates if s['id'] not in bound and matches[s['id']] and usage[matches[s['id']]['id']]==1]
+    pending=[(s,matches[s['id']]) for s in candidates if s['id'] not in bound and s['id'] in matches]
     identified_count=0
     for at in range(0,len(pending),100):
         chunk=pending[at:at+100]
-        located=actor.locate({'locations':[{**LOCATION,'lat':n['lat'],'lon':n['lon']} for s,n in chunk],'costing':'pedestrian'})
+        located=actor.locate({'locations':[{**LOCATION,'lat':n['lat'],'lon':n['lon']} for s,n in chunk],'costing':'pedestrian','verbose':True})
         for (stop,feature),result in zip(chunk,located):
             anchor=identified_anchor(stop,feature,result)
             if anchor:anchors.append(anchor);identified_count+=1
@@ -107,7 +104,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     anchors=[s for s in anchors if counts[key(s)]==1]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
     geo=json.loads(Path(graph_report).read_text())
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / identified OSM bus-stop positions <=25m from GTFS, unique pedestrian way <=5m; timed offsets; rail access omitted"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; timed offsets; rail access omitted"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -127,7 +124,15 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-osm-bus-position-v3','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: entydiga yttrafiklägen inom 1m av gångnätet, eller koppling via en entydig namngiven OSM-busshållplats högst 25m från GTFS-läget och högst 5m från gångnätet. Små koordinatavvikelser räknas in i gångtid och avstånd. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-bus-assignment-junction-v4','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    from walking_audit import audit
+    reference_file=Path('data/walking-reference-pairs.json')
+    references=json.loads(reference_file.read_text()) if reference_file.exists() else []
+    quality=audit(candidates,anchors,pairs,references)
+    quality['version']=data['version']
+    Path(str(output)+'.audit.json').write_text(json.dumps(quality,ensure_ascii=False,separators=(',',':')))
+    if quality['referenceFailures']:
+        raise ValueError('Walking reference regressions; inspect '+str(output)+'.audit.json: '+json.dumps(quality['referenceFailures'],ensure_ascii=False))
     Path(output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')))
     report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(pairs),'identifiedPositionBindings':identified_count,'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')

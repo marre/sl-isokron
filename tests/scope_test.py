@@ -30,6 +30,12 @@ class OSMTests(unittest.TestCase):
         self.assertFalse(walkable({'highway':'footway','foot':'no'}))
         self.assertFalse(walkable({'highway':'motorway','foot':'yes'}))
         self.assertFalse(walkable({'highway':'primary'}))
+        self.assertTrue(walkable({'highway':'tertiary','maxspeed':'40'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'70'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','foot':'no'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','foot':'use_sidepath'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','access':'private'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','foot:conditional':'no @ night'}))
         self.assertTrue(walkable({'highway':'primary','foot':'designated'}))
         self.assertTrue(blocked_node({'barrier':'gate'}))
         self.assertFalse(blocked_node({'barrier':'entrance','opening_hours':'24/7'}))
@@ -51,6 +57,9 @@ class EndpointTests(unittest.TestCase):
         self.assertIsNotNone(select_anchor(stop,{'edges':[edge,{**edge,'percent_along':1}]}))
         self.assertIsNone(select_anchor(stop,{'edges':[edge,{**edge,'way_id':2}]}))
         self.assertIsNone(select_anchor(stop,{'edges':[{**edge,'correlated_lon':18.001}]}))
+        urban={**edge,'way_id':2,'correlated_lon':18.0000001,'edge_info':{'names':['sliso:urban-default']}}
+        self.assertEqual(select_anchor(stop,{'edges':[edge,urban]})['way'],1)
+        self.assertEqual(select_anchor(stop,{'edges':[urban]})['way'],2)
 
     def test_bus_coordinate_tolerance_needs_unique_osm_identity(self):
         from valhalla_walks import endpoint_tolerance, select_anchor
@@ -69,14 +78,15 @@ class EndpointTests(unittest.TestCase):
         self.assertIsNone(select_anchor(stop,{'edges':[{**edge,'correlated_lon':17.933}]},5))
 
     def test_osm_bus_position_resolves_run_sides_without_guessing_nearest_path(self):
-        from valhalla_walks import identified_bus_stop, identified_anchor, select_anchor
+        from valhalla_walks import identified_anchor, select_anchor
+        from stop_matching import match_bus_stops
         stop={'id':'a','name':'Runstensplan','platform':'','busOnly':True,'lat':59.351047,'lon':17.900123}
         osm={'id':'1823992068','lat':59.3511061,'lon':17.9000386,'tags':{'highway':'bus_stop','name':'Runstensplan'}}
         # GTFS lies roughly midway between two paths; broad road snapping is ambiguous.
         paths=[{'way_id':85093,'correlated_lat':59.351088,'correlated_lon':17.90004},
                {'way_id':84620,'correlated_lat':59.351003,'correlated_lon':17.900205}]
         self.assertIsNone(select_anchor(stop,{'edges':paths},10))
-        self.assertEqual(identified_bus_stop(stop,[osm]),osm)
+        self.assertEqual(match_bus_stops([stop],[osm]).get(stop['id']),osm)
         actual={'edges':[{'way_id':85093,'correlated_lat':59.351096,'correlated_lon':17.900056}]}
         bound=identified_anchor(stop,osm,actual)
         self.assertEqual(bound['way'],85093)
@@ -86,14 +96,14 @@ class EndpointTests(unittest.TestCase):
         self.assertIsNone(identified_anchor(stop,osm,{'edges':paths+[{'way_id':2,'correlated_lat':osm['lat'],'correlated_lon':osm['lon']}]}))
 
     def test_osm_identity_match_rejects_ambiguity_restrictions_and_wrong_platforms(self):
-        from valhalla_walks import identified_bus_stop
+        from stop_matching import match_bus_stops
         stop={'id':'a','name':'Runstensplan','platform':'','busOnly':True,'lat':59.351595,'lon':17.901282}
         osm={'id':'1823992041','lat':59.3515189,'lon':17.9011792,'tags':{'highway':'bus_stop','name':'Runstensplan'}}
-        self.assertEqual(identified_bus_stop(stop,[osm]),osm)
-        for features in ([osm,osm],[{**osm,'lat':59.352}],[{**osm,'tags':{**osm['tags'],'foot':'no'}}],[{**osm,'tags':{**osm['tags'],'name':'Elsewhere'}}]):
-            self.assertIsNone(identified_bus_stop(stop,features))
-        self.assertIsNone(identified_bus_stop({**stop,'busOnly':False},[osm]))
-        self.assertIsNone(identified_bus_stop({**stop,'platform':'B'},[osm]))
+        self.assertEqual(match_bus_stops([stop],[osm]).get(stop['id']),osm)
+        for features in ([osm,{**osm,'id':'other-node'}],[{**osm,'lat':59.352}],[{**osm,'tags':{**osm['tags'],'foot':'no'}}],[{**osm,'tags':{**osm['tags'],'name':'Elsewhere'}}]):
+            self.assertNotIn(stop['id'],match_bus_stops([stop],features))
+        self.assertEqual(match_bus_stops([{**stop,'busOnly':False}],[osm]),{})
+        self.assertEqual(match_bus_stops([{**stop,'platform':'B'}],[osm]),{})
 
     def test_network_walk_includes_both_endpoint_offsets_and_limit(self):
         from valhalla_walks import walking_pair

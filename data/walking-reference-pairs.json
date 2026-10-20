@@ -1,0 +1,7 @@
+[
+  {"name":"Skorpvägen","stops":["9022001012117001","9022001012117002"],"maxSeconds":300},
+  {"name":"Ankarstocksvägen","stops":["9022001012119001","9022001012119002"],"maxSeconds":300},
+  {"name":"Runstensplan","stops":["9022001012169001","9022001012169002"],"maxSeconds":300},
+  {"name":"Västerledstorget","stops":["9022001012017001","9022001012017002"],"maxSeconds":300},
+  {"name":"Grenvägen","stops":["9022001012030001","9022001012030002"],"maxSeconds":300}
+]

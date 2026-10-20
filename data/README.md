@@ -91,3 +91,39 @@ Se [Runstensplan-fallet](../docs/runstensplan-regression.md). Det lokala
 ombygget med feed 2026-10-19 gav 3 970 anslutna lägen, varav 879 genom den nya
 positionstilldelningen, och 133 310 riktade par utan matrisfel. Aktuella
 produktionstal hämtas ur manifestet; underlaget är fortfarande partiellt.
+
+## Systematisk rättning: tilldelning, gångkorsningar och lokalgator
+
+Profil `bus-assignment-junction-v4` löser närliggande hållplatslägen gemensamt.
+Samma namn/lägeskod, högst 25 meters avvikelse och kända tillträdesregler krävs
+fortfarande. En avgränsad bipartit sökning väljer maximal entydig tilldelning
+med minsta totala koordinatavvikelse. Endast tilldelningar som är oförändrade
+i alla alternativ inom 5 meters total kostnad accepteras. Likvärdiga byten av
+riktning, identiska GTFS-lägen och för stora grupper lämnas olösta.
+
+Vid vägkopplingen prioriteras redan accepterad gånggeometri framför en ny
+intilliggande gata med standardtillträde. En klart bättre positionsträff på
+OSM-hållplatsens gångväg kan skiljas från en sämre kandidat (både minst 2 meters
+avståndsskillnad och dubbla avståndet krävs för att förkasta alternativet).
+Kvarvarande alternativ måste vara förenade inom 15 meter genom Valhallas
+faktiska grafnod-ID:n och tillåtna dubbelriktade kanter. Närliggande koordinater
+kopplar aldrig ihop två grafnoder. Separata broplan eller frånkopplade gångbanor
+blir därför inte en ny passage genom denna korsningskontroll.
+
+OSM-profilen medger också svensk normal gångåtkomst på `tertiary`/
+`tertiary_link` med uttrycklig hastighetsgräns högst 50 km/h eller `SE:urban`.
+Explicit gångförbud, krav på separat sidoväg (`foot=use_sidepath`), privat
+åtkomst, kända tidsbegränsningar och barriärer har företräde. Högre eller okänd
+hastighet på dessa vägar kräver fortfarande det tidigare uttryckliga
+fotgängarunderlaget. En vanlig väg kan representera en gatukorridor även när
+trottoaren inte är separat kartlagd; detta är inte ett löfte om trottoarstandard.
+
+`scripts/walking_audit.py` granskar samtliga yttrafiklägen efter saknade
+riktade gångpar och orimligt långa nätvägar mellan närliggande lägen med samma
+namn. Fågelvägsavstånd används bara för diagnos, aldrig som gångtid. Resultatet
+publiceras som Actions-artefakten `sliso-walking-audit`. Kvarstående fynd kräver
+granskning; de fylls inte automatiskt med genvägar. De fem rapporterade fallen
+finns i `walking-reference-pairs.json`; bygget stoppas om en kontrollerad
+riktning saknas eller överstiger fem minuters nätgång. Borttagna hållplats-ID:n
+redovisas som överhoppade referenser. Denna regressionstestlista är inte en
+manuell granskning av alla gångpassager.
