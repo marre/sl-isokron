@@ -66,3 +66,28 @@ filtrerade OSM-nätet. Kända tillträdeshinder och separerade nät kvarstår.
 
 Orsaken och det reproducerade användarfallet finns i
 [Skärvik–Skorpvägen–Ankarstocksvägen](../docs/walking-regression.md).
+
+## Rättning 2026-10-20: namngivna OSM-positioner vid Runstensplan
+
+Profil `osm-bus-position-v3` bevarar de tidigare accepterade anslutningarna och
+kompletterar dem med identitetsbaserade busshållplatspositioner. Om en GTFS-punkt
+inte kan kopplas entydigt får exakt en OSM-`highway=bus_stop` med samma namn och
+angiven lägeskod identifieras inom 25 meter. OSM-noden får inte ha kända
+begränsningar och får inte vara kandidat för flera GTFS-lägen. Därefter kopplas
+**OSM-hållplatsens position**, inte den felplacerade GTFS-punkten, till exakt en
+gångväg inom 5 meter. Tvetydiga vägar, för stora avvikelser och spår-/båtlägen
+får inte denna komplettering. Identiska projicerade GTFS-lägen nekas som tidigare.
+
+Både GTFS–OSM-avvikelsen och OSM–gångnätsavvikelsen räknas konservativt med i
+gångbudget och meter; inga kostnadsfria plattformshopp införs. Själva förbindelsen
+routas längs det filtrerade gångnätet. Originalets GTFS-ID/koordinater bevaras för
+kontroll mot nästa feed. OSM-nod-ID och koordinatavvikelse sparas i indexets
+hållplatsproveniens och ankarfil. Parens upprepade källtext har kortats;
+fullständig profil, OSM-hash och Valhalla-version finns i indexmetadata och
+manifestets `walkingVersion`. Detta minskar distributionens storlek utan att
+ändra tiderna för befintliga par.
+
+Se [Runstensplan-fallet](../docs/runstensplan-regression.md). Det lokala
+ombygget med feed 2026-10-19 gav 3 970 anslutna lägen, varav 879 genom den nya
+positionstilldelningen, och 133 310 riktade par utan matrisfel. Aktuella
+produktionstal hämtas ur manifestet; underlaget är fortfarande partiellt.
