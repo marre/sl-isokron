@@ -16,8 +16,8 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 MAX_FILE = 25 * 1024 * 1024
-MAX_ARCHIVE = 512 * 1024 * 1024
-MAX_UNPACKED = 2 * 1024 * 1024 * 1024
+MAX_ARCHIVE = 768 * 1024 * 1024
+MAX_UNPACKED = 3 * 1024 * 1024 * 1024
 VERSION = re.compile(r'sl-[0-9a-f]{20}')
 
 

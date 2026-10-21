@@ -33,7 +33,7 @@ def prepare(graph_path, original_pbf, directory, station_access=False):
         # pedestrian geometry keeps priority when stop coordinates fit both.
         default_sources=set()
         from osm_walks import walkable
-        roads=osmium.FileProcessor(str(original_pbf)).with_filter(osmium.filter.EntityFilter(osmium.osm.WAY)).with_filter(osmium.filter.TagFilter(('highway','tertiary'),('highway','tertiary_link')))
+        roads=osmium.FileProcessor(str(original_pbf)).with_filter(osmium.filter.EntityFilter(osmium.osm.WAY)).with_filter(osmium.filter.TagFilter(*[('highway',h) for h in ('primary','primary_link','secondary','secondary_link','tertiary','tertiary_link')]))
         for road in roads:
             tags=dict(road.tags)
             explicit=tags.get('foot') in ('yes','designated','permissive') or tags.get('sidewalk') in ('yes','both','left','right')

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {loadNetwork, verified, decodeConnections} from '../src/core/data';
+import {loadNetwork, verified, decodeConnections, decodeWalks} from '../src/core/data';
 import type {FileRef, Manifest} from '../src/core/types';
 async function refFor(url:string, content:string):Promise<FileRef>{const bytes=new TextEncoder().encode(content);return {url,bytes:bytes.byteLength,sha256:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),v=>v.toString(16).padStart(2,'0')).join('')};}
 test('data integrity rejects corrupt bytes; denied persistent cache still permits valid data',async()=>{
@@ -39,4 +39,12 @@ test('hourly shards outside the query interval are not fetched',async()=>{
   await loadNetwork(m,t0,t0+1800);
   assert.ok(urls.includes(inside.url));assert.ok(!urls.includes(unused.url));
  }finally{globalThis.fetch=oldFetch;}
+});
+
+test('compact walking data preserves directions, fractions, distance and provenance',()=>{
+ const payload={schema:1,sources:['OSM/Valhalla pedestrian','reviewed station path'],edges:[[1,2,60.5,80,0],[2,1,70,null,1]]};
+ assert.deepEqual(decodeWalks(payload),[{from:1,to:2,seconds:60.5,metres:80,source:'OSM/Valhalla pedestrian'},{from:2,to:1,seconds:70,source:'reviewed station path'}]);
+ assert.deepEqual(decodeWalks(decodeWalks(payload)),decodeWalks(payload));
+ for(const row of [[1,2,0,80,0],[1,2,60,-1,0],[1,2,60,80,3],[1,2,60,80,-1],[1.5,2,60,80,0]])assert.throws(()=>decodeWalks({...payload,edges:[row]}),/ogiltig/);
+ assert.throws(()=>decodeWalks({...payload,schema:2}),/ogiltigt/);
 });

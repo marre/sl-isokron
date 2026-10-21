@@ -1,4 +1,4 @@
-import type { Connection, FileRef, Manifest, Network } from './types';
+import type { Connection, FileRef, Manifest, Network, Walk } from './types';
 const memory = new Map<string, ArrayBuffer>();
 export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
   const response = await fetch('/data/manifest.json', { cache: 'no-cache', signal });
@@ -39,8 +39,21 @@ export function decodeConnections(buffer: ArrayBuffer, trips: string[]): Connect
   }
   return result;
 }
+// Large datasets share repeated provenance strings and omit repeated field names.
+// Existing immutable JSON arrays remain supported for older releases.
+export function decodeWalks(payload: unknown): Walk[] {
+  if (Array.isArray(payload)) return payload as Walk[];
+  const data = payload as { schema?: number; sources?: unknown; edges?: unknown } | null;
+  if (!data || data.schema !== 1 || !Array.isArray(data.sources) || !data.sources.every(s => typeof s === 'string' && s.length) || !Array.isArray(data.edges)) throw new Error('Gångpaketet har ett ogiltigt format.');
+  const sources = data.sources as string[];
+  return data.edges.map((r: unknown) => {
+    if (!Array.isArray(r) || r.length !== 5 || !Number.isInteger(r[0]) || r[0] < 0 || !Number.isInteger(r[1]) || r[1] < 0 || !Number.isFinite(r[2]) || r[2] <= 0 || (r[3] !== null && (!Number.isFinite(r[3]) || r[3] < 0)) || !Number.isInteger(r[4]) || !sources[r[4]]) throw new Error('Gångpaketet innehåller en ogiltig förbindelse.');
+    return { from:r[0],to:r[1],seconds:r[2],...(r[3] === null ? {} : { metres:r[3] }),source:sources[r[4]] };
+  });
+}
+
 export async function loadNetwork(m: Manifest, t0: number, end: number, signal?: AbortSignal): Promise<Network> {
-  const [stops, walks, routes, transfers, trips] = await Promise.all([loadJSON<Network['stops']>(m.stops, signal), loadJSON<Network['walks']>(m.walks, signal), loadJSON<Network['routes']>(m.routes, signal), loadJSON<Network['transfers']>(m.transfers, signal), loadJSON<string[]>(m.trips, signal)]);
+  const [stops, walks, routes, transfers, trips] = await Promise.all([loadJSON<Network['stops']>(m.stops, signal), loadJSON<unknown>(m.walks, signal).then(decodeWalks), loadJSON<Network['routes']>(m.routes, signal), loadJSON<Network['transfers']>(m.transfers, signal), loadJSON<string[]>(m.trips, signal)]);
   // Daily packages are bucketed by ACTUAL UTC departure, not service-day label.
   const first = new Date(t0 * 1000).toISOString().slice(0,10), last = new Date(end * 1000).toISOString().slice(0,10);
   const selected = Object.entries(m.days).filter(([d]) => d >= first && d <= last);

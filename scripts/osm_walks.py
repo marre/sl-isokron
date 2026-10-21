@@ -30,13 +30,13 @@ def walkable(tags):
         return False
     if tags.get('access') in FORBIDDEN and tags.get('foot') not in ('yes','designated','permissive'):
         return False
-    # In Sweden ordinary tertiary roads permit pedestrians by default, including
+    # In Sweden ordinary public roads permit pedestrians by default, including
     # rural roads without a tagged sidewalk. A vehicle speed limit is not a foot
     # access restriction. This models access, not walking comfort or road safety.
     if tags.get('motorroad') == 'yes':
         return False
-    default_tertiary = h in {'tertiary','tertiary_link'}
-    if h in EXPLICIT and not default_tertiary and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
+    default_road = h in {'primary','primary_link','secondary','secondary_link','tertiary','tertiary_link'}
+    if h in EXPLICIT and not default_road and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
         return False
     if tags.get('construction') or tags.get('proposed') or tags.get('route') == 'ferry' or tags.get('conveying') in ('forward','backward','reversible','yes'):
         return False
@@ -61,7 +61,7 @@ def normalize(s):
 def load_stops(feed):
     with zipfile.ZipFile(feed) as z:
         with io.TextIOWrapper(z.open('stops.txt'),encoding='utf-8-sig',newline='') as f:
-            return [dict(id=s['stop_id'],name=s['stop_name'],platform=s.get('platform_code',''),lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in csv.DictReader(f) if s.get('location_type','0') in ('','0')]
+            return [dict(id=s['stop_id'],name=s['stop_name'],platform=s.get('platform_code',''),station=s.get('parent_station',''),lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in csv.DictReader(f) if s.get('location_type','0') in ('','0')]
 
 def bindings(stops, features, graph_nodes):
     # Spatial hash only filters candidates; physical identity is required for acceptance.
@@ -153,7 +153,7 @@ def extract(pbf,feed,output,reviewed=None):
     digest=hashlib.sha256()
     with Path(pbf).open('rb') as f:
         while b:=f.read(4*1024*1024):digest.update(b)
-    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-default-tertiary-platform-lift-v5'
+    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-ordinary-road-platform-lift-v6'
     graph=dict(platforms=platforms,platformWays=sorted(platform_ids),version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=[{'from':e.pop('from_'),**e} for e in edges])
     with gzip.open(output,'wt',encoding='utf-8') as f:json.dump(graph,f,ensure_ascii=False,separators=(',',':'))
     report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),platforms=platforms,profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)

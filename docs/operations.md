@@ -72,7 +72,7 @@ Appen är statisk: `npm run build`, utdatamapp `dist`. Alla riktiga data ska fö
 
 Dessa värden har inte konfigurerats av agenten. Ingen Worker, R2, betalplan eller publik reposynlighetsändring krävs. En eventuell deployment visar fortfarande utvecklingsmärkning så länge gångindexet har `reviewed=false`. Att koden bygger är inte ett pilotgodkännande.
 
-CI behåller aktuell och senast föregående identifierade genererade dataversion. Det utökade gångnätet gör att tre fulla versioner skulle överskrida arkivbudgeten 512 MiB vid kommande uppdateringar. Den redan publicerade övergångsreleasen med tre versioner är 524 355 920 byte, under gränsen 536 870 912 byte. `prune_data.py` tar bara bort kataloger med matchande generatorstämpel och version under angiven datarot; okända kataloger och symlänkar lämnas orörda. Klienter som hållits öppna länge och behöver en borttagen version måste ladda om; nya och gamla paket blandas aldrig.
+CI behåller aktuell och senast föregående identifierade genererade dataversion. Det utökade gångnätet gör att tre fulla versioner skulle överskrida den tidigare arkivbudgeten 512 MiB vid kommande uppdateringar. Den redan publicerade övergångsreleasen med tre versioner är 524 355 920 byte, under gränsen 536 870 912 byte. `prune_data.py` tar bara bort kataloger med matchande generatorstämpel och version under angiven datarot; okända kataloger och symlänkar lämnas orörda. Klienter som hållits öppna länge och behöver en borttagen version måste ladda om; nya och gamla paket blandas aldrig.
 
 ## Mätt budget och kvarvarande kontokrav
 
@@ -110,3 +110,11 @@ En gångytas färg anger total restid inklusive föregående färd och byte. Til
 Konturer interpolerar räckvidden i gångnätet; de är **inte** en garanti för gångbarhet eller tillträde till varje punkt innanför polygonen. Även vatten, tomtmark och andra otillgängliga detaljer kan täckas av interpolation. Ytorna märks därför ungefärliga och täckningen ofullständig. Ingen cirkel eller fri plattformsanslutning används som ersättning. Gångområden ger inga klickbara adressrestider eller exakta resvägar till godtyckliga punkter. Gångavstånd i reselistan kommer från routningens faktiska nätlängd; tid multipliceras inte med en schablonhastighet för att skapa påstådda meter.
 
 Vid gångombygge sparas nu Actions-artefakten `sliso-walking-audit` i sju dagar. Den redovisar återstående gångluckor, långa nätdetourer och utfallet för de rapporterade referensparen. En referensregression stoppar publicering; granska underlaget innan referensen ändras. Ingen geografisk genväg skapas för att passera kontrollen.
+
+
+Den utökade vanliga vägåtkomsten använder nu en intern arkivgräns på 768 MiB
+komprimerat och 3 GiB uppackat, med fortsatt högst två sparade versioner.
+Cloudflares gränser på 25 MiB per fil och 20 000 filer gäller oförändrat.
+Stora gångindex kodas kompakt utan att kasta kanter eller källhänvisningar,
+och närliggande gångprofiler grupperas i begränsade shards. Arkivets byteantal,
+SHA-256 och alla filers integritet kontrolleras före installation/publicering.

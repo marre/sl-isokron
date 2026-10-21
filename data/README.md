@@ -110,11 +110,10 @@ faktiska grafnod-ID:n och tillåtna dubbelriktade kanter. Närliggande koordinat
 kopplar aldrig ihop två grafnoder. Separata broplan eller frånkopplade gångbanor
 blir därför inte en ny passage genom denna korsningskontroll.
 
-OSM-profilen medger svensk normal gångåtkomst på vanliga `tertiary`/
-`tertiary_link`-vägar, även på landsbygden. Bilarnas hastighetsgräns är inte
+OSM-profilen medger svensk normal gångåtkomst på vanliga `primary`-, `secondary`- och `tertiary`-vägar (inklusive länkar), även på landsbygden. Bilarnas hastighetsgräns är inte
 ett gångförbud. `motorroad=yes`, explicit gångförbud, krav på separat sidoväg
 (`foot=use_sidepath`), privat åtkomst, kända tidsbegränsningar och barriärer
-har företräde. Primär-/sekundärvägar kräver fortsatt uttryckligt gångunderlag.
+har företräde. Motorvägar, motortrafikleder och `trunk`-vägar ingår inte i denna standardåtkomst.
 En tillåten väg kan sakna trottoar; modellen bedömer åtkomst, inte trafikmiljö
 eller lämplighet för barn. Detta rättar de bortfiltrerade 60–70-vägarna vid
 Lovö kyrka och Barkarby på Lovön.
@@ -164,3 +163,19 @@ kompilering undantas gång mellan två uttryckligt identifierade lägen på
 **samma plattformsyta**: ingen hiss eller entré behövs för detta. Den verkliga
 kartlagda gångtiden och koordinatavvikelserna behålls, med minst en sekund.
 Anslutningar till gatan eller en annan plattform behåller stationstillägget.
+
+
+2026-10-21: Solbacka på Färingsö och Sundby by kompletterar referenslistan.
+En obunden busshållplats får nu använda sin egen GTFS-position vid en entydig
+kartlagd gångkorsning inom fem meter, om ett OSM-identifierat syskon i samma
+GTFS-stoppområde kan nås över nätet i båda riktningarna inom 250 meter.
+Olika broplan förenas inte av koordinater; korsningskontrollen kräver delade
+riktiga grafnoder. Inget fågelvägsavstånd ersätter fysisk gång.
+
+Stora gångpaket använder ett självidentifierande JSON-format med `schema: 1`,
+`sources` och `edges`: varje rad är `[frånindex,tillindex,sekunder,meter,källindex]`.
+`null` som meter bevarar avsaknad av avstånd. Riktning, bråkdelar av sekunder
+och full källtext bevaras. Läsaren stöder också äldre oföränderliga JSON-arrayer.
+Närliggande gångområden (cirka 110-metersrutor) samlas i filer med högst fyra
+lägen. Gammalt genererat shardmaterial tas bort efter ett lyckat nytt index;
+andra filer lämnas orörda. Detta begränsar filantal och upprepade hämtningar.

@@ -180,3 +180,22 @@ test('walking legs show network distance and reset cancels in-flight results',as
  await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('#stop-search')).toHaveValue('');
 });
+
+test('compact walking payload is verified and used by the worker',async({page})=>{
+ const {createHash}=await import('node:crypto');let packed='',seen=false;
+ await page.route('**/data/manifest.json',async route=>{
+  const response=await route.fetch(),m=await response.json();
+  const walks=await (await page.request.get('http://127.0.0.1:5174'+m.walks.url)).json();
+  const sources=[...new Set(walks.map((w:any)=>w.source))];
+  packed=JSON.stringify({schema:1,sources,edges:walks.map((w:any)=>[w.from,w.to,w.seconds,w.metres??null,sources.indexOf(w.source)])});
+  m.walks={url:'/data/browser-compact/walks.json',bytes:Buffer.byteLength(packed),sha256:createHash('sha256').update(packed).digest('hex')};
+  await route.fulfill({json:m});
+ });
+ await page.route('**/data/browser-compact/walks.json',r=>{seen=true;return r.fulfill({contentType:'application/json',body:packed});});
+ await init(page);await select(page);await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
+ for(const c of await page.locator('[name=mode]').all())await c.uncheck();
+ await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await page.getByRole('button',{name:'Stockholm City · Testläge A',exact:true}).press('Enter');
+ await expect(page.locator('#journey-panel')).toContainText('320 m');
+ await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');expect(seen).toBe(true);
+});

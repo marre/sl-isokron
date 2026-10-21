@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, platform, arch } from 'node:os';
 import { gzipSync } from 'node:zlib';
-import { decodeConnections } from '../src/core/data';
+import { decodeConnections, decodeWalks } from '../src/core/data';
 import { defaults } from '../src/core/settings';
 import { search } from '../src/core/router';
 import { stockholmInstant } from '../src/core/time';
@@ -11,7 +11,7 @@ const m:Manifest=JSON.parse(readFileSync(root+'/manifest.json','utf8'));
 const bytes=(ref:FileRef)=>readFileSync(root+'/'+ref.url.replace(/^\/data\//,''));
 const json=<T>(ref:FileRef):T=>JSON.parse(bytes(ref).toString());
 const trips=json<string[]>(m.trips);
-const core:Omit<Network,'connections'>={stops:json(m.stops),routes:json(m.routes),walks:json(m.walks),transfers:json(m.transfers)};
+const core:Omit<Network,'connections'>={stops:json(m.stops),routes:json(m.routes),walks:decodeWalks(json(m.walks)),transfers:json(m.transfers)};
 const cases:{start:string;startId:string;platform:string;max:number;window:number;elapsedMs:number;labels:number;reachable:number}[]=[];
 let maxInput=0,maxGzip=0;
 const names=['T-Centralen','Slussen','Odenplan','Danderyds sjukhus','Mörby','Alvik','Liljeholmen','Norrtälje busstation','Nynäshamn','Bålsta','Gnesta','Uppsala Centralstation','Vaxholm','Nybroplan','Handen','Täby centrum','Kårsta','Österskär','Tumba','Stavsnäs'];

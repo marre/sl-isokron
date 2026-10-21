@@ -5,9 +5,9 @@ Kravkälla: [version 0.6](kravspec.md). Status 2026-10-19: körbar utvecklingsve
 ## Utfört
 
 - TypeScript-kontroll, Vite-produktionsbygge och filbudgetkontroll.
-- 39 TypeScript-tester av restidsmodell, gångbudget, avgångsfönster, transferkontext, daterade turer, på-/avstigning, natt, sommartid, hållplatssökning, delningsformat, reskedjor, tidsjusterad anslutningsgång och färgskalans gränser. Motorn jämförs med ett oberoende uttömmande orakel i 60 små slumpade nät och med en oprunad sökning i ytterligare 100 nät med villkorade bytesregler.
-- 46 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
-- 26 Chromium-integrationstester, 13 vardera för dator- och mobilvy: riktig worker och datahämtning, sökning/lägesval, resultat, förarsamordning, delning, tidszoner, avbrytning, dataluckor och resväg via hover, tangentbord och tryck. Kartinpassning, dolda hållplatser utan känd resa, nollställning inklusive avbrytning/länk, gångavstånd och gångområdens på-/avslag ingår. De använder isolerade syntetiska fixturer; riktiga data skrivs inte över. Bakgrundstiles blockeras avsiktligt.
+- 40 TypeScript-tester av restidsmodell, gångbudget, avgångsfönster, transferkontext, daterade turer, på-/avstigning, natt, sommartid, hållplatssökning, delningsformat, reskedjor, tidsjusterad anslutningsgång och färgskalans gränser. Motorn jämförs med ett oberoende uttömmande orakel i 60 små slumpade nät och med en oprunad sökning i ytterligare 100 nät med villkorade bytesregler.
+- 48 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
+- 28 Chromium-integrationstester, 14 vardera för dator- och mobilvy: riktig worker och datahämtning, sökning/lägesval, resultat, förarsamordning, delning, tidszoner, avbrytning, dataluckor och resväg via hover, tangentbord och tryck. Kartinpassning, dolda hållplatser utan känd resa, nollställning inklusive avbrytning/länk, gångavstånd och gångområdens på-/avslag ingår. De använder isolerade syntetiska fixturer; riktiga data skrivs inte över. Bakgrundstiles blockeras avsiktligt.
 - Riktig GTFS Regional SL, feedversion 2026-10-19, hämtad genom Actions och kompilerad lokalt: 611 linjeposter, 14 219 hållplatslägen och cirka 5,76 miljoner daterade förbindelser. Alla aktörer ingår enligt beställarens uttryckliga beslut. Schema 2 partitionerar trafiken i UTC-timblock; största filen är cirka 9,6 MB, under gränsen 25 MiB.
 - Riktigt OSM-gångnät filtrerat och routat lokalt med Valhalla. 1 041 lägen har konservativa geometriska anslutningar, och 10 460 riktade gångpar har beräknats. Underlaget är **inte manuellt granskat**, och stationernas plattforms-/entréförbindelser saknas. Se [datakällor och reproduktion](../data/README.md).
 - [120 referenssökningar med verkliga data](benchmark-real-partial-walk.json): 20 startlägen × 30/60/120 minuter × 30/120 minuters avgångsfönster. Median 42 ms, p95 351 ms, högst 1 518 ms på denna container. Partiell gång begränsar söknätet och gör detta otillräckligt som bevis för prestanda med full gångtäckning. De valda lägena anges i råprotokollet; vissa avgångsfönster saknar trafik.
@@ -55,3 +55,8 @@ Gångytorna laddas och ritas nu successivt med räknare/procent, oberoende av
 ankomstordning, med snabbaste färg överst. Avbruten sökning tar bort även
 delvis ritade ytor. Separata browserfall för fördröjd andra fil och avbrytning
 körs i dator- och mobilvy. Se även [Lovön och Vallentuna](lovo-vallentuna.md).
+
+Solbacka/Sundby by kontrolleras i båda riktningar i det byggstoppande
+referensregistret. Kompakt gångdata testas både för full bevarad information
+(inklusive riktning, bråkdelar, okänt avstånd och källtext), skadade rader och
+verklig workerhämtning i dator- och mobilvy. Äldre JSON-paket stöds fortsatt.

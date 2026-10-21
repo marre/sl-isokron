@@ -106,6 +106,12 @@ def validate_walks(data, stops):
         edges.append(edge)
     return [{'from': e.pop('from_'), **e} for e in edges], excluded
 
+def compact_walks(walks):
+    sources=list(dict.fromkeys(w['source'] for w in walks))
+    ids={source:i for i,source in enumerate(sources)}
+    return {'schema':1,'sources':sources,'edges':[[w['from'],w['to'],w['seconds'],w.get('metres'),ids[w['source']]] for w in walks]}
+
+
 def publish(output, stops, routes, walks, transfers, trips, days, meta, report, areas=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -124,7 +130,9 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
                     name=f"{day}-{(hour%86400)//3600:02d}-{part//100_000}.bin"
                     time_files[name]=b"".join(struct.pack("<9I",*r) for r in entries[part:part+100_000])
                     day_files[day].append((name,hour,hour+3600))
-        files = {'trips.json': compact(trips), 'stops.json': compact(stops), 'routes.json': compact(routes), 'walks.json': compact(walks), 'transfers.json': compact(transfers)}
+        walk_payload=compact(walks)
+        if len(walk_payload)>8*1024*1024:walk_payload=compact(compact_walks(walks))
+        files = {'trips.json': compact(trips), 'stops.json': compact(stops), 'routes.json': compact(routes), 'walks.json': walk_payload, 'transfers.json': compact(transfers)}
         files.update(time_files)
         if areas: files.update(areas['files'])
         fingerprint = hashlib.sha256(compact(meta) + (compact(areas['index']) if areas else b'') + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]

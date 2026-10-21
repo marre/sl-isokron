@@ -62,3 +62,25 @@ class PlatformAccessTests(unittest.TestCase):
             self.assertEqual(pair['seconds'],186)
             self.assertEqual(pair['metres'],88)
         self.assertIsNone(walking_pair(platform,street,1800,.08,'mapped station path',30))
+
+    def test_same_station_binding_requires_local_topology_and_two_real_directions(self):
+        from valhalla_walks import station_anchor
+        stop={'id':'a','name':'Station','station':'area','busOnly':True,'lat':59.,'lon':18.}
+        seed={'id':'b','name':'Station','station':'area','binding':'identified-osm-bus-stop','lat':59.0001,'lon':18.,'anchorLat':59.0001,'anchorLon':18.,'offsetMetres':2}
+        edges=[]
+        for forward,node in [(True,1),(False,2)]:
+            edges.append({'edge_info':{'way_id':42,'shape':'walkway'},'correlated_lat':59.,'correlated_lon':18.,'percent_along':.5,
+                          'edge':{'forward':forward,'end_node':{'value':node},'geo_attributes':{'length':10},'access':{'pedestrian':True}}})
+        class Actor:
+            def __init__(self,distances):self.distances=iter(distances);self.calls=0
+            def matrix(self,request):
+                self.calls+=1;km=next(self.distances)
+                return {'sources_to_targets':{'distances':[[km]],'durations':[[None if km is None else 30]]}}
+        actor=Actor([.03,.03]);anchor=station_anchor(stop,{'edges':edges},[seed],actor)
+        self.assertEqual(anchor['verifiedSibling'],'b');self.assertEqual(actor.calls,2)
+        self.assertEqual(anchor['lat'],stop['lat'])
+        for distances in [[.03,None],[.03,.4]]:self.assertIsNone(station_anchor(stop,{'edges':edges},[seed],Actor(distances)))
+        self.assertIsNone(station_anchor(stop,{'edges':edges},[{**seed,'station':'another-area'}],Actor([])))
+        self.assertIsNone(station_anchor(stop,{'edges':edges},[{**seed,'binding':'unknown'}],Actor([])))
+        disconnected=edges+[{**e,'edge_info':{'way_id':43,'shape':'bridge'},'edge':{**e['edge'],'end_node':{'value':e['edge']['end_node']['value']+10}}} for e in edges]
+        self.assertIsNone(station_anchor(stop,{'edges':disconnected},[seed],Actor([])))

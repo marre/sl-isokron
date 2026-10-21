@@ -25,6 +25,9 @@ class WalkingAreaBudgetTests(unittest.TestCase):
             (root/'config').write_text(json.dumps({'service_limits':{'isochrone':{}}}))
             (root/'anchors').write_text(json.dumps([{'id':'a','lat':59,'lon':18,'anchorLat':59,'anchorLon':18,'offsetMetres':4},{'id':'b','lat':59,'lon':18,'anchorLat':59,'anchorLon':18,'offsetMetres':4,'accessSeconds':120}]))
             (root/'walks').write_text(json.dumps({'version':'fixture'}))
+            (root/'areas').mkdir()
+            (root/'areas/areas-0001.json').write_text('{}')
+            (root/'areas/notes.json').write_text('preserve')
             with patch.dict(sys.modules,{'valhalla':types.SimpleNamespace(Actor=Actor)}),contextlib.redirect_stdout(io.StringIO()):
                 build(root/'config',root/'anchors',root/'walks',root/'areas')
             contours=requests[0]['contours']
@@ -35,5 +38,7 @@ class WalkingAreaBudgetTests(unittest.TestCase):
             station=requests[1]['contours']
             self.assertGreater(station[0]['time'],0)
             self.assertAlmostEqual(station[0]['time']*60+4/(80/60)+120,180)
-            station_output=json.loads((root/'areas/areas-0001.json').read_text())['b']
+            station_output=json.loads((root/'areas/areas-0000.json').read_text())['b']
             self.assertEqual([c['minutes'] for c in station_output],list(range(3,31)))
+            self.assertFalse((root/'areas/areas-0001.json').exists())
+            self.assertEqual((root/'areas/notes.json').read_text(),'preserve')

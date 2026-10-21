@@ -9,9 +9,14 @@ import zipfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from build_data import active_services, compile_feed, gtfs_epoch, gtfs_seconds, validate_walks
+from build_data import active_services, compile_feed, gtfs_epoch, gtfs_seconds, validate_walks, compact_walks
 
 class DataTests(unittest.TestCase):
+    def test_compact_walks_preserves_costs_and_distinct_provenance(self):
+        walks=[dict(from_=1,to=2,seconds=60.5,metres=80,source='OSM'),dict(from_=2,to=1,seconds=70,source='station')]
+        walks=[{'from':w.pop('from_'),**w} for w in walks]
+        packed=compact_walks(walks)
+        self.assertEqual(packed,{'schema':1,'sources':['OSM','station'],'edges':[[1,2,60.5,80,0],[2,1,70,None,1]]})
     def test_calendar_exception(self):
         calendar=[dict(service_id='a',start_date='20261019',end_date='20261020',monday='1',tuesday='1',wednesday='0',thursday='0',friday='0',saturday='0',sunday='0')]
         services=active_services(calendar,[dict(service_id='a',date='20261019',exception_type='2'),dict(service_id='b',date='20261019',exception_type='1')])

@@ -5,6 +5,7 @@ every enclosed point is accessible. No circles or unbound platform access.
 """
 import argparse
 import json
+import math
 import time
 from pathlib import Path
 
@@ -35,6 +36,11 @@ def build(config, anchors, walks, output, station_config=None):
                 index['stops'].append({k: stop[k] for k in ('id', 'lat', 'lon')} | {'file': name})
         chunk, size, number = {}, 0, number + 1
 
+    # Nearby endpoints share a bounded shard to keep regional releases below
+    # the static asset count limit without fetching distant profiles together.
+    cell=lambda s:(math.floor(s['lat']*1000),math.floor(s['lon']*500))
+    anchors.sort(key=lambda s:(cell(s),s['id']))
+    previous_cell=None
     for at, stop in enumerate(anchors):
         # Reserve endpoint access time before expanding on the physical network.
         offset_minutes = stop.get('offsetMetres', 0) / 80 + stop.get('accessSeconds', 0) / 60
@@ -46,12 +52,16 @@ def build(config, anchors, walks, output, station_config=None):
         if any(c['geometry']['type'] not in ('Polygon', 'MultiPolygon') for c in contours):
             raise ValueError('Expected pedestrian area polygons')
         encoded = json.dumps(contours, separators=(',', ':'))
-        # One bounded endpoint per shard avoids downloading unrelated contours.
-        if chunk: flush()
+        if chunk and (len(chunk)>=4 or previous_cell!=cell(stop)): flush()
+        previous_cell=cell(stop)
         chunk[stop['id']] = contours; size += len(encoded)
         if (at + 1) % 100 == 0: print('Walking area contours:', at + 1, '/', len(anchors), flush=True)
     flush()
     (output / 'index.json').write_text(json.dumps(index, separators=(',', ':')))
+    # Remove only obsolete shards owned by this generator after successful
+    # publication of the new index; preserve unrelated files in cached output.
+    for old in output.glob('areas-[0-9][0-9][0-9][0-9].json'):
+        if old.name not in index['files']:old.unlink()
     report = dict(stops=len(index['stops']), files=len(index['files']), bytes=sum(p.stat().st_size for p in output.glob('*.json')), elapsedSeconds=round(time.monotonic()-started, 2),
         source=metadata['version'], stepMinutes=1, generalizeMetres=10, reviewed=False,
         note='Approximate network isochrones. Raster interpolation can cover inaccessible ground. No automatic rail-platform binding.')
