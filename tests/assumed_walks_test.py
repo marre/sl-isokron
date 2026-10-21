@@ -22,3 +22,13 @@ class AssumedWalkTests(unittest.TestCase):
         self.assertEqual(len(data['edges']),2)
         self.assertTrue(all(e['seconds']==60 for e in data['edges']))
         self.assertTrue(all(s['binding']=='assumed-same-name' for s in data['stops']))
+
+    def test_feed_refresh_removes_stale_assumptions_and_rebuilds_for_new_stops(self):
+        from assumed_walks import refresh_assumed_walks
+        old=[dict(id=i,name='Station',lat=59.,lon=18.) for i in ('a','b')]
+        data=extend_index(dict(edges=[],stops=[],warnings=[]),old)
+        new=[old[0],{**old[1],'name':'Renamed','lat':59.01},{**old[1],'id':'c','lat':59.001}]
+        refresh_assumed_walks(data,new)
+        self.assertEqual({(e['from'],e['to']) for e in data['edges']},{('a','c'),('c','a')})
+        self.assertEqual(len(data['warnings']),1)
+        self.assertEqual({s['id'] for s in data['stops']},{'a','c'})

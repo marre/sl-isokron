@@ -4,6 +4,7 @@ import math
 import unicodedata
 from osm_walks import distance
 
+POLICY = {'maxMetres':250,'distanceMultiplier':1.25,'speedKmh':4.8,'minimumSeconds':60}
 SOURCE = 'Assumed same-name stop transfer; <=250m; distance x1.25; 4.8km/h; minimum 60s'
 
 def name_key(name):
@@ -33,5 +34,15 @@ def extend_index(data, stops):
     used={e[k] for e in data['edges'] for k in ('from','to')}
     missing=used-included
     data['stops'].extend({k:s[k] for k in ('id','lat','lon')} | {'binding':'assumed-same-name'} for s in stops if s['id'] in missing)
-    data['warnings'].append('Antagna gångbyten: hållplatser med samma namn högst 250 meter från varandra kopplas när kartlagd gångväg saknas. Avstånd uppskattas till fågelvägen × 1,25, tid vid 4,8 km/h, minst en minut. Dessa passager är inte verifierade i gångkartan.')
+    warning=('Antagna gångbyten: hållplatser med samma namn högst 250 meter från varandra kopplas när kartlagd gångväg saknas. Avstånd uppskattas till fågelvägen × 1,25, tid vid 4,8 km/h, minst en minut. Dessa passager är inte verifierade i gångkartan.')
+    if warning not in data.setdefault('warnings',[]):data['warnings'].append(warning)
+    data['sameNameTransfers']=POLICY.copy()
     return data
+
+
+def refresh_assumed_walks(data, stops):
+    """Re-evaluate assumptions against each new feed, retaining physical checks."""
+    if not data.get('sameNameTransfers') and not any(e.get('source')==SOURCE for e in data['edges']):return data
+    data['edges']=[e for e in data['edges'] if e.get('source')!=SOURCE]
+    data['stops']=[s for s in data['stops'] if s.get('binding')!='assumed-same-name']
+    return extend_index(data,stops)

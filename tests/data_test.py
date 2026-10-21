@@ -76,6 +76,17 @@ class DataTests(unittest.TestCase):
                 b=io.StringIO();csv.writer(b).writerows(rows);z.writestr(name,b.getvalue())
         walkfile=root/'walk.json';walkfile.write_text(json.dumps(self.walks()))
         return path,walkfile
+    def test_compile_refreshes_cached_estimates_against_current_feed_names_and_coordinates(self):
+        from assumed_walks import extend_index
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);feed,w=self.fixture(root);out=root/'out'
+            old=[dict(id=i,name='Old common name',lat=59.,lon=18.) for i in ('a','b')]
+            cached=extend_index(dict(version='v9',maxMinutes=30,speedKmh=4.8,stops=[],edges=[],warnings=[]),old)
+            w.write_text(json.dumps(cached))
+            compile_feed(feed,w,out,date(2026,10,19))
+            m=json.loads((out/'manifest.json').read_text())
+            walks=json.loads((out/m['walks']['url'].removeprefix('/data/')).read_text())
+            self.assertEqual(walks,[])
     def test_sl_metro_401_compiles_as_metro(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);feed,w=self.fixture(root,route_type='401');out=root/'out'

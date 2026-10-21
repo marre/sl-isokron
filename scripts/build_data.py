@@ -248,6 +248,8 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     del raw_times
     with open(walking) as f:
         walk_meta = json.load(f)
+    from assumed_walks import refresh_assumed_walks
+    refresh_assumed_walks(walk_meta,[dict(id=s['stop_id'],name=s['stop_name'],lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in raw_stops if s.get('location_type','0') in ('','0')])
     validate_walks(walk_meta,[dict(id=s['stop_id'],lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in raw_stops if s.get('location_type','0') in ('','0')])
     scope_walks = {**walk_meta, 'edges':[e for e in walk_meta['edges'] if e['from'] in stop_ids and e['to'] in stop_ids]}
     walks, excluded = validate_walks(scope_walks, stops)
