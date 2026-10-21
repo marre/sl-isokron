@@ -204,9 +204,6 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         located=actor.locate({'locations':[{**LOCATION,'lat':n['lat'],'lon':n['lon']} for s,n in chunk],'costing':'pedestrian','verbose':True})
         for (stop,feature),result in zip(chunk,located):
             anchor=identified_anchor(stop,feature,result)
-            if anchor is None:
-                original=actor.locate({'locations':[{**LOCATION,'lat':stop['lat'],'lon':stop['lon']}],'costing':'pedestrian','verbose':True})[0]
-                anchor=identified_gtfs_anchor(stop,feature,original)
             if anchor:anchors.append(anchor);identified_count+=1
     bound={s['id'] for s in anchors}
     seeds=list(anchors)
@@ -228,6 +225,17 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         located=actor.locate({'locations':[{**LOCATION,'radius':50,'search_cutoff':50,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
         located_pending.extend(zip(chunk,located))
     anchors.extend(recover_nearby_anchors(located_pending,seeds,actor))
+    # Preserve already established endpoint positions before considering the
+    # original GTFS coordinate as a fallback for a displaced identified pole.
+    bound={s['id'] for s in anchors}
+    occupied={(round(s['anchorLat'],6),round(s['anchorLon'],6)) for s in anchors}
+    for stop,result in located_pending:
+        if stop['id'] in bound or stop['id'] not in matches:continue
+        anchor=identified_gtfs_anchor(stop,matches[stop['id']],result)
+        if anchor and (round(anchor['anchorLat'],6),round(anchor['anchorLon'],6)) not in occupied:
+            anchors.append(anchor);bound.add(stop['id'])
+            occupied.add((round(anchor['anchorLat'],6),round(anchor['anchorLon'],6)))
+    anchors.extend(recover_nearby_anchors([(s,r) for s,r in located_pending if s['id'] not in bound],anchors,actor))
     for s in platform_stops:
         platform_actor=station_actor if s.get('accessSeconds') else actor
         result=platform_actor.locate({'locations':[{**LOCATION,'lat':s['platformLat'],'lon':s['platformLon']}],'costing':'pedestrian','verbose':True})[0]
