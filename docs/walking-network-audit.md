@@ -133,3 +133,20 @@ in i kontrollens 500-metersgräns. Inga hållplatsnamn styr genereringsreglerna.
 Sammanhängande gång visas som ett resesteg även när kartlagda och uppskattade
 sträckor blandas. Alla mellanpunkter, tider och avstånd bevaras; steget markeras
 uppskattat om någon del är uppskattad. Detta ändrar inte resans gångbudget.
+
+Kontroll med publicerad tidtabell 2026-10-21 och användarens Skärvikssökning
+08.07, 15 minuters gång och fyra byten, mot lokalt ombyggt gångindex:
+
+| Lägen | Före | Efter (avrundat uppåt) |
+| --- | --- | --- |
+| Bromma sjukhus, tre lägen | 89 / 90 / 92 min | 60 / 61 / 63 min |
+| Söderberga allé, två aktiva ordinarie lägen | 59 / 59 min | 59 / 59 min |
+| Kvarnhagen i Hässelby | 96 min | 59 min |
+| Hässelby slott, tre lägen | 58 / 58 / 61 min | 58 / 58 / 61 min |
+
+I samma låsta OSM- och GTFS-underlag får 109 ytterligare lägen fysiska ankare,
+utan att något tidigare ankare försvinner. Alla 48 riktade fysiska referensfall
+klaras, och sökningens kontroll av gångförlängningar ger noll överträdelser.
+Bromma sjukhus och Kvarnhagen har lagts till som referenspar. Andra närliggande
+lägen kan fortfarande sakna kartunderlag eller ha en verklig barriär/gångbudget
+och får därför inte kopplas ihop enbart på grund av kort fågelavstånd.
