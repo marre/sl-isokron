@@ -1,19 +1,29 @@
 """Bounded one-to-one OSM bus-stop assignment and physical junction validation."""
 from collections import defaultdict
 import heapq
+import re
 from osm_walks import blocked_node, distance, normalize
 
 
+def sl_area_ref(stop):
+    area=re.fullmatch(r'9021001(\d{6})000',stop.get('station',''))
+    return str(int(area[1])) if area else None
+
+
 def match_bus_stops(stops, features, margin=5):
-    by_name=defaultdict(list)
+    by_name=defaultdict(list);by_ref=defaultdict(list)
     for feature in features:
         if feature['tags'].get('highway')=='bus_stop' and not blocked_node(feature['tags']):
             by_name[normalize(feature['tags'].get('name',''))].append(feature)
+            ref=feature['tags'].get('ref','')
+            if ref.isdigit():by_ref[str(int(ref))].append(feature)
     candidates={}; reverse=defaultdict(set); nodes={f['id']:f for f in features}
     for stop in stops:
         if not stop.get('busOnly'):continue
         options=[]
-        for f in by_name[normalize(stop['name'])]:
+        area=sl_area_ref(stop)
+        options_by_id={f['id']:f for f in by_name[normalize(stop['name'])]+(by_ref.get(area,[]) if area else [])}
+        for f in options_by_id.values():
             if stop.get('platform') and stop['platform'] not in (f['tags'].get('local_ref'),f['tags'].get('ref')):continue
             metres=distance((stop['lat'],stop['lon']),(f['lat'],f['lon']))
             if metres<=25:

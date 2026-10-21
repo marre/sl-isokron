@@ -1,5 +1,5 @@
 """Compile a GTFS ZIP + audited walking index into immutable sliso packages.
-No inferred walking edges. Standard library only. See docs/data.md.
+Mapped walking edges and explicitly labelled same-name access assumptions. Standard library only. See docs/data.md.
 """
 import argparse
 import csv
@@ -73,6 +73,7 @@ def active_services(calendar, exceptions):
     return services
 
 def validate_walks(data, stops):
+    from assumed_walks import SOURCE as ASSUMED_SOURCE
     if not data.get('version') or not 5 <= data.get('maxMinutes', 0) <= 30 or data.get('speedKmh') != 4.8:
         raise ValueError('Walking metadata must include version, maxMinutes 5–30 and speedKmh 4.8')
     bindings = {s['id']: s for s in data['stops']}
@@ -97,7 +98,7 @@ def validate_walks(data, stops):
         # The raw station index includes endpoint access allowances. Moving
         # between two positions on the same identified platform uses no lift
         # or station entrance, so retain only its mapped walking cost.
-        if a.get('platformWay') and a.get('platformWay')==b.get('platformWay') and a.get('binding')==b.get('binding')=='identified-osm-platform':
+        if e['source']!=ASSUMED_SOURCE and a.get('platformWay') and a.get('platformWay')==b.get('platformWay') and a.get('binding')==b.get('binding')=='identified-osm-platform':
             allowance=a.get('accessSeconds',0)+b.get('accessSeconds',0)
             if not 0<=allowance<=seconds:raise ValueError('Invalid station access allowance')
             seconds=max(1,seconds-allowance)
@@ -251,7 +252,9 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     scope_walks = {**walk_meta, 'edges':[e for e in walk_meta['edges'] if e['from'] in stop_ids and e['to'] in stop_ids]}
     walks, excluded = validate_walks(scope_walks, stops)
     outgoing={w['from'] for w in walks}
-    for i,stop in enumerate(stops):stop['walking']='available' if i in outgoing else 'missing'
+    from assumed_walks import SOURCE as ASSUMED_SOURCE
+    mapped_outgoing={w['from'] for w in walks if w['source']!=ASSUMED_SOURCE}
+    for i,stop in enumerate(stops):stop['walking']='available' if i in mapped_outgoing else 'estimated' if i in outgoing else 'missing'
     areas = None
     if walking_areas:
         area_root = Path(walking_areas)
@@ -352,7 +355,7 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     source_version=feed_info[0].get('feed_version','') if feed_info else ''
     try: source_updated=parse_date(source_version).isoformat()
     except ValueError: source_updated=None
-    meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
+    meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids and s.get('binding')!='assumed-same-name'}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
     report = dict(stops=len(stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
     publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report,areas)
 

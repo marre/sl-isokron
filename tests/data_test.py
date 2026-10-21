@@ -41,6 +41,11 @@ class DataTests(unittest.TestCase):
         self.assertEqual(validate_walks(data,self.stops())[0][0]['seconds'],1)
         data['edges'][0]['seconds']=239
         with self.assertRaisesRegex(ValueError,'station access'):validate_walks(data,self.stops())
+    def test_assumed_walk_never_refunds_a_mapped_platform_allowance(self):
+        from assumed_walks import SOURCE
+        data=self.walks();data['edges'][0].update(seconds=60,source=SOURCE)
+        for s in data['stops']:s.update(platformWay=42,binding='identified-osm-platform',accessSeconds=120)
+        self.assertEqual(validate_walks(data,self.stops())[0][0]['seconds'],60)
     def stops(self):
         return self.walks()['stops']
     def test_A20_known_time_restrictions_excluded(self):

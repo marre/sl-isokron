@@ -4,16 +4,13 @@ position can resolve ambiguous/inaccurate GTFS coordinates; all offsets are time
 No broad nearest-road access; only explicitly identified rail platforms are included.
 """
 import argparse
-import csv
-import io
 import json
 import math
 import time
-import zipfile
 from collections import Counter
 from pathlib import Path
 from osm_walks import distance,load_stops,normalize,blocked_node
-from stop_matching import match_bus_stops, junction_edge, way_id
+from stop_matching import match_bus_stops, junction_edge, way_id, sl_area_ref
 
 LOCATION = {'radius':5,'search_cutoff':30,'node_snap_tolerance':0,'minimum_reachability':0}
 
@@ -21,11 +18,16 @@ def endpoint_tolerance(stop, features):
     # Only a small coordinate mismatch at an identified surface bus stop. Never
     # broaden boat/rail access or guess across a large gap to the nearest road.
     if not stop.get('busOnly'): return 1
-    matches = [n for n in features if n['tags'].get('highway') == 'bus_stop' and not blocked_node(n['tags'])
-        and normalize(n['tags'].get('name', '')) == normalize(stop['name'])
-        and (not stop.get('platform') or stop['platform'] in (n['tags'].get('local_ref'), n['tags'].get('ref')))
-        and distance((stop['lat'], stop['lon']), (n['lat'], n['lon'])) <= 10]
-    return 5 if len(matches) == 1 else 1
+    matches=[]
+    for n in features:
+        tags=n['tags'];ref=tags.get('ref','')
+        exact_ref=bool(sl_area_ref(stop) and ref.isdigit() and str(int(ref))==sl_area_ref(stop))
+        if tags.get('highway')!='bus_stop' or blocked_node(tags):continue
+        if not exact_ref and normalize(tags.get('name',''))!=normalize(stop['name']):continue
+        if stop.get('platform') and stop['platform'] not in (tags.get('local_ref'),ref):continue
+        if distance((stop['lat'],stop['lon']),(n['lat'],n['lon'])) <= (25 if exact_ref else 10):matches.append(n)
+    return 5 if len(matches)==1 else 1
+
 
 
 def identified_anchor(stop, feature, result):
@@ -117,14 +119,9 @@ def nearby_network_anchor(stop, result, seeds, actor):
 
 
 def surface_stops(feed):
-    from build_data import rows
-    with zipfile.ZipFile(feed) as z:
-        routes={r['route_id']:int(r['route_type']) for r in rows(z,'routes.txt',True)}
-        trips={t['trip_id']:routes[t['route_id']] for t in rows(z,'trips.txt',True)}
-        modes={}
-        with io.TextIOWrapper(z.open('stop_times.txt'),encoding='utf-8-sig',newline='') as f:
-            for row in csv.DictReader(f):modes.setdefault(row['stop_id'],set()).add(trips[row['trip_id']])
-    return [{**s,'busOnly':modes[s['id']] <= {3,700}} for s in load_stops(feed) if modes.get(s['id']) and modes[s['id']] <= {3,4,700,1000}]
+    from osm_walks import stop_modes
+    modes=stop_modes(feed);stops=load_stops(feed)
+    return [{**s,'busOnly':modes[s['id']] <= {3,700}} for s in stops if modes.get(s['id']) and modes[s['id']] <= {3,4,700,1000}]
 
 def walking_pair(source_stop, target_stop, seconds, kilometres, provenance, max_minutes):
     if seconds is None or kilometres is None: return None
@@ -149,16 +146,16 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     features=json.loads(Path(stop_features).read_text()) if stop_features else []
     by_name={}
     for feature in features: by_name.setdefault(normalize(feature['tags'].get('name','')),[]).append(feature)
+    matches=match_bus_stops(candidates,features)
     for at in range(0,len(candidates),100):
         chunk=[s for s in candidates[at:at+100] if 'platformWay' not in s]
         if not chunk:continue
         result=actor.locate({'locations':[{**LOCATION,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
         for s,r in zip(chunk,result):
-            anchor=select_anchor(s,r,endpoint_tolerance(s,by_name.get(normalize(s['name']),[])))
+            anchor=select_anchor(s,r,endpoint_tolerance(s,list({n['id']:n for n in by_name.get(normalize(s['name']),[])+([matches[s['id']]] if s['id'] in matches else [])}.values())))
             if anchor:anchors.append(anchor)
     # A GTFS point can lie between sidewalks. Match the actual named OSM bus
     # stop first, then locate that position, rather than widening road snapping.
-    matches=match_bus_stops(candidates,features)
     bound={s['id'] for s in anchors}
     pending=[(s,matches[s['id']]) for s in candidates if s['id'] not in bound and s['id'] in matches]
     identified_count=0
@@ -209,7 +206,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     counts=Counter(key(s) for s in anchors)
     anchors=[s for s in anchors if counts[key(s)]==1 or ('platformWay' in s and all(t.get('platformWay')==s['platformWay'] for t in anchors if key(t)==key(s)))]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; nearby bus endpoint <=10m, real graph junction <=50m and bidirectional network <=500m to existing bus anchor <=250m; timed offsets; explicitly identified OSM platforms only"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; nearby bus endpoint <=10m, real graph junction <=50m and bidirectional network <=500m to existing bus anchor <=250m; timed offsets; identified surface OSM platforms by named stop-area membership and platform code"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -235,7 +232,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-bus-assignment-junction-platform-v8','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-same-name-platform-v9','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     from walking_audit import audit
     reference_file=Path('data/walking-reference-pairs.json')
     references=json.loads(reference_file.read_text()) if reference_file.exists() else []
@@ -244,8 +241,10 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     Path(str(output)+'.audit.json').write_text(json.dumps(quality,ensure_ascii=False,separators=(',',':')))
     if quality['referenceFailures']:
         raise ValueError('Walking reference regressions; inspect '+str(output)+'.audit.json: '+json.dumps(quality['referenceFailures'],ensure_ascii=False))
+    from assumed_walks import extend_index
+    extend_index(data,all_stops)
     Path(output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')))
-    report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(pairs),'identifiedPositionBindings':identified_count,'stationNetworkBindings':sum(s.get('binding')=='same-station-pedestrian-network' for s in anchors),'nearbyNetworkBindings':sum(s.get('binding')=='nearby-pedestrian-network' for s in anchors),'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
+    report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(data['edges']),'mappedPairs':len(pairs),'assumedPairs':len(data['edges'])-len(pairs),'identifiedPositionBindings':identified_count,'stationNetworkBindings':sum(s.get('binding')=='same-station-pedestrian-network' for s in anchors),'nearbyNetworkBindings':sum(s.get('binding')=='nearby-pedestrian-network' for s in anchors),'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     Path(str(output)+'.anchors.json').write_text(json.dumps(anchors,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(report),flush=True)

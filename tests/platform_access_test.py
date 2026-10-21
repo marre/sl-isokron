@@ -104,3 +104,23 @@ class PlatformAccessTests(unittest.TestCase):
         self.assertIsNone(nearby_network_anchor({**stop,'busOnly':False},result,[seed],Actor([])))
         self.assertIsNone(nearby_network_anchor(stop,result,[{**seed,'lat':59.01}],Actor([])))
         self.assertIsNone(nearby_network_anchor(stop,{'edges':result['edges']+segment(2,'bridge',30,40)},[seed],Actor([])))
+
+    def test_auto_identity_requires_station_membership_number_and_surface_geometry(self):
+        from platform_access import discover_platforms
+        s=dict(id='rail',name='Märsta',platform='7',lat=59.,lon=18.)
+        way={'tags':{'railway':'platform','gtfs:platform_code:SE-003-UL':'7'},'points':[{'lat':59.,'lon':17.9999},{'lat':59.,'lon':18.0001}]}
+        self.assertEqual(discover_platforms([s],{42:way},{42:['Märsta']})[0]['platformWay'],42)
+        self.assertEqual(discover_platforms([s],{42:way},{42:['Another station']}),[])
+        self.assertEqual(discover_platforms([{**s,'platform':'1'}],{42:way},{42:['Märsta']}),[])
+        self.assertEqual(discover_platforms([s],{42:way,43:way},{42:['Märsta'],43:['Märsta']}),[])
+        for restriction in ({'tunnel':'yes'},{'layer':'-2'},{'fixme':'estimated'},{'access':'private'}):
+            self.assertEqual(discover_platforms([s],{42:{**way,'tags':{**way['tags'],**restriction}}},{42:['Märsta']}),[])
+
+    def test_official_stop_area_ref_can_validate_a_renamed_pole_not_a_large_road_snap(self):
+        from valhalla_walks import endpoint_tolerance
+        s={'id':'sky','name':'Sky City','station':'9021001057342000','platform':'','lat':59.,'lon':18.,'busOnly':True}
+        feature={'id':'osm','lat':59.0001,'lon':18.,'tags':{'highway':'bus_stop','name':'Sky City / Terminal 4 och 5','ref':'57342'}}
+        self.assertEqual(endpoint_tolerance(s,[feature]),5)
+        self.assertEqual(endpoint_tolerance(s,[{**feature,'lat':59.0003}]),1)
+        self.assertEqual(endpoint_tolerance(s,[{**feature,'tags':{**feature['tags'],'ref':'57343'}}]),1)
+        self.assertEqual(endpoint_tolerance(s,[feature,{**feature,'id':'other'}]),1)

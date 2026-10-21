@@ -68,3 +68,27 @@ Lokalt beräknade restider före avrundning:
 De sista leden följer riktiga gångvägar: 20 meter vid Kungsberga, 105 meter
 vid Folkets hus, 193–227 meter från Stationsgatan till Esplanaden och 285 meter
 från Ekbacken till äldreboendet. Resor och tider kan ändras med nästa tidtabell.
+
+## Antagna byten mellan lägen med samma namn (v9)
+
+På användarens uttryckliga begäran antas gång vara möjlig mellan **alla lägen
+med samma namn inom 250 meter fågelvägen**, även mellan olika stoppområden.
+Namn jämförs utan skillnader i versaler och blanksteg; interpunktion bevaras.
+`scripts/assumed_walks.py` fyller bara riktningar som saknar kartlagd gångkant.
+Avståndet uppskattas till fågelvägen × 1,25, tiden till 4,8 km/h med minst
+60 sekunder. Tiden belastar samma sammanhängande gångbudget som annan gång.
+Detta är ett medvetet undantag från kravspecens krav på enbart kartlagda
+passager, inte en verifiering av tillgänglighet, nivåer eller barriärer.
+
+Antagna kanter har egen källa och visas som **Gång · uppskattad** i resedetaljerna.
+De skapar inga inbillade OSM-ankare eller gångytor. Den fysiska referensgranskningen
+körs före dessa tillägg; rapporten skiljer `mappedPairs` från `assumedPairs`.
+Lönnviksvägen, Skå flygfält, Toyota, Lammholmsbacken och Fruängsgården omfattas
+av samma regel; inga hållplatsnamn finns hårdkodade i genereringen.
+
+Ytjärnvägsplattformar kan dessutom bindas automatiskt när både namngivet
+OSM-stoppområde och plattformsnummer identifierar samma unika kartlagda
+plattform inom 25 meter. Underjordiska, osäkert uppskattade, tillträdesbegränsade
+och tvetydiga plattformar avvisas. En biljettvalidator får användas när dess
+kartlagda gångväg delar en verklig OSM-nod med en identifierad plattform.
+Det möjliggör granskning av busstågbytet i Märsta utan hållplatsspecifika undantag.

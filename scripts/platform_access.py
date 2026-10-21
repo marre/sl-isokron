@@ -1,4 +1,4 @@
-"""Explicit GTFS-to-OSM platform identities; no nearest-station inference."""
+"""GTFS-to-OSM platform identities by explicit binding or named area and code."""
 import math
 from osm_walks import distance, normalize, timed, FORBIDDEN
 
@@ -35,4 +35,36 @@ def platform_positions(bindings, stops, ways):
         p=project(s,way['points'])
         if p is None or p['offsetMetres']>25: raise ValueError('Platform geometry moved: '+binding['id'])
         result.append({**s,'accessSeconds':binding.get('accessSeconds',0),'platformWay':binding['osmWay'],'platformLat':p['lat'],'platformLon':p['lon'],'offsetMetres':p['offsetMetres']})
+    return result
+
+
+def platform_refs(tags):
+    values=[tags.get('local_ref') or tags.get('ref','')]
+    values += [v for k,v in tags.items() if k.startswith('gtfs:platform_code:')]
+    if not any(values) and tags.get('name','').isdigit():values.append(tags['name'])
+    return {ref.strip() for value in values for ref in value.split(';') if ref.strip()}
+
+
+def discover_platforms(stops, ways, way_areas, excluded=()):
+    """Bind surface rail stops by named stop-area membership AND platform code.
+
+    Coordinates only validate an independently identified platform. Underground,
+    estimated and ambiguous identities remain unbound.
+    """
+    result=[]
+    for stop in stops:
+        if stop['id'] in excluded or not stop.get('platform'):continue
+        candidates=[]
+        for wid,way in ways.items():
+            tags=way['tags']
+            if tags.get('railway')!='platform' or not platform_allowed(tags):continue
+            if tags.get('fixme') or tags.get('tunnel')=='yes' or tags.get('location')=='underground' or tags.get('subway')=='yes':continue
+            if any(part.strip().startswith('-') for key in ('level','layer') for part in tags.get(key,'').split(';')):continue
+            if normalize(stop['name']) not in {normalize(n) for n in way_areas.get(wid,())}:continue
+            if stop['platform'] not in platform_refs(tags):continue
+            p=project(stop,way['points'])
+            if p is not None and p['offsetMetres']<=25:candidates.append((wid,p))
+        if len(candidates)==1:
+            wid,p=candidates[0]
+            result.append({**stop,'accessSeconds':0,'platformWay':wid,'platformLat':p['lat'],'platformLon':p['lon'],'offsetMetres':p['offsetMetres'],'identity':'named-osm-stop-area-platform-ref'})
     return result

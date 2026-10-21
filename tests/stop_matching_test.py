@@ -79,3 +79,10 @@ class MatchingTests(unittest.TestCase):
         connector=segment(3,'crossing',20,30,8,.5,18.0002)
         self.assertIsNone(junction_edge(s,{'edges':edges},graph_tolerance=50,max_metres=50))
         self.assertIsNotNone(junction_edge(s,{'edges':edges+connector},graph_tolerance=50,max_metres=50))
+
+    def test_exact_sl_area_reference_matches_a_renamed_pole_only_within_identity_radius(self):
+        s={**stop('a',59,18),'name':'SkyCity','station':'9021001057342000'}
+        f={**feature('A',59,18),'tags':{'highway':'bus_stop','name':'Sky City / Terminal 4 och 5','ref':'57342'}}
+        self.assertEqual(match_bus_stops([s],[f])['a']['id'],'A')
+        self.assertEqual(match_bus_stops([s],[{**f,'lat':59.001}]),{})
+        self.assertEqual(match_bus_stops([{**s,'station':'9021001057343000'}],[f]),{})

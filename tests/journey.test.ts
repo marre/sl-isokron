@@ -70,3 +70,14 @@ test('every multi-band scale runs from light green to dark red with inclusive 10
   }
   assert.equal(colorFor(600, 10), BAND_COLORS[0]);
 });
+
+test('assumed access remains labelled and shares the continuous walking budget', () => {
+  const n=network();
+  n.walks=[{from:0,to:1,seconds:300,source:'mapped',metres:400},{from:1,to:2,seconds:120,source:'Assumed same-name stop transfer; <=250m',metres:160}, {from:2,to:3,seconds:240,source:'mapped',metres:320}];
+  const settings={...defaults(n.stops[0]),date:'2026-10-19',time:'08:00',walkMinutes:10};
+  const r=search(n,settings),legs=journeyFor(r,2);
+  assert.equal(legs.length,2);
+  assert.equal(legs[0].estimated,undefined);assert.equal(legs[1].estimated,true);
+  assert.equal(r.values[2]?.seconds,420);
+  assert.equal(r.values[3],null); // An assumed transfer does not start a fresh walking allowance.
+});

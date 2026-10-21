@@ -20,7 +20,7 @@ export function journeyFor(result: SearchResult, destination: number): JourneyLe
   const grouped: JourneyLeg[] = [];
   for (const leg of legs) {
     const last = grouped.at(-1);
-    if (last?.kind === 'walk' && leg.kind === 'walk' && last.to === leg.from && last.arrival === leg.departure) {
+    if (last?.kind === 'walk' && leg.kind === 'walk' && !!last.estimated === !!leg.estimated && last.to === leg.from && last.arrival === leg.departure) {
       last.to = leg.to; last.arrival = leg.arrival; last.stops.push(...leg.stops.slice(1));
       last.metres = last.metres === undefined || leg.metres === undefined ? undefined : last.metres + leg.metres;
     } else grouped.push(leg);

@@ -1,3 +1,5 @@
+> Aktuell regel från v9: samma namn inom 250 meter får en märkt uppskattad gångkoppling när kartlagd riktning saknas. Historiska profiler nedan beskriver även äldre, striktare underlag.
+
 # Trafikurval och gångindex
 
 **Utvecklingsdata, ännu inte komplett för en pilot.**
@@ -132,7 +134,7 @@ automatiskt, och täckningen förblir partiell.
 
 `scripts/walking_audit.py` granskar samtliga yttrafiklägen efter saknade
 riktade gångpar och orimligt långa nätvägar mellan närliggande lägen med samma
-namn. Fågelvägsavstånd används bara för diagnos, aldrig som gångtid. Resultatet
+namn. Den fysiska granskningen använder fågelvägsavstånd bara för diagnos. Separata antagna gångkanter enligt v9 räknas inte som nätbevis. Resultatet
 publiceras som Actions-artefakten `sliso-walking-audit`. Kvarstående fynd kräver
 granskning; de fylls inte automatiskt med genvägar. De rapporterade fallen
 finns i `walking-reference-pairs.json`; bygget stoppas om en kontrollerad
@@ -187,3 +189,8 @@ bussläge högst 250 meter bort. Återställda lägen kedjas inte som bevis.
 Alla närliggande par granskas nu i byggets diagnostik, även olika namn.
 Se [nät- och resultataudit](../docs/walking-network-audit.md) för gränser,
 regressioner och kommandot som kontrollerar en hel delad sökning.
+
+Från gångprofil v9 tillåts ett användarvalt undantag: saknade gångriktningar
+mellan lägen med samma namn inom 250 meter får en tydligt märkt uppskattning.
+Tid och avstånd ingår i gångbudgeten; uppskattningarna skapar inga gångytor.
+Se [metod och begränsningar](../docs/walking-network-audit.md#antagna-byten-mellan-lägen-med-samma-namn-v9).

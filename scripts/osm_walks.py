@@ -1,6 +1,5 @@
-"""Conservative offline OSM walking graph. Requires osmium; no routing API.
-Only unique, same-name bus-stop nodes within 1 m of GTFS coordinates are auto-bound.
-No nearest-road connectors. Other bindings require an explicitly reviewed input file.
+"""Offline OSM walking graph with restricted access and identified platforms.
+Only mapped edges join physical graph nodes; access assumptions are separate.
 """
 import argparse
 import csv
@@ -63,6 +62,17 @@ def load_stops(feed):
         with io.TextIOWrapper(z.open('stops.txt'),encoding='utf-8-sig',newline='') as f:
             return [dict(id=s['stop_id'],name=s['stop_name'],platform=s.get('platform_code',''),station=s.get('parent_station',''),lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in csv.DictReader(f) if s.get('location_type','0') in ('','0')]
 
+def stop_modes(feed):
+    from build_data import rows
+    with zipfile.ZipFile(feed) as z:
+        routes={r['route_id']:int(r['route_type']) for r in rows(z,'routes.txt',True)}
+        trips={t['trip_id']:routes[t['route_id']] for t in rows(z,'trips.txt',True)}
+        modes={}
+        with io.TextIOWrapper(z.open('stop_times.txt'),encoding='utf-8-sig',newline='') as f:
+            for row in csv.DictReader(f):modes.setdefault(row['stop_id'],set()).add(trips[row['trip_id']])
+    return modes
+
+
 def bindings(stops, features, graph_nodes):
     # Spatial hash only filters candidates; physical identity is required for acceptance.
     bins = {}
@@ -95,7 +105,15 @@ def extract(pbf,feed,output,reviewed=None):
     stops=load_stops(feed)
     bounds=(min(s['lon'] for s in stops)-.05,min(s['lat'] for s in stops)-.05,max(s['lon'] for s in stops)+.05,max(s['lat'] for s in stops)+.05)
     def inside(lat,lon):return bounds[0]<=lon<=bounds[2] and bounds[1]<=lat<=bounds[3]
-    blocked=set();features=[]
+    blocked=set();features=[];pending_validators={};validator_ways={}
+    modes=stop_modes(feed)
+    rail_stops=[s for s in stops if modes.get(s['id']) and modes[s['id']] <= {2,100,109}]
+    rail_names={normalize(s['name']) for s in rail_stops};way_areas={}
+    for relation in osmium.FileProcessor(str(pbf)).with_filter(osmium.filter.EntityFilter(osmium.osm.RELATION)).with_filter(osmium.filter.TagFilter(('public_transport','stop_area'))):
+        name=relation.tags.get('name','')
+        if normalize(name) in rail_names:
+            for member in relation.members:
+                if member.type=='w' and member.role in ('platform',''):way_areas.setdefault(member.ref,set()).add(name)
     platform_file=Path('data/platform-bindings.json')
     platform_bindings=json.loads(platform_file.read_text()) if platform_file.exists() else []
     platform_ids={b['osmWay'] for b in platform_bindings};platform_ways={}
@@ -108,21 +126,28 @@ def extract(pbf,feed,output,reviewed=None):
         if not inside(n.location.lat,n.location.lon):continue
         tags=dict(n.tags)
         gate_tags={**tags,'barrier':'no'} if n.id in fare_gates and tags.get('amenity')=='ticket_validator' and tags.get('operator')=='SL' else tags
+        if tags.get('amenity')=='ticket_validator' and tags.get('barrier') in ('turnstile','ticket_gate') and not blocked_node({**tags,'barrier':'no'}):
+            pending_validators[n.id]={'lat':n.location.lat,'lon':n.location.lon};gate_tags={**tags,'barrier':'no'}
         if blocked_node(gate_tags):blocked.add(n.id)
         if tags.get('highway')=='bus_stop':features.append(dict(id=str(n.id),lat=n.location.lat,lon=n.location.lon,tags=tags))
     print(f'OSM restriction scan: {len(blocked)} blocked nodes, {len(features)} bus-stop nodes',flush=True)
     edges=[];nodes=set();accepted_ways=0;excluded_ways=0
-    wayfilter=osmium.filter.TagFilter(*[('highway',h) for h in sorted(SAFE|EXPLICIT)],('railway','platform'),('highway','platform'),('highway','elevator'))
+    wayfilter=osmium.filter.TagFilter(*[('highway',h) for h in sorted(SAFE|EXPLICIT)],('railway','platform'),('highway','elevator'))
     processor=osmium.FileProcessor(str(pbf)).with_locations().with_filter(osmium.filter.EntityFilter(osmium.osm.WAY)).with_filter(wayfilter)
     for w in processor:
         tags=dict(w.tags)
-        is_platform=w.id in platform_ids
+        is_rail=tags.get('railway')=='platform' or w.id in platform_ids
+        is_platform=is_rail
         is_elevator=w.id in elevators and tags.get('highway')=='elevator'
         if is_platform:
-            platform_ways[w.id]={'tags':tags,'points':[{'lat':n.lat,'lon':n.lon} for n in w.nodes if n.location.valid()]}
+            platform_ways[w.id]={'tags':tags,'points':[{'id':n.ref,'lat':n.lat,'lon':n.lon} for n in w.nodes if n.location.valid()]}
         from platform_access import platform_allowed
         if not (platform_allowed(tags) if is_platform else walkable({**tags,'highway':'footway'}) if is_elevator else walkable(tags)):
             excluded_ways+=1;continue
+        refs={n.ref for n in w.nodes}
+        if not is_platform:
+            if tags.get('highway') in ('footway','pedestrian','path','steps'):
+                for gate in refs & pending_validators.keys():validator_ways.setdefault(gate,set()).update(refs)
         relevant=False
         for a,b in pairwise(w.nodes):
             if a.ref in blocked or b.ref in blocked or not a.location.valid() or not b.location.valid():continue
@@ -137,8 +162,16 @@ def extract(pbf,feed,output,reviewed=None):
         if relevant:
             accepted_ways+=1
             if accepted_ways%50000==0:print(f'OSM walking ways: {accepted_ways}; segments: {len(edges)}',flush=True)
-    from platform_access import platform_positions
+    from platform_access import platform_positions,discover_platforms
     platforms=platform_positions(platform_bindings,stops,platform_ways)
+    automatic=discover_platforms(rail_stops,platform_ways,way_areas,{s['id'] for s in platforms})
+    platforms.extend(automatic)
+    matched_platform_nodes={p['id'] for stop in platforms for p in platform_ways[stop['platformWay']]['points']}
+    inferred_validators={gate for gate,refs in validator_ways.items() if refs & matched_platform_nodes}
+    invalid_validators=set(pending_validators)-inferred_validators-fare_gates
+    blocked.update(invalid_validators)
+    if invalid_validators:edges=[e for e in edges if int(e['from_']) not in invalid_validators and int(e['to']) not in invalid_validators]
+    platform_ids.update(wid for wid,way in platform_ways.items() if way['tags'].get('railway')=='platform')
     accepted=bindings(stops,features,nodes)
     if reviewed:
         overrides=json.loads(Path(reviewed).read_text())
@@ -153,10 +186,12 @@ def extract(pbf,feed,output,reviewed=None):
     digest=hashlib.sha256()
     with Path(pbf).open('rb') as f:
         while b:=f.read(4*1024*1024):digest.update(b)
-    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-ordinary-road-platform-lift-v6'
-    graph=dict(platforms=platforms,platformWays=sorted(platform_ids),version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=[{'from':e.pop('from_'),**e} for e in edges])
-    with gzip.open(output,'wt',encoding='utf-8') as f:json.dump(graph,f,ensure_ascii=False,separators=(',',':'))
-    report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),platforms=platforms,profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)
+    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-mapped-platform-access-v7'
+    # Rename in place: avoid a second full copy of millions of segment dicts.
+    for edge in edges:edge['from']=edge.pop('from_')
+    graph=dict(platforms=platforms,platformWays=sorted(platform_ids),version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=edges)
+    with gzip.open(output,'wt',encoding='utf-8',compresslevel=1) as f:json.dump(graph,f,ensure_ascii=False,separators=(',',':'))
+    report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),platforms=platforms,automaticPlatformBindings=len(automatic),inferredFareGates=sorted(inferred_validators),profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)
     Path(str(output)+'.bus-stops.json').write_text(json.dumps(features,ensure_ascii=False,separators=(',',':')))
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(report,ensure_ascii=False),flush=True)

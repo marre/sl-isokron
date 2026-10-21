@@ -124,3 +124,9 @@ OSM-hämtningen har tre försök med högst 180 sekunders överföring per förs
 Endast en fullständig SHA-256-verifierad fil får publiceras till källcachen;
 avbrutna överföringar sparas separat och återupptas, men används inte av
 gångbygget förrän hela filens checksumma stämmer. Felaktiga kompletta filer avvisas. Cachen ligger utanför Git.
+
+Gångprofil v9 skiljer kartlagda gångpar från användarens antagna byten mellan
+liknamniga lägen inom 250 meter. Ett byte av den regeln kräver ett nytt gångbygge
+(`prepare_walking=true`) och publicering av ny datarelease, inte bara en ny
+webbbyggnad. `assumedPairs` i byggrapporten ska redovisas separat från
+`mappedPairs`; antagna passager räknas aldrig som godkända fysiska referenspar.

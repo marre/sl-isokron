@@ -150,5 +150,21 @@
       "9022001050305002"
     ],
     "maxSeconds": 300
+  },
+  {
+    "name": "Märsta bussterminal–pendeltåg 1",
+    "stops": [
+      "9022001057032007",
+      "9022001005121001"
+    ],
+    "maxSeconds": 600
+  },
+  {
+    "name": "Märsta bussterminal–pendeltåg 7",
+    "stops": [
+      "9022001057032007",
+      "9022001005121002"
+    ],
+    "maxSeconds": 600
   }
 ]

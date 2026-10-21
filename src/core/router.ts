@@ -47,15 +47,25 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   for (const w of network.walks) walking[w.from].push(w);
   const ruleIndex = new Map<string, TransferRule[]>();
   const tripSpecific = new Set<string>();
+  const transferDelay = network.stops.map(() => 0);
+  const transferBlocked = new Set<number>();
   const routeSpecific = network.transfers.some(r => r.fromRoute);
   for (const r of network.transfers) {
+    transferDelay[r.from] = Math.max(transferDelay[r.from], r.seconds);
+    if (r.type === 3) transferBlocked.add(r.from);
     const key = `${r.from}|${r.to}`;
     const list = ruleIndex.get(key) ?? []; list.push(r); ruleIndex.set(key,list);
     if (r.fromTrip) tripSpecific.add(r.fromTrip);
   }
+  // Once every minimum transfer time from an alighting event has elapsed,
+  // its stop/time cannot restrict any future boarding. Forget only that spent
+  // context, retaining trip/route distinctions and all prohibited transfers.
+  function settled(l: Label): boolean {
+    return !transferBlocked.has(l.alightStop) && l.time >= l.alightTime + transferDelay[l.alightStop];
+  }
   function contextKey(l: Label): string {
     const trip = (tripSpecific.has(l.lastTrip) || tripSpecific.has(baseTrip(l.lastTrip))) ? l.lastTrip : '*';
-    return `${l.stop}|${l.boardings}|${trip}|${routeSpecific ? l.lastRoute : '*'}|${l.alightStop}`;
+    return `${l.stop}|${l.boardings}|${trip}|${routeSpecific ? l.lastRoute : '*'}|${settled(l) ? '*' : l.alightStop}`;
   }
   const values: (Reach | null)[] = network.stops.map(() => null);
   const witnesses: (Label | null)[] = network.stops.map(() => null);
@@ -78,7 +88,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     // Context must match: transfer constraints refer to the actual previous trip/alighting event.
     const key = contextKey(l);
     const list = frontiers.get(key) ?? [];
-    const dominates = (a: Label, b: Label) => a.time <= b.time && a.alightTime <= b.alightTime && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
+    const dominates = (a: Label, b: Label) => a.time <= b.time && (settled(a) && settled(b) || a.alightTime <= b.alightTime) && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
     if (options.prune !== false && list.some(a => dominates(a, l))) return;
     frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queue.push(l);
     if (queue.length > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
@@ -115,7 +125,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
       let node: JourneyNode;
       if ('seconds' in via) {
-        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres };
+        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres, estimated: via.source.startsWith('Assumed same-name stop transfer;') || undefined };
       } else {
         const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
         node = { previous, kind: 'transit', from: via.from, to: l.stop, departure: via.departure, arrival: l.time, route: via.route, stops: [via.from, ...path.map(c => c.to)], requestStop: !!via.pickupRequest || !!l.alight!.dropoffRequest };

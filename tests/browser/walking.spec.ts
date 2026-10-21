@@ -54,3 +54,21 @@ test('reset removes partial walking areas and ignores late arrivals', async ({pa
   await expect(page.locator('#progressive-map .leaflet-walking-areas-pane canvas')).toHaveCount(0);
   await expect(page.locator('#progressive-status')).not.toContainText('Ungefärliga');
 });
+
+test('estimated same-name walking is labelled in journey details', async ({page}) => {
+  await page.route('https://tile.openstreetmap.org/**', r=>r.abort());
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const component='/src/journey-view.ts';
+    const {JourneyView}=await import(component),L=(window as any).L;
+    const el=document.createElement('div');el.style.cssText='width:300px;height:300px';document.body.append(el);
+    const stops=[{id:'a',name:'Station',platform:'A',lat:59.,lon:18.,walking:'estimated'},{id:'b',name:'Station',platform:'B',lat:59.0005,lon:18.,walking:'estimated'}];
+    const map=L.map(el).setView([59,18],14),markers=stops.map(s=>L.circleMarker([s.lat,s.lon]).addTo(map));
+    const view=new JourneyView(map,markers,()=>{});
+    view.setData({values:[null,{seconds:60,kind:'walk',arrival:120,boardings:0,journey:0}],journeys:[{previous:null,kind:'walk',from:0,to:1,departure:60,arrival:120,stops:[0,1],metres:70,estimated:true}],routes:[]},{date:'2026-10-21',maxMinutes:120},stops);
+    view.pin(1);
+  });
+  await expect(page.locator('#journey-panel')).toContainText('Gång · uppskattad');
+  await expect(page.locator('#journey-panel')).toContainText('samma namn inom 250 meter');
+  await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 1 min · 70 m');
+});

@@ -14,17 +14,25 @@
   "method": [
     "scripts/osm_walks.py",
     "scripts/prepare_pedestrian_tiles.py",
-    "scripts/valhalla_walks.py"
+    "scripts/valhalla_walks.py",
+    "scripts/assumed_walks.py"
   ],
   "requirements": "scripts/requirements-walking.txt",
   "profile": {
     "walkingSpeedKmh": 4.8,
     "maxMinutes": 30,
     "endpointToleranceMetres": 1,
-    "railPlatformAutoBinding": false,
-    "knownTimeRestrictedWaysExcluded": true
+    "railPlatformAutoBinding": "Exact named OSM stop-area membership and platform code; surface only, unambiguous geometry within 25m",
+    "knownTimeRestrictedWaysExcluded": true,
+    "sameNameAssumption": {
+      "maximumDirectMetres": 250,
+      "distanceMultiplier": 1.25,
+      "minimumSeconds": 60,
+      "mappedDirectionsPreserved": true,
+      "reviewed": false
+    }
   },
-  "quality": {
+  "historicalBaselineQuality": {
     "surfaceCandidates": 11181,
     "boundStops": 1041,
     "totalStops": 14219,
