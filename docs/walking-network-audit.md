@@ -165,3 +165,49 @@ integritetskontrollerade publicerade datafilerna verifierar gångytor och
 sammanslagna gångsteg vid Söderberga allé, Bromma sjukhus, Hässelby slott och
 Kvarnhagen, fortlöpande stationsresultat och nollställning utan webbläsarfel.
 Automatiska kontroller: 46 TypeScript-, 69 Python- och 34 webbläsartester.
+
+## Station names in the possessive form (2026-10-21)
+
+Lindholmen's train platforms have no direct mapped walking profile. Their nearby
+bus stop, **Lindholmens station**, does. The previous suffix normalization left
+`lindholmen` and `lindholmens` separate, so the train could be reached while the
+walking-profile source stayed unreachable. This is a station-access gap, not
+on-demand contour calculation failing.
+
+The same general rule now recognizes a Swedish possessive `s` immediately before
+`station`, provided the corresponding shorter name already exists within 250 m.
+Exact names take precedence: `Hägernäs station` still matches `Hägernäs`, rather
+than a hypothetical `Hägernä`. Directional suffixes, punctuation, the 250 m limit,
+paid walking time and the existing physical paths remain respected. New aliases
+never serve as evidence for additional name normalization. Missing directions
+are still explicitly estimated under the user-authorized same-name assumption.
+
+Against the published 2026-10-21 feed this adds 508 directed access links and gives
+45 more stop positions outward access to a precomputed walking profile. It also
+connects variants at Stocksund, Kragstalund, Ekskogen, Sundbyberg, Häggvik,
+Jakobsberg and other stations; there are no hard-coded station names in the rule.
+The user's Vallentuna 21:05 / 30-minute-walk query reaches Lindholmens station in
+629 seconds, with 60 seconds of continuous walking used. Its precomputed profile
+therefore has 29 walking minutes available. The whole-query audit finds zero
+walking-extension violations.
+
+`python scripts/walking_coverage.py --manifest PATH/manifest.json --output report.json --csv gaps.csv`
+verifies the core file hashes and audits **all** stop positions, using directed
+walking paths to existing precomputed profiles. It distinguishes a missing own
+profile from missing access to every profile, and reserves at least one contour
+minute. It does not invent walking exits. Every data build uploads the JSON and
+CSV as the `sliso-walking-coverage` Actions artifact, outside Git.
+
+Before this repair, 9,674 of 14,195 stop positions had their own profiles; another
+1,707 could reach a profile within a 30-minute walking allowance. Afterward 1,752
+can do so, leaving 2,769 without known profile access. These counts include old
+and unused GTFS positions, and describe potential access with the full allowance.
+A particular search can have less travel time or continuous walking left. Some
+unresolved examples include Handen, Österskär, Segersäng and Gröndalsviken.
+
+Walking geometry is already precomputed offline in one-minute increments up to
+30 minutes for each mapped endpoint, stored in small spatial shards, verified
+and cached by the browser. A query selects profiles using arrival time and its
+remaining continuous walking budget. Viewport changes load only nearby profiles;
+the browser combines and draws the polygons. Reusing the prepared walking cache
+allows station-name corrections to publish without redoing OSM routing or contours.

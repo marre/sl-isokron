@@ -37,3 +37,23 @@ class AssumedWalkTests(unittest.TestCase):
         stops=[dict(id='rail',name='Upplands Väsby',lat=59.,lon=18.),dict(id='bus',name='Upplands Väsby station',lat=59.001,lon=18.),dict(id='west',name='Upplands Väsby station västra',lat=59.,lon=18.),dict(id='far',name='Upplands Väsby station',lat=59.01,lon=18.)]
         result=add_assumed_walks(stops,[])
         self.assertEqual({(e['from'],e['to']) for e in result},{('rail','bus'),('bus','rail')})
+
+    def test_swedish_possessive_station_names_connect_to_existing_nearby_stems(self):
+        stops=[dict(id='rail',name='Lindholmen',lat=59.,lon=18.),dict(id='bus',name='Lindholmens station',lat=59.0005,lon=18.),dict(id='old',name='Lindholmens station',lat=59.0006,lon=18.)]
+        mapped=dict(from_='rail',to='bus',seconds=80,source='mapped');mapped['from']=mapped.pop('from_')
+        result=add_assumed_walks(stops,[mapped])
+        pairs=[(e['from'],e['to']) for e in result]
+        self.assertEqual(len(pairs),6)
+        self.assertEqual(len(set(pairs)),6)
+        self.assertEqual(result[0],mapped)
+        self.assertEqual(next(e for e in result if e['from']=='bus' and e['to']=='rail')['source'],SOURCE)
+        self.assertEqual({(e['from'],e['to']) for e in add_assumed_walks(stops[::-1],[])},set(pairs))
+
+    def test_natural_final_s_uses_the_exact_station_name_instead_of_a_shorter_neighbor(self):
+        stops=[dict(id='rail',name='Hägernäs',lat=59.,lon=18.),dict(id='bus',name='Hägernäs station',lat=59.0005,lon=18.),dict(id='unrelated',name='Hägernä',lat=59.,lon=18.)]
+        result=add_assumed_walks(stops,[])
+        self.assertEqual({(e['from'],e['to']) for e in result},{('rail','bus'),('bus','rail')})
+
+    def test_possessive_station_alias_keeps_radius_punctuation_and_direction_restrictions(self):
+        stops=[dict(id='rail',name='Lindholmen',lat=59.,lon=18.),dict(id='far',name='Lindholmens station',lat=59.01,lon=18.),dict(id='west',name='Lindholmens station västra',lat=59.,lon=18.),dict(id='punctuation',name='Lindholmen-station',lat=59.,lon=18.)]
+        self.assertEqual(add_assumed_walks(stops,[]),[])
