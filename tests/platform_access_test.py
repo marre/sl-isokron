@@ -93,6 +93,7 @@ class PlatformAccessTests(unittest.TestCase):
         class Actor:
             def __init__(self,km):self.km=iter(km)
             def matrix(self,request):
+                if request.get('expansion_max_distance')!=510:raise AssertionError('Local validation must bound native exploration')
                 km=next(self.km)
                 return {'sources_to_targets':{'distances':[[km]],'durations':[[30 if km is not None else None]]}}
         result={'edges':segment(1,'footway',10,20)}

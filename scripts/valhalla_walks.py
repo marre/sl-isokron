@@ -58,7 +58,7 @@ def select_anchor(stop,result,tolerance=1,platform=False):
     if not edges or len({way_id(e) for e in edges}) != 1:
         return None
     edge=min(edges,key=lambda e:distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])))
-    return {**stop,'anchorLat':edge['correlated_lat'],'anchorLon':edge['correlated_lon'],'way':way_id(edge),'offsetMetres':distance((stop['lat'],stop['lon']),(edge['correlated_lat'],edge['correlated_lon']))}
+    return {**stop,'anchorLat':edge['correlated_lat'],'anchorLon':edge['correlated_lon'],'way':way_id(edge),'edgeMetres':edge.get('edge',{}).get('geo_attributes',{}).get('length',0),'offsetMetres':distance((stop['lat'],stop['lon']),(edge['correlated_lat'],edge['correlated_lon']))}
 
 def station_anchor(stop, result, seeds, actor):
     # Official bus stops in the same stop area can be slightly displaced from
@@ -105,8 +105,10 @@ def nearby_network_anchor(stop, result, seeds, actor):
     for neighbor in neighbors:
         valid=True
         for a,b in [(anchor,neighbor),(neighbor,anchor)]:
+            # Native expansion counts a whole endpoint edge before deducting
+            # its unused part. Reserve both edge lengths to keep short paths.
             try:
-                r=actor.matrix({'sources':[loc(a)],'targets':[loc(b)],'costing':'pedestrian','units':'kilometers','verbose':False})
+                r=actor.matrix({'sources':[loc(a)],'targets':[loc(b)],'costing':'pedestrian','units':'kilometers','expansion_max_distance':math.ceil(500+a.get('edgeMetres',0)+b.get('edgeMetres',0)),'verbose':False})
                 seconds=r['sources_to_targets']['durations'][0][0];km=r['sources_to_targets']['distances'][0][0]
                 if seconds is None or km is None or not math.isfinite(seconds) or not math.isfinite(km) or seconds<0 or km<0 or km*1000+a['offsetMetres']+b['offsetMetres']>500:valid=False;break
             except Exception:valid=False;break
