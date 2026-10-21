@@ -64,5 +64,5 @@ verklig workerhämtning i dator- och mobilvy. Äldre JSON-paket stöds fortsatt.
 Den spatiala återställningen och [nät-/resultatauditen](walking-network-audit.md)
 testar även olika hållplatsnamn, verkliga korsningskanter utanför själva
 lägesradien, oanslutna broplan, saknad gångriktning, långa nätomvägar och
-kvarvarande sammanhängande gångbudget. 43 TypeScript- och 55 Pythonfall. Källhämtningens tester omfattar
-verifierad cache, korrupt cache, avbrutna överföringar, tidsgränser och fel checksumma.
+kvarvarande sammanhängande gångbudget. 43 TypeScript- och 56 Pythonfall. Källhämtningens tester omfattar
+verifierad cache, korrupt cache, avbrutna/återupptagna överföringar, tidsgränser och fel checksumma.

@@ -122,4 +122,5 @@ SHA-256 och alla filers integritet kontrolleras före installation/publicering.
 OSM-hämtningen har tre försök med högst 180 sekunders överföring per försök,
 20 sekunders anslutningsgräns och avbrytning vid långvarigt låg överföringstakt.
 Endast en fullständig SHA-256-verifierad fil får publiceras till källcachen;
-felaktiga eller avbrutna filer återanvänds inte. Cachen ligger utanför Git.
+avbrutna överföringar sparas separat och återupptas, men används inte av
+gångbygget förrän hela filens checksumma stämmer. Felaktiga kompletta filer avvisas. Cachen ligger utanför Git.

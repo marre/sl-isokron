@@ -40,3 +40,16 @@ class OsmDownloadTests(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):fetch_osm(self.provenance,self.cache)
             self.assertEqual(run.call_count,3)
         self.assertFalse(list(self.cache.iterdir()))
+
+    def test_interrupted_download_resumes_verified_immutable_source(self):
+        calls=[]
+        def download(args,**kwargs):
+            calls.append(args);part=Path(args[args.index('--output')+1])
+            self.assertEqual(args[args.index('--continue-at')+1],'-')
+            if len(calls)==1:
+                part.write_bytes(self.content[:8]);raise subprocess.CalledProcessError(28,args)
+            self.assertEqual(part.read_bytes(),self.content[:8])
+            part.write_bytes(part.read_bytes()+self.content[8:])
+        with patch('prepare_walking.subprocess.run',side_effect=download):
+            self.assertEqual(fetch_osm(self.provenance,self.cache).read_bytes(),self.content)
+        self.assertEqual(len(calls),2)

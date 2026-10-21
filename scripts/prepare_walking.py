@@ -20,14 +20,20 @@ def fetch_osm(provenance, cache):
             print('Reusing checksum-verified OSM extract: '+checksum[:20],flush=True);return target
         target.unlink()
     part=target.with_suffix('.part')
+    if part.exists() and verified(part):
+        part.replace(target);return target
     for attempt in range(1,4):
         print(f'Fetching pinned OSM extract: attempt {attempt}/3 (180 second transfer limit)',flush=True)
         try:
             subprocess.run(['curl','--fail','--location','--show-error','--connect-timeout','20',
-                '--max-time','180','--speed-time','30','--speed-limit','1048576',
+                '--max-time','180','--continue-at','-','--speed-time','30','--speed-limit','1048576',
                 '--user-agent','sliso-walking-build/1','--output',str(part),provenance['source']],check=True)
-        except subprocess.CalledProcessError:
-            part.unlink(missing_ok=True)
+        except subprocess.CalledProcessError as error:
+            if part.exists() and verified(part):
+                part.replace(target);return target
+            # Keep partial bytes separate from the usable cache. The immutable
+            # source can resume next attempt; the final SHA still verifies all bytes.
+            if error.returncode==33:part.unlink(missing_ok=True)
             if attempt==3:raise
             continue
         if not verified(part):
