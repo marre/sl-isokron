@@ -220,6 +220,8 @@ test('map progress shows provisional stations before completion and cancel rejec
  const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
  await expect(marker).toBeVisible();
  await expect(page.locator('#status')).toContainText('preliminära');
+ const progressBox=await page.locator('.map-progress-text').boundingBox(),headingBox=await page.locator('.map-heading').boundingBox();
+ expect(progressBox!.y+progressBox!.height).toBeLessThanOrEqual(headingBox!.y);
  await expect(page.locator('#legend')).toBeHidden();
  await marker.press('Enter');await expect(page.locator('.stop-popup')).toContainText('Preliminärt 10 min');
  await expect(page.locator('#map-label')).toContainText('T-CENTRALEN');
