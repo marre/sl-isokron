@@ -155,3 +155,13 @@ Alla hållplatslägen förutsätts ha någon gångbar utgång. Saknad anslutning
 en lucka i kartunderlaget eller matchningen, inte belägg för att gång är omöjlig.
 Utgångens faktiska läge och väg behöver fortfarande matchas; stationsplattformar
 får inte automatiskt anslutas till en närliggande väg på fel nivå.
+
+Publicerat underlag: `sl-68faf7a7c92914d702f8`, GTFS 2026-10-21, gångversion v11.
+Den publicerade versionen har 9 674 fysiska ankare, 109 fler än föregående
+publicerade v10, samt 482 735 riktade gångpar. De 48 fysiska referensfallen
+klaras. Samma publicerade sökning ger tiderna i tabellen ovan och noll
+överträdelser i sökauditen. Lokal produktionsbyggd webbläsarkontroll med de
+integritetskontrollerade publicerade datafilerna verifierar gångytor och
+sammanslagna gångsteg vid Söderberga allé, Bromma sjukhus, Hässelby slott och
+Kvarnhagen, fortlöpande stationsresultat och nollställning utan webbläsarfel.
+Automatiska kontroller: 46 TypeScript-, 69 Python- och 34 webbläsartester.
