@@ -144,9 +144,14 @@ Kontroll med publicerad tidtabell 2026-10-21 och användarens Skärvikssökning
 | Kvarnhagen i Hässelby | 96 min | 59 min |
 | Hässelby slott, tre lägen | 58 / 58 / 61 min | 58 / 58 / 61 min |
 
-I samma låsta OSM- och GTFS-underlag får 109 ytterligare lägen fysiska ankare,
+I samma låsta OSM- och GTFS-underlag får 110 ytterligare lägen fysiska ankare,
 utan att något tidigare ankare försvinner. Alla 48 riktade fysiska referensfall
 klaras, och sökningens kontroll av gångförlängningar ger noll överträdelser.
 Bromma sjukhus och Kvarnhagen har lagts till som referenspar. Andra närliggande
 lägen kan fortfarande sakna kartunderlag eller ha en verklig barriär/gångbudget
 och får därför inte kopplas ihop enbart på grund av kort fågelavstånd.
+
+Alla hållplatslägen förutsätts ha någon gångbar utgång. Saknad anslutning är
+en lucka i kartunderlaget eller matchningen, inte belägg för att gång är omöjlig.
+Utgångens faktiska läge och väg behöver fortfarande matchas; stationsplattformar
+får inte automatiskt anslutas till en närliggande väg på fel nivå.
