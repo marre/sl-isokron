@@ -238,3 +238,18 @@ test('map progress shows provisional stations before completion and cancel rejec
  await expect(page.locator('#map-progress')).toBeHidden();
  await expect(page.locator('#status')).toContainText('Avbruten');
 });
+
+test('disconnected walking exits remain visibly flagged on a collapsed mobile legend',async({page})=>{
+ await init(page);
+ const s={v:1,stop:'demo-20',name:'Mörby station',lat:59.3887,lon:18.0507,date:stockholmNow().date,time:'22:26',maxMinutes:120,walkMinutes:30,maxTransfers:4,windowMinutes:30,modes:['boat']};
+ await page.goto('/#s='+encodeURIComponent(JSON.stringify(s)));
+ await expect(page.locator('#legend')).toBeVisible();
+ await expect(page.locator('.complete-badge')).toBeVisible();
+ await expect(page.locator('.complete-badge')).toHaveText('Gångdata saknas');
+ if(await page.locator('#legend-toggle').isVisible()){
+  expect((await page.locator('#legend').boundingBox())!.height).toBeLessThan(125);
+  await page.locator('#legend-toggle').click();
+ }
+ await expect(page.locator('.exit-warning')).toBeVisible();
+ await expect(page.locator('.exit-warning')).toContainText('missa möjliga resor');
+});
