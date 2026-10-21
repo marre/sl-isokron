@@ -152,7 +152,7 @@ test('only known destinations remain after search; new search restores the map a
  expect(await enabledMarkers()).toBeLessThan(before);
  await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
- await expect(page.locator('.leaflet-walking-areas-pane canvas')).toBeVisible();
+ await expect(page.locator('.leaflet-walking-areas-pane canvas').first()).toBeVisible();
  await page.locator('#walking-toggle').uncheck();await expect(page.locator('#walking-status')).toContainText('dolda');
  await page.locator('#share').click();await expect(page).toHaveURL(/#s=/);
  await page.locator('#reset-search').click();

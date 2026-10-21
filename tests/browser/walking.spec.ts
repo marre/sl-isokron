@@ -1,0 +1,56 @@
+import { test, expect } from '@playwright/test';
+import { createHash } from 'node:crypto';
+
+async function walkingFixture(page: import('@playwright/test').Page) {
+  await page.route('https://tile.openstreetmap.org/**', r => r.abort());
+  await page.goto('/');
+  const geometry = { type: 'Polygon', coordinates: [[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]] };
+  const bodies = ['a','b'].map(id => JSON.stringify({ [id]: [{ minutes: 10, geometry }] }));
+  const refs = bodies.map((body,i) => ({ url: `/data/progressive/${i}.json`, bytes: Buffer.byteLength(body), sha256: createHash('sha256').update(body).digest('hex') }));
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/data/progressive/*.json', async route => {
+    const i = Number(new URL(route.request().url()).pathname.split('/').at(-1)!.split('.')[0]);
+    if (i === 1) await pending;
+    await route.fulfill({ contentType: 'application/json', body: bodies[i] }).catch(() => {});
+  });
+  await page.evaluate(async refs => {
+    const component = '/src/walking-view.ts', leaflet = '/node_modules/leaflet/dist/leaflet-src.esm.js';
+    const { WalkingView } = await import(component), L = await import(leaflet);
+    const el = document.createElement('div'); el.id = 'progressive-map';
+    el.style.cssText = 'position:fixed;left:0;top:0;width:300px;height:300px;z-index:10000'; document.body.append(el);
+    const status = document.createElement('p'); status.id = 'progressive-status'; document.body.append(status);
+    const view = new WalkingView(L.map(el).setView([59.33,18],14), (text:string) => { status.textContent = text; }, () => {});
+    (window as any).progressiveView = view;
+    view.setData({ walkSources: [{ stop:0,seconds:0,walked:0 },{ stop:1,seconds:600,walked:0 }] },
+      { maxMinutes:20,walkMinutes:10 }, { walkingAreas: { index:{ a:0,b:1 },files:refs } }, [{ id:'a' },{ id:'b' }]);
+  }, refs);
+  return release;
+}
+
+test('walking areas paint before the final file arrives and preserve faster colors', async ({page}) => {
+  const release = await walkingFixture(page);
+  await expect(page.locator('#progressive-status')).toContainText('1 av 2 (50 %)');
+  const first = page.locator('#progressive-map .leaflet-walking-band-0-pane');
+  await expect(first.locator('canvas')).toBeVisible();
+  expect(await first.locator('canvas').evaluate((canvas:HTMLCanvasElement) => {
+    const data=canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height).data;
+    return data.some((value,index)=>index%4===3&&value>0);
+  })).toBe(true);
+  release();
+  await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
+  const slower = page.locator('#progressive-map .leaflet-walking-band-1-pane');
+  await expect(slower.locator('canvas')).toBeVisible();
+  expect(Number(await first.evaluate(e=>getComputedStyle(e).zIndex))).toBeGreaterThan(Number(await slower.evaluate(e=>getComputedStyle(e).zIndex)));
+});
+
+test('reset removes partial walking areas and ignores late arrivals', async ({page}) => {
+  const release = await walkingFixture(page);
+  await expect(page.locator('#progressive-status')).toContainText('1 av 2');
+  await page.evaluate(() => (window as any).progressiveView.reset());
+  release();
+  await expect(page.locator('#progressive-map .leaflet-walking-areas-pane canvas')).toHaveCount(0);
+  await page.waitForTimeout(150);
+  await expect(page.locator('#progressive-map .leaflet-walking-areas-pane canvas')).toHaveCount(0);
+  await expect(page.locator('#progressive-status')).not.toContainText('Ungefärliga');
+});
