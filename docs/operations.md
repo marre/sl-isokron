@@ -14,7 +14,7 @@ Tjänsten är en utvecklingsversion. Beställaren har publicerat appen via Cloud
 | `inventory_only=false` | Kompilera riktig tidtabell med `data/feed-scope.json` och det medföljande partiella `data/walking-index.json`, testa och bygg appen. |
 | `initialize_quota_ledger=false` | Återanvänd sparad bokföring. Välj true endast första gången eller efter bekräftad cacheförlust och kontroll av kvarvarande Trafiklab-kvot. |
 | `export_source=false` | Normalläge. True exporterar validerad rå GTFS som ett separat artefakt för lokal bearbetning; retention 1 dag. |
-| `prepare_walking=false` | True bygger om gångavstånd och ungefärliga gångområden från den checksummebundna OSM-källan. Kör vid första aktivering, cacheförlust eller förnyat gångunderlag. PBF/tiles används temporärt; endast förberedda index och konturer cachas. |
+| `prepare_walking=false` | True bygger om gångavstånd och ungefärliga gångområden från den checksummebundna OSM-källan. Kör vid första aktivering, cacheförlust eller förnyat gångunderlag. Den checksummeverifierade PBF-källan sparas i Actions-cache tillsammans med förberedda index och konturer. Tiles används temporärt. |
 | `publish_release=false` | True publicerar kompilerade data som en versionsmärkt GitHub Release och uppdaterar den lilla `data/release.json` i Git. Det triggar Cloudflares befintliga Git-integration. Kräver `inventory_only=false`. |
 | `deploy=false` | Bygg för granskning utan att publicera. True kräver dessutom `SLISO_DEPLOY_ENABLED=true` och Cloudflare-inställningarna nedan. |
 
@@ -118,3 +118,8 @@ Cloudflares gränser på 25 MiB per fil och 20 000 filer gäller oförändrat.
 Stora gångindex kodas kompakt utan att kasta kanter eller källhänvisningar,
 och närliggande gångprofiler grupperas i begränsade shards. Arkivets byteantal,
 SHA-256 och alla filers integritet kontrolleras före installation/publicering.
+
+OSM-hämtningen har tre försök med högst 180 sekunders överföring per försök,
+20 sekunders anslutningsgräns och avbrytning vid långvarigt låg överföringstakt.
+Endast en fullständig SHA-256-verifierad fil får publiceras till källcachen;
+felaktiga eller avbrutna filer återanvänds inte. Cachen ligger utanför Git.

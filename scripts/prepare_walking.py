@@ -1,4 +1,4 @@
-"""Reproducible, optional CI rebuild; cache only small outputs, not the OSM PBF."""
+"""Reproducible CI rebuild with a verified, immutable OSM download cache."""
 import argparse
 import hashlib
 import json
@@ -6,19 +6,44 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.request
 from pathlib import Path
+
+
+def fetch_osm(provenance, cache):
+    """Bound the entire transfer, verify bytes, and atomically cache by SHA-256."""
+    cache=Path(cache);cache.mkdir(parents=True,exist_ok=True)
+    checksum=provenance['sha256'];target=cache/(checksum+'.osm.pbf')
+    def verified(path):
+        with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()==checksum
+    if target.exists():
+        if verified(target):
+            print('Reusing checksum-verified OSM extract: '+checksum[:20],flush=True);return target
+        target.unlink()
+    part=target.with_suffix('.part')
+    for attempt in range(1,4):
+        print(f'Fetching pinned OSM extract: attempt {attempt}/3 (180 second transfer limit)',flush=True)
+        try:
+            subprocess.run(['curl','--fail','--location','--show-error','--connect-timeout','20',
+                '--max-time','180','--speed-time','30','--speed-limit','1048576',
+                '--user-agent','sliso-walking-build/1','--output',str(part),provenance['source']],check=True)
+        except subprocess.CalledProcessError:
+            part.unlink(missing_ok=True)
+            if attempt==3:raise
+            continue
+        if not verified(part):
+            part.unlink(missing_ok=True)
+            raise ValueError('OSM source checksum mismatch')
+        part.replace(target)
+        print(f'OSM extract verified and cached: {target.stat().st_size} bytes',flush=True)
+        return target
+    raise RuntimeError('OSM download attempts exhausted')
 
 
 def prepare(gtfs, output):
     provenance = json.loads(Path('data/walking-index.source.json').read_text())['osm']
     output = Path(output); output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='sliso-walking-build-') as temp:
-        root = Path(temp); pbf = root/'source.osm.pbf'
-        with urllib.request.urlopen(urllib.request.Request(provenance['source'],headers={'User-Agent':'sliso-walking-build/1'}), timeout=120) as source, pbf.open('wb') as target:
-            shutil.copyfileobj(source, target)
-        with pbf.open('rb') as stream: checksum = hashlib.file_digest(stream, 'sha256').hexdigest()
-        if checksum != provenance['sha256']: raise ValueError('OSM source checksum mismatch')
+        root = Path(temp); pbf = fetch_osm(provenance,output.parent/'osm-cache')
         def run(script, *args): subprocess.run([sys.executable, 'scripts/'+script, *map(str, args)], check=True)
         graph = root/'graph.json.gz'; tiles = root/'valhalla'; station_tiles=root/'station-valhalla'; walks = output/'walks.json'
         run('osm_walks.py', '--pbf', pbf, '--gtfs', gtfs, '--output', graph)
