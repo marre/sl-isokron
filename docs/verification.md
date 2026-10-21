@@ -81,3 +81,26 @@ underlag för den aktuella kartvyn; procenten är arbete inom aktuell fas,
 inte en uppskattning av återstående sekunder. Delresultat har inga färdiga
 reskedjor. Avbrytning eller ändrade inställningar tar bort dem och ignorerar
 sena meddelanden. Dator-/mobiltester täcker detta samt gånghämtning vid panorering.
+
+## Mobile map layout (2026-10-21)
+
+Phone layouts use a compact result legend and destination card. Walking controls,
+colour intervals and the full itinerary expand explicitly. Opening search closes
+journey details; a valid search collapses the form while results stream, with a
+separate visible cancellation control. Inputs use 16 px text and primary controls
+have at least 44 px touch targets. Short coarse-pointer landscape windows use the
+same layout. Search edits retain the calculated result until settings change.
+
+Chromium touch emulation verified at 390×844, 320×568 and 844×390, including
+unforced taps, touch dragging with a selected journey, drawer expansion/collapse,
+sharing, cancellation, reset and portrait/landscape resizing. The complete browser
+suite passes 35 tests (the phone-only case is skipped in the desktop project), and
+46 TypeScript tests pass. Production compilation and static-file limits pass.
+
+A production build was also exercised with integrity-checked published dataset
+`sl-68faf7a7c92914d702f8` and the shared Skärvik 2026-10-21 08:07 query. At 390×844,
+the compact legend measures 88 px high and Kvarnhagen's journey card 86.6 px;
+itinerary expansion and returning to search work without overlapping sheets or
+browser errors. Basemap requests were disabled for these repeatable browser
+checks; routing and walking data were the real published files. These are browser
+emulation checks, not physical iOS/Android device certification.

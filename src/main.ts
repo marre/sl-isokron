@@ -1,3 +1,4 @@
+import { mobileLayout } from './layout';
 import L from 'leaflet';
 import { JourneyView } from './journey-view';
 import { MapProgress } from './map-progress';
@@ -18,7 +19,7 @@ const arrow='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke=
 $('#app').innerHTML = `
 <header class="topbar"><a class="brand" href="/" aria-label="sliso startsida"><span class="brand-icon">s<span>${arrow}</span></span>sliso<span class="brand-dot">.</span></a><span class="tagline">Stockholm, inom räckhåll.</span><button class="text-button" id="about-open">Om kartan <span aria-hidden="true">${arrow}</span></button></header>
 <main>
-<aside class="panel" aria-label="Sökinställningar">
+<aside id="search-settings" class="panel" aria-label="Sökinställningar"><div class="mobile-panel-header"><strong>Sökinställningar</strong><button id="mobile-close-search" type="button">Visa kartan ↓</button></div>
 <div class="eyebrow"><span class="live-dot"></span> UTFORSKA MED SL</div>
 <h1>Hur långt<br>når <em>du?</em></h1>
 <p class="intro">En startplats. En stund på vägen.<br>Upptäck vad som finns inom räckhåll.</p>
@@ -35,7 +36,7 @@ $('#app').innerHTML = `
 <div id="status" role="status" aria-live="polite">Välj en hållplats för att börja.</div>
 </form><div class="panel-foot"><span aria-hidden="true">◷</span> Planerad trafik · Ingen realtid <button id="data-open" class="text-button">Om datan</button></div>
 </aside>
-<section class="map-section" aria-label="Restidskarta"><div id="map-progress" class="map-progress" hidden><div role="progressbar" aria-label="Beräkning" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="map-progress-fill"></span></div><span class="map-progress-text"></span></div><div id="map"></div><div class="map-heading"><span class="map-heading-dot"></span><span id="map-label">STOCKHOLM & OMKRING</span></div><button id="reset-search" class="reset-search" title="Välj ny startpunkt och behåll restidsinställningarna" hidden>Ny sökning</button><div id="map-demo" class="map-demo" hidden>TESTDATA · Ej för reseplanering</div><button id="mobile-toggle" class="mobile-toggle" aria-expanded="true">Dölj sökpanel ↓</button><div class="map-actions"><button id="fit" title="Visa hela trafiknätet" aria-label="Visa hela trafiknätet">⌖</button></div><div id="map-empty" class="map-tip"><span aria-hidden="true">◎</span><div><strong>Allt börjar någonstans.</strong><span>Sök en hållplats eller välj en punkt på kartan.</span></div></div><aside id="journey-panel" class="journey-panel" aria-label="Resedetaljer" aria-labelledby="journey-title" hidden></aside><section id="legend" class="legend" aria-label="Restidsintervall" hidden></section><button id="share" class="share-button" disabled><span aria-hidden="true">${arrow}</span> Kopiera delningslänk</button><div class="map-source" id="source-note">Hållplatser och ungefärliga gångområden</div></section>
+<section class="map-section" aria-label="Restidskarta"><div id="map-progress" class="map-progress" hidden><div role="progressbar" aria-label="Beräkning" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="map-progress-fill"></span></div><span class="map-progress-text"></span></div><div id="map"></div><div class="map-heading"><span class="map-heading-dot"></span><span id="map-label">STOCKHOLM & OMKRING</span></div><button id="reset-search" class="reset-search" title="Välj ny startpunkt och behåll restidsinställningarna" hidden>Ny sökning</button><div id="map-demo" class="map-demo" hidden>TESTDATA · Ej för reseplanering</div><button id="mobile-toggle" class="mobile-toggle" aria-controls="search-settings" aria-expanded="true">Dölj sökpanel ↓</button><button id="map-cancel" class="map-cancel" hidden>Avbryt sökning</button><div class="map-actions"><button id="fit" title="Visa hela trafiknätet" aria-label="Visa hela trafiknätet">⌖</button></div><div id="map-empty" class="map-tip"><span aria-hidden="true">◎</span><div><strong>Allt börjar någonstans.</strong><span>Sök en hållplats eller välj en punkt på kartan.</span></div></div><aside id="journey-panel" class="journey-panel" aria-label="Resedetaljer" aria-labelledby="journey-title" hidden></aside><section id="legend" class="legend" aria-label="Restidsintervall" hidden></section><button id="share" class="share-button" aria-label="Kopiera delningslänk" title="Kopiera delningslänk" disabled><span aria-hidden="true">${arrow}</span> Kopiera delningslänk</button><div class="map-source" id="source-note">Hållplatser och ungefärliga gångområden</div></section>
 </main>
 <dialog id="info-dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
 
@@ -54,7 +55,7 @@ let stops: Stop[] = [], manifest: Manifest, selected = -1, worker: Worker | unde
 let result: SearchResult | undefined, usedSettings: Settings | undefined, dirty = false;
 let settings: Settings, runTimer: ReturnType<typeof setTimeout>;
 let activeOption = -1;
-const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index); });
+const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index); if(mobileLayout.matches)setMobileSearch(true); });
 const mapProgress=new MapProgress($('#map-progress'));
 let previewValues: (Reach|null)[] = [], previewActive=false;
 const walkingView = new WalkingView(map, text=>{const el=document.querySelector('#walking-status');if(el)el.textContent=text;}, ()=>{}, (completed,total,failed)=>{
@@ -62,17 +63,17 @@ const walkingView = new WalkingView(map, text=>{const el=document.querySelector(
   mapProgress.update(`3/3 · Gångområden i kartvyn: ${completed} av ${total}${failed?` · ${failed} misslyckades`:''}`,completed,total);
 });
 const modeInputs = () => [...document.querySelectorAll<HTMLInputElement>('input[name=mode]')];
-function showError(message: string) { $('#form-error').textContent = message; $('#form-error').hidden = false; }
+function showError(message: string) { $('#form-error').textContent = message; $('#form-error').hidden = false; if(mobileLayout.matches)setMobileSearch(true); }
 function status(message: string) { $('#status').textContent = message; }
 function terminate(message?: string) {
   mapProgress.reset();
   generation++; worker?.terminate(); worker = undefined; clearTimeout(runTimer);
-  $('#cancel').hidden = true;
+  $('#cancel').hidden = true; $('#map-cancel').hidden=true;
   if (message) status(message);
 }
 function clearResults() {
   journeyView.reset();walkingView.reset();map.closePopup();mapProgress.reset();previewValues=[];previewActive=false;
-  result = undefined; usedSettings = undefined; $('#legend').hidden = true; $('#map-empty').hidden = false;
+  result = undefined; usedSettings = undefined; $('#legend').hidden = true; $('#legend').classList.remove('legend-expanded'); $('#map-empty').hidden = false;
   for (const marker of markers) {
     (marker.getElement() as SVGElement).style.display = '';
     marker.setStyle({ color: '#52766e', fillColor: '#f5f6f0', fillOpacity: .9, weight: 1.5, radius: 5 });
@@ -144,12 +145,19 @@ function renderResults(r: SearchResult,s: Settings) {
     (markers[i].getElement() as SVGElement).style.display=v?'':'none';
     if(v)markers[i].setStyle({color:'#fff',fillColor:colorFor(v.seconds,s.maxMinutes),fillOpacity:1,weight:2,radius:7});
   });
-  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2>${count} nåbara hållplatslägen</h2></div><span class="complete-badge">Färdig</span></div><div class="bands">${Array.from({length:Math.ceil(s.maxMinutes/10)},(_,i)=>`<span><i style="background:${bandColors(s.maxMinutes)[i]}"></i>${i*10}–${Math.min((i+1)*10,s.maxMinutes)} min</span>`).join('')}</div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">Visar bara hållplatser med känd resa.${!manifest.demo&&!manifest.walkingCoverage?.reviewed?' Saknade gångkopplingar kan ge längre restider och dölja nåbara hållplatser.':''} Övre bandgränsen ingår.</p><p>Hovra för resväg · Klicka eller tryck för att fästa resan.</p><button id="fit-result" class="fit-result">Visa hela resultatet</button><label class="walking-toggle"><input id="walking-toggle" type="checkbox" ${walkingView.enabled?'checked':''}> Visa gångområden</label><p id="walking-status" class="walking-status" role="status"></p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}`;
+  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2>${count} nåbara hållplatslägen</h2></div><span class="complete-badge">Färdig</span><button id="legend-toggle" class="legend-toggle" aria-expanded="false" aria-controls="legend-details" aria-label="Visa färgskala och kartalternativ">⌃</button></div><div class="legend-scale" aria-hidden="true">${bandColors(s.maxMinutes).map(color=>`<i style="background:${color}"></i>`).join('')}</div><div class="legend-range" aria-hidden="true"><span>0 min</span><span>${s.maxMinutes} min</span></div><div id="legend-details" class="legend-details"><div class="bands">${Array.from({length:Math.ceil(s.maxMinutes/10)},(_,i)=>`<span><i style="background:${bandColors(s.maxMinutes)[i]}"></i>${i*10}–${Math.min((i+1)*10,s.maxMinutes)} min</span>`).join('')}</div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">Visar bara hållplatser med känd resa.${!manifest.demo&&!manifest.walkingCoverage?.reviewed?' Saknade gångkopplingar kan ge längre restider och dölja nåbara hållplatser.':''} Övre bandgränsen ingår.</p><p>Hovra för resväg · Klicka eller tryck för att fästa resan.</p><button id="fit-result" class="fit-result">Visa hela resultatet</button><label class="walking-toggle"><input id="walking-toggle" type="checkbox" ${walkingView.enabled?'checked':''}> Visa gångområden</label><p id="walking-status" class="walking-status" role="status"></p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}</div>`;
   $('#legend').hidden=false;$('#fit-result').onclick=fitCurrentStops;
+  $('#legend-toggle').onclick=()=>{
+    const open=$('#legend').classList.toggle('legend-expanded');
+    $('#legend-toggle').setAttribute('aria-expanded',String(open));
+    $('#legend-toggle').setAttribute('aria-label',open?'Dölj färgskala och kartalternativ':'Visa färgskala och kartalternativ');
+    $('#legend-toggle').textContent=open?'⌄':'⌃';
+    if(open&&mobileLayout.matches){journeyView.close();setMobileSearch(false);}
+  };
   $<HTMLInputElement>('#walking-toggle').onchange=()=>walkingView.toggle($<HTMLInputElement>('#walking-toggle').checked);
   walkingView.setData(r,s,manifest,stops);
   status(count ? `Färdigt. ${count} hållplatslägen nås på högst ${s.maxMinutes} minuter. Beräkning: ${Math.round(r.elapsed)} ms.` : 'Inga andra hållplatslägen nås inom gränserna. Det kan saknas gånganslutningar i underlaget.');
-  if (window.innerWidth<760) { document.body.classList.add('panel-collapsed'); updateMobile(); }
+  if (mobileLayout.matches) setMobileSearch(false);
   $('#fit').setAttribute('title','Visa hela resultatet');$('#fit').setAttribute('aria-label','Visa hela resultatet');
 }
 
@@ -158,7 +166,9 @@ async function calculate() {
   try {
     settings=readSettings();validateSettings(settings,manifest.walkingMaxMinutes);validateDate(settings.date,manifest.validFrom,manifest.validTo);
     terminate();clearResults();dirty=false;const id=generation;
-    $('#cancel').hidden=false;$('#map-empty').hidden=true;previewActive=true;previewValues=stops.map(()=>null);
+    $('#cancel').hidden=false;$('#map-cancel').hidden=false;
+    if(mobileLayout.matches)setMobileSearch(false);
+    $('#map-empty').hidden=true;previewActive=true;previewValues=stops.map(()=>null);
     markers.forEach((marker,i)=>(marker.getElement() as SVGElement).style.display=i===selected?'':'none');
     mapProgress.update('1/3 · Laddar och verifierar data',0,1);
     status('Laddar tidtabell och gånganslutningar…');
@@ -189,7 +199,8 @@ function popup(index: number) {
   L.popup().setLatLng([stop.lat,stop.lon]).setContent(box).openOn(map);
 }
 $('#search-form').addEventListener('submit',e=>{e.preventDefault();void calculate();});
-$('#cancel').onclick=()=>{terminate();clearResults();status('Avbruten. Hållplatsernas nåbarhet är okänd tills en ny sökning är färdig.');};
+$('#cancel').onclick=()=>{terminate();clearResults();status('Avbruten. Hållplatsernas nåbarhet är okänd tills en ny sökning är färdig.');if(mobileLayout.matches)setMobileSearch(true);};
+$('#map-cancel').onclick=()=>$('#cancel').click();
 $('#max-time').addEventListener('input',()=>{$('#max-output').innerHTML=`${$<HTMLInputElement>('#max-time').value} <small>min</small>`;invalidate();});
 $('#platform').addEventListener('change',()=>{const value=$<HTMLSelectElement>('#platform').value;if(value!=='')setStart(Number(value));});
 $('#search-form').addEventListener('input',e=>{const target=e.target as HTMLInputElement;if(['date','time','window'].includes(target.id))invalidate();});
@@ -216,7 +227,7 @@ function fitCurrentStops() {
   const visible=stops.filter((_,i)=>previewActive?previewValues[i]:!result||result.values[i]);if(!visible.length)return;
   map.invalidateSize({pan:false});
   const bounds=L.latLngBounds(visible.map(s=>[s.lat,s.lon]));const walkingBounds=walkingView.bounds();if(walkingBounds)bounds.extend(walkingBounds);
-  map.fitBounds(bounds,{animate:false,maxZoom:14,paddingTopLeft:[30,130],paddingBottomRight:[30,result?$('#legend').offsetHeight+80:40]});
+  map.fitBounds(bounds,{animate:false,maxZoom:14,paddingTopLeft:[30,130],paddingBottomRight:[30,result?$('#legend').offsetHeight+(mobileLayout.matches?40:80):40]});
 }
 $('#fit').onclick=fitCurrentStops;
 function resetSearch() {
@@ -235,8 +246,27 @@ $('#share').onclick=async()=>{
   try{const s=readSettings();validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);const hash=shareHash(s);history.replaceState(null,'',hash);await navigator.clipboard.writeText(location.origin+location.pathname+hash);status('Länken är kopierad. Den delar startplats och inställningar, inte ett sparat resultat.');}
   catch(e){showError(`Kunde inte kopiera länken: ${(e as Error).message} Om länken syns i adressfältet kan du kopiera den därifrån.`);}
 };
-function updateMobile(){const collapsed=document.body.classList.contains('panel-collapsed');$('#mobile-toggle').textContent=collapsed?'Visa sökpanel ↑':'Dölj sökpanel ↓';$('#mobile-toggle').setAttribute('aria-expanded',String(!collapsed));setTimeout(()=>map.invalidateSize(),200);}
-$('#mobile-toggle').onclick=()=>{document.body.classList.toggle('panel-collapsed');updateMobile();};
+function collapseLegend(){
+  $('#legend').classList.remove('legend-expanded');
+  const toggle=document.querySelector<HTMLElement>('#legend-toggle');
+  if(toggle){toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Visa färgskala och kartalternativ');toggle.textContent='⌃';}
+}
+function updateMobile(){
+  const collapsed=document.body.classList.contains('panel-collapsed');
+  $('#mobile-toggle').textContent=collapsed?(selected>=0?stops[selected].name+' · Ändra':'Sök hållplats'):'Visa kartan';
+  $('#mobile-toggle').setAttribute('aria-expanded',String(!collapsed));
+  setTimeout(()=>map.invalidateSize({pan:true}),0);
+}
+function setMobileSearch(open:boolean){
+  if(open){journeyView.close();map.closePopup();collapseLegend();}
+  document.body.classList.toggle('panel-collapsed',!open);updateMobile();
+}
+$('#mobile-toggle').onclick=()=>setMobileSearch(document.body.classList.contains('panel-collapsed'));
+$('#mobile-close-search').onclick=()=>setMobileSearch(false);
+$('#journey-panel').addEventListener('journeyopen',()=>{
+  if(mobileLayout.matches){setMobileSearch(false);collapseLegend();}
+});
+mobileLayout.addEventListener('change',()=>updateMobile());
 function dialog(title:string,html:string){$('#dialog-title').textContent=title;$('#dialog-body').innerHTML=html;$<HTMLDialogElement>('#info-dialog').showModal();}
 $('#dialog-close').onclick=()=>$<HTMLDialogElement>('#info-dialog').close();
 $('#about-open').onclick=()=>dialog('En annan sorts restidskarta',`<p>sliso visar minsta restid till varje hållplatsläge, bland tillåtna avgångar i ditt avgångsfönster. Olika hållplatser kan bygga på olika avgångar.</p><p>Väntan före första påstigning räknas inte. All färd, gång och väntan vid byten ingår. Exempel: gång 5 min + färd 20 min + byte 7 min + färd 10 min = <strong>42 minuter</strong>.</p><p>Kartan visar hållplatser och, där gångunderlag finns, ungefärliga gångområden. Ytorna uppskattas från ett gångnät och kan innehålla otillgängliga delar. De garanterar inte tillträde till alla entréer. Uppgifterna är planerade; realtid saknas.</p><p>Delningslänken innehåller startplatsens ID, namn och koordinater samt datum, tid och alla filter. Alla som har länken kan läsa dem. Resultat kan förändras när data uppdateras.</p>`);
@@ -265,7 +295,7 @@ async function init(){
     if(!manifest.demo&&(manifest.sourceUpdated||manifest.updated.slice(0,10))<addDays(stockholmNow().date,-2))banner.textContent+=' · Äldre data: uppdateringen kan ha misslyckats.';
     if(manifest.warnings.length&&!manifest.demo)banner.textContent+=' · Databegränsningar finns, se Om datan.';
     if(!manifest.demo&&!manifest.walkingCoverage?.reviewed){banner.classList.add('demo');banner.textContent=`UTVECKLINGSLÄGE · Tidtabell ${manifest.sourceUpdated||manifest.updated.slice(0,10)}. Ofullständigt gångunderlag kan underskatta nåbarheten.`;$('#map-demo').hidden=false;$('#map-demo').textContent='UTVECKLING · Gångdata ofullständiga';}
-    stops.forEach((s,i)=>{const m=L.circleMarker([s.lat,s.lon],{radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('click',()=>{if(result?.values[i]){map.closePopup();journeyView.pin(i);}else{journeyView.close();if(!result&&!previewActive)setStart(i);popup(i);}});const el=m.getElement();if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>journeyView.hover(i));el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive)setStart(i);popup(i);}}});}markers.push(m);});
+    stops.forEach((s,i)=>{const m=L.circleMarker([s.lat,s.lon],{radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('click',()=>{if(result?.values[i]){map.closePopup();journeyView.pin(i);}else{journeyView.close();if(!result&&!previewActive){setStart(i);if(mobileLayout.matches){setMobileSearch(true);return;}}popup(i);}});const el=m.getElement();if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>journeyView.hover(i));el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i);if(mobileLayout.matches){setMobileSearch(true);return;}}popup(i);}}});}markers.push(m);});
     $('#stop-search').removeAttribute('disabled');
     if(!await cacheAvailable()){const p=document.createElement('p');p.className='hint';p.textContent='Lokal lagring är inte tillgänglig. Data hämtas på nytt vid behov.';banner.after(p);}
     void pruneCache(manifest);

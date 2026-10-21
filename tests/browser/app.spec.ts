@@ -7,6 +7,10 @@ async function init(page: import('@playwright/test').Page) {
  await expect(page.locator('#stop-search')).toBeEnabled();
  await page.locator('#time').fill('08:00');
 }
+async function share(page: import('@playwright/test').Page){
+ if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='true')await page.locator('#mobile-close-search').click();
+ await page.locator('#share').click();
+}
 async function select(page: import('@playwright/test').Page, name='T-Centralen') {
  await page.locator('#stop-search').fill(name);
  await page.locator('#stop-search').press('ArrowDown');
@@ -36,7 +40,7 @@ test('local stop search, worker result, filters, share and marker detail',async(
  await page.locator('#calculate').click();
  await expect(page.locator('#legend')).toBeVisible();
  await expect(page.locator('#legend')).toContainText('Endast gång');
- await page.locator('#share').click();
+ await share(page);
  await expect(page).toHaveURL(/#s=/);
  const shared=page.url();
  await page.goto(shared);await expect(page.locator('#legend')).toBeVisible();
@@ -53,7 +57,7 @@ test('station hierarchy requires choosing a named platform',async({page})=>{
 test('A12/A14 cancellation and changed settings leave no finished result',async({page})=>{
  await init(page);await select(page);
  await page.route('**/*.bin',async r=>{await new Promise(resolve=>setTimeout(resolve,800));await r.continue();});
- await page.locator('#calculate').click();await page.locator('#cancel').click();
+ await page.locator('#calculate').click();await page.locator('#cancel:visible, #map-cancel:visible').first().click();
  await expect(page.locator('#status')).toContainText('Avbruten');
  await expect(page.locator('#legend')).toBeHidden();
  await page.locator('#time').fill('09:00');await page.locator('#time').blur();
@@ -61,7 +65,7 @@ test('A12/A14 cancellation and changed settings leave no finished result',async(
 });
 test('missing origin and out-of-coverage date are never silently replaced',async({page})=>{
  await init(page);await select(page);
- await page.locator('#share').click();
+ await share(page);
  const s=JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3)));
  s.stop='removed-id';s.name='Försvunnen hållplats';
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(s)));
@@ -76,7 +80,7 @@ test('missing origin and out-of-coverage date are never silently replaced',async
 test('shared Stockholm times survive another browser timezone',async({browser})=>{
  const context=await browser.newContext({timezoneId:'America/New_York'});
  const page=await context.newPage();await init(page);await select(page);
- await page.locator('#share').click();
+ await share(page);
  const s=JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3)));
  expect(s.time).toBe('08:00');expect(s.date).toBe(stockholmNow().date);
  await context.close();
@@ -93,6 +97,7 @@ test('changed settings terminate old data loading before it can publish',async({
  await init(page);await select(page);
  await page.route('**/*.bin',async r=>{await new Promise(resolve=>setTimeout(resolve,800));await r.continue();});
  await page.locator('#calculate').click();
+ if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
  await page.locator('#stop-search').fill('Universitetet');await page.locator('#stop-search').press('Enter');
  await page.waitForTimeout(1000);
  await expect(page.locator('#legend')).toBeHidden();
@@ -124,7 +129,7 @@ test('destination route previews on hover, pins on touch or click, and clears on
   await expect(page.locator('#journey-panel')).toBeHidden();
   await marker.hover({force:true});
   await page.locator('#journey-pin').click();
- }else await marker.tap({force:true});
+ }else {await marker.tap({force:true});await page.locator('#journey-expand').click();}
  await expect(page.locator('#journey-pin')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#journey-panel')).toContainText('Avgång');
  await expect(page.locator('#journey-panel')).toContainText('Ankomst');
@@ -153,8 +158,10 @@ test('only known destinations remain after search; new search restores the map a
  await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
  await expect(page.locator('.leaflet-walking-areas-pane canvas').first()).toBeVisible();
+ if(await page.locator('#legend-toggle').isVisible())await page.locator('#legend-toggle').click();
  await page.locator('#walking-toggle').uncheck();await expect(page.locator('#walking-status')).toContainText('dolda');
- await page.locator('#share').click();await expect(page).toHaveURL(/#s=/);
+ if(await page.locator('#legend-toggle').isVisible())await page.locator('#legend-toggle').click();
+ await share(page);await expect(page).toHaveURL(/#s=/);
  await page.locator('#reset-search').click();
  await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();
@@ -220,12 +227,12 @@ test('map progress shows provisional stations before completion and cancel rejec
  const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
  await expect(marker).toBeVisible();
  await expect(page.locator('#status')).toContainText('preliminära');
- const progressBox=await page.locator('.map-progress-text').boundingBox(),headingBox=await page.locator('.map-heading').boundingBox();
+ const progressBox=await page.locator('.map-progress-text').boundingBox(),headingBox=await page.locator('.map-heading:visible, #mobile-toggle:visible').first().boundingBox();
  expect(progressBox!.y+progressBox!.height).toBeLessThanOrEqual(headingBox!.y);
  await expect(page.locator('#legend')).toBeHidden();
  await marker.press('Enter');await expect(page.locator('.stop-popup')).toContainText('Preliminärt 10 min');
  await expect(page.locator('#map-label')).toContainText('T-CENTRALEN');
- await page.locator('#cancel').click();
+ await page.locator('#cancel:visible, #map-cancel:visible').first().click();
  await expect(page.locator('#map-progress')).toBeHidden();
  await page.evaluate(()=>(window as any).streamWorker.emit({type:'stations',completedRounds:2,totalRounds:6,changes:[{stop:5,value:{seconds:300,journey:null}}]}));
  await expect(page.locator('#map-progress')).toBeHidden();

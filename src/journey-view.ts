@@ -1,3 +1,4 @@
+import { mobileLayout } from './layout';
 import L from 'leaflet';
 import { journeyFor, journeyTime } from './core/journey';
 import { distanceText } from './core/walking';
@@ -47,7 +48,7 @@ export class JourneyView {
 
   pin(index: number, focus = false) {
     clearTimeout(this.timer); this.pinned = index; this.show(index);
-    if (focus && !this.panel.hidden) this.panel.querySelector<HTMLButtonElement>('#journey-pin')!.focus({ preventScroll: true });
+    if (focus && !this.panel.hidden) this.panel.querySelector<HTMLButtonElement>(mobileLayout.matches?'#journey-expand':'#journey-pin')!.focus({ preventScroll: true });
   }
 
   leave() {
@@ -60,7 +61,7 @@ export class JourneyView {
       const value = this.result.values[this.active];
       if (value) this.markers[this.active].setStyle({ color: '#fff', fillColor: colorFor(value.seconds, this.settings.maxMinutes), weight: 2, radius: 7 });
     }
-    this.active = null; this.layer.clearLayers(); this.panel.hidden = true;
+    this.active = null; this.layer.clearLayers(); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
     this.panel.closest('.map-section')!.classList.remove('journey-open');
   }
 
@@ -94,8 +95,15 @@ export class JourneyView {
     }).join('');
     const walks=legs.filter(l=>l.kind==='walk'),walkingSeconds=walks.reduce((sum,l)=>sum+l.arrival-l.departure,0);
     const walkingMetres=walks.every(l=>l.metres!==undefined)?walks.reduce((sum,l)=>sum+l.metres!,0):undefined;
-    this.panel.innerHTML = `<div class="journey-header"><div><span class="eyebrow">RESAN TILL</span><h2 id="journey-title">${escape(destination.name)}</h2><p>${escape(destination.platform)}</p></div><button id="journey-close" aria-label="Stäng resedetaljer">×</button></div><div class="journey-scroll"><div class="journey-summary"><strong>${minutes(value.seconds)}</strong><span>${value.kind === 'walk' ? 'Gång' : `${Math.max(0, value.boardings - 1)} ${value.boardings === 2 ? 'byte' : 'byten'}`}</span><button id="journey-pin" aria-pressed="${this.pinned === index}">${this.pinned === index ? 'Fäst ✓' : 'Fäst resan'}</button></div>${walks.some(l=>l.estimated) ? '<p class="journey-request">Resan innehåller antagen gång mellan hållplatser med samma namn inom 250 meter; suffixet ”station” kan skilja. Passage och gångavstånd är inte verifierade i kartan.</p>' : ''}${walkingGap ? '<p class="journey-request">Vi saknar gångvägen från detta hållplatsläge i kartunderlaget. En kortare resa kan därför finnas.</p>' : ''}${legs.length ? `<p class="journey-times">Avgång ${time(legs[0].departure)}<br>Ankomst ${time(legs.at(-1)!.arrival)}</p>${walks.length?`<p class="journey-walking">Gång totalt: ${minutes(walkingSeconds)} · ${distanceText(walkingMetres)}</p>`:''}<ol class="journey-legs">${rows}</ol>` : '<p>Du är redan vid starthållplatsen.</p>'}<p class="journey-note">Planerade tider i Stockholmstid. Initial väntan räknas inte; väntan vid byten ingår.</p><p class="journey-note">Schematisk resväg via hållplatserna. Linjerna visar inte exakt spår- eller gånggeometri. Streckad linje betyder gång.</p><div class="journey-actions"><button id="journey-fit" ${legs.length ? '' : 'disabled'}>Visa hela resvägen</button><button id="journey-start">Res härifrån</button></div></div>`;
+    this.panel.innerHTML = `<div class="journey-header"><div><span class="eyebrow">RESAN TILL</span><h2 id="journey-title">${escape(destination.name)}</h2><p>${escape(destination.platform)}</p><button id="journey-expand" class="journey-expand" aria-expanded="false" aria-controls="journey-content"><strong>${minutes(value.seconds)}</strong> · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} ${value.boardings===2?'byte':'byten'}`} <span>Visa resan ↑</span></button></div><button id="journey-close" aria-label="Stäng resedetaljer">×</button></div><div id="journey-content" class="journey-scroll"><div class="journey-summary"><strong>${minutes(value.seconds)}</strong><span>${value.kind === 'walk' ? 'Gång' : `${Math.max(0, value.boardings - 1)} ${value.boardings === 2 ? 'byte' : 'byten'}`}</span><button id="journey-pin" aria-pressed="${this.pinned === index}">${this.pinned === index ? 'Fäst ✓' : 'Fäst resan'}</button></div>${walks.some(l=>l.estimated) ? '<p class="journey-request">Resan innehåller antagen gång mellan hållplatser med samma namn inom 250 meter; suffixet ”station” kan skilja. Passage och gångavstånd är inte verifierade i kartan.</p>' : ''}${walkingGap ? '<p class="journey-request">Vi saknar gångvägen från detta hållplatsläge i kartunderlaget. En kortare resa kan därför finnas.</p>' : ''}${legs.length ? `<p class="journey-times">Avgång ${time(legs[0].departure)}<br>Ankomst ${time(legs.at(-1)!.arrival)}</p>${walks.length?`<p class="journey-walking">Gång totalt: ${minutes(walkingSeconds)} · ${distanceText(walkingMetres)}</p>`:''}<ol class="journey-legs">${rows}</ol>` : '<p>Du är redan vid starthållplatsen.</p>'}<p class="journey-note">Planerade tider i Stockholmstid. Initial väntan räknas inte; väntan vid byten ingår.</p><p class="journey-note">Schematisk resväg via hållplatserna. Linjerna visar inte exakt spår- eller gånggeometri. Streckad linje betyder gång.</p><div class="journey-actions"><button id="journey-fit" ${legs.length ? '' : 'disabled'}>Visa hela resvägen</button><button id="journey-start">Res härifrån</button></div></div>`;
     this.panel.hidden = false; this.panel.closest('.map-section')!.classList.add('journey-open');
+    this.panel.dispatchEvent(new Event('journeyopen'));
+    this.panel.querySelector<HTMLButtonElement>('#journey-expand')!.onclick=()=>{
+      const open=this.panel.classList.toggle('journey-expanded');
+      const button=this.panel.querySelector<HTMLButtonElement>('#journey-expand')!;
+      button.setAttribute('aria-expanded',String(open));
+      button.querySelector('span')!.textContent=open?'Dölj detaljer ↓':'Visa resan ↑';
+    };
     this.panel.querySelector<HTMLButtonElement>('#journey-close')!.onclick = () => { this.close(); this.map.getContainer().focus(); };
     this.panel.querySelector<HTMLButtonElement>('#journey-pin')!.onclick = () => { this.pinned = this.pinned === index ? null : index; this.show(index); };
     this.panel.querySelector<HTMLButtonElement>('#journey-start')!.onclick = () => this.onStart(index);
@@ -105,7 +113,7 @@ export class JourneyView {
   private fit(legs: JourneyLeg[]) {
     const coords = legs.flatMap(leg => leg.stops.map(i => [this.stops[i].lat, this.stops[i].lon] as L.LatLngTuple));
     if (!coords.length) return;
-    const mobile = window.innerWidth <= 760;
+    const mobile = mobileLayout.matches;
     // Mobile search-panel collapse changes the map size before its delayed resize.
     this.map.invalidateSize({ pan: false });
     const legend = document.querySelector<HTMLElement>('#legend')!;
