@@ -112,3 +112,24 @@ när tågens plattformsnummer saknas i OSM. Det skapar inga påhittade tågytor.
 Gångytor hämtas för den synliga kartvyn med marginal för gångradien, och nya
 underlag laddas vid panorering. Därmed kan inte tusentals avlägsna profiler
 fördröja gångytorna runt den plats användaren tittar på.
+
+## Beroenden mellan gånganslutningar (v11)
+
+Två generella bortfall förklarade stora skillnader vid Bromma sjukhus och
+Kvarnhagen. En identifierad OSM-hållplatsstolpe kunde ligga längre från gångvägen
+än GTFS-koordinaten; då avvisades även den bättre GTFS-positionen. En globalt
+entydig stolpmatchning inom 25 meter får nu också styrka GTFS-positionens egen
+unika gångväg inom fem meter. Positionen flyttas inte till stolpen, och den
+faktiska koordinatavvikelsen belastar gångtid och avstånd.
+
+Återhämtning av närliggande hållplatslägen använde tidigare en enda ögonblicksbild
+av kända anslutningar. Om grannläget blev godkänt i samma fas fick den nya
+anslutningen aldrig prövas igen. Nu upprepas fasen tills inga fler lägen godkänns.
+Varje läge måste fortfarande klara sina egna koordinat-, grafnods- och dubbelriktade
+nätvägskontroller. Nätet kompletteras inte med uppskattade länkar mellan olika
+namn; en tidigare återhämtad grannes ursprungliga koordinatavvikelse räknas också
+in i kontrollens 500-metersgräns. Inga hållplatsnamn styr genereringsreglerna.
+
+Sammanhängande gång visas som ett resesteg även när kartlagda och uppskattade
+sträckor blandas. Alla mellanpunkter, tider och avstånd bevaras; steget markeras
+uppskattat om någon del är uppskattad. Detta ändrar inte resans gångbudget.

@@ -52,6 +52,17 @@ def identified_anchor(stop, feature, result):
         'offsetMetres':shift+anchor['offsetMetres']}
 
 
+def identified_gtfs_anchor(stop, feature, result):
+    """Use the original GTFS position when a matched OSM pole is less accurate.
+
+    The caller supplies a globally unambiguous pole match within 25 m. Keep a
+    unique pedestrian way within 5 m of GTFS; never widen the endpoint offset.
+    """
+    if not stop.get('busOnly') or distance((stop['lat'],stop['lon']),(feature['lat'],feature['lon']))>25:return None
+    anchor=select_anchor(stop,result,5)
+    return {**anchor,'osmNode':feature['id'],'binding':'identified-osm-bus-stop'} if anchor else None
+
+
 def select_anchor(stop,result,tolerance=1,platform=False):
     edges=[e for e in result.get('edges') or [] if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= tolerance]
     if not platform:edges=[e for e in edges if not any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[]))]
@@ -94,7 +105,8 @@ def nearby_network_anchor(stop, result, seeds, actor):
     A maximum 10 m timed coordinate offset is allowed only when competing ways
     join through actual graph nodes within 50 m, and a previously bound bus stop
     within 250 m has pedestrian paths in BOTH directions of at most 500 m.
-    Newly recovered stops never serve as evidence for another recovery.
+    Each endpoint and both native paths are checked independently. Reusing a
+    verified endpoint never adds assumed links to the pedestrian graph.
     """
     if not stop.get('busOnly'):return None
     # Nearby rail geometry must not disqualify a real street-level footpath.
@@ -120,6 +132,30 @@ def nearby_network_anchor(stop, result, seeds, actor):
             except Exception:valid=False;break
         if valid:return {**anchor,'binding':'nearby-pedestrian-network','verifiedNearby':neighbor['id']}
     return None
+
+
+def recover_nearby_anchors(located_pending, seeds, actor):
+    """Resolve endpoint dependencies without relying on input or phase order."""
+    seed_bins={}
+    for s in seeds:
+        if s.get('busOnly'):seed_bins.setdefault((math.floor(s['lat']*400),math.floor(s['lon']*200)),[]).append(s)
+    occupied={(round(s['anchorLat'],6),round(s['anchorLon'],6)) for s in seeds}
+    accepted=[]
+    while located_pending:
+        recovered=[];remaining=[]
+        for stop,result in located_pending:
+            cell=(math.floor(stop['lat']*400),math.floor(stop['lon']*200))
+            nearby=[s for a in range(-1,2) for b in range(-1,2) for s in seed_bins.get((cell[0]+a,cell[1]+b),[])]
+            anchor=nearby_network_anchor(stop,result,nearby,actor)
+            if anchor and (round(anchor['anchorLat'],6),round(anchor['anchorLon'],6)) not in occupied:recovered.append(anchor)
+            else:remaining.append((stop,result))
+        if not recovered:break
+        accepted.extend(recovered)
+        for s in recovered:
+            seed_bins.setdefault((math.floor(s['lat']*400),math.floor(s['lon']*200)),[]).append(s)
+            occupied.add((round(s['anchorLat'],6),round(s['anchorLon'],6)))
+        located_pending=remaining
+    return accepted
 
 
 def surface_stops(feed):
@@ -168,6 +204,9 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         located=actor.locate({'locations':[{**LOCATION,'lat':n['lat'],'lon':n['lon']} for s,n in chunk],'costing':'pedestrian','verbose':True})
         for (stop,feature),result in zip(chunk,located):
             anchor=identified_anchor(stop,feature,result)
+            if anchor is None:
+                original=actor.locate({'locations':[{**LOCATION,'lat':stop['lat'],'lon':stop['lon']}],'costing':'pedestrian','verbose':True})[0]
+                anchor=identified_gtfs_anchor(stop,feature,original)
             if anchor:anchors.append(anchor);identified_count+=1
     bound={s['id'] for s in anchors}
     seeds=list(anchors)
@@ -179,21 +218,16 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         for stop,result in zip(chunk,located):
             anchor=station_anchor(stop,result,seeds,actor)
             if anchor:anchors.append(anchor)
-    # Spatial recovery covers differently named stops and whole stop areas with
-    # no mapped pole. Use a fixed snapshot, never a cascade of inferred anchors.
-    bound={s['id'] for s in anchors};seeds=list(anchors);seed_bins={}
-    for s in seeds:
-        if s.get('busOnly'):seed_bins.setdefault((math.floor(s['lat']*400),math.floor(s['lon']*200)),[]).append(s)
-    occupied={(round(s['anchorLat'],6),round(s['anchorLon'],6)) for s in seeds}
+    # Resolve to a fixed point: every recovered endpoint has its own verified
+    # native paths. A single snapshot made coverage depend on binding order.
+    bound={s['id'] for s in anchors};seeds=list(anchors)
     pending=[s for s in candidates if s['id'] not in bound and s.get('busOnly')]
+    located_pending=[]
     for at in range(0,len(pending),100):
         chunk=pending[at:at+100]
         located=actor.locate({'locations':[{**LOCATION,'radius':50,'search_cutoff':50,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
-        for stop,result in zip(chunk,located):
-            cell=(math.floor(stop['lat']*400),math.floor(stop['lon']*200))
-            nearby=[s for a in range(-1,2) for b in range(-1,2) for s in seed_bins.get((cell[0]+a,cell[1]+b),[])]
-            anchor=nearby_network_anchor(stop,result,nearby,actor)
-            if anchor and (round(anchor['anchorLat'],6),round(anchor['anchorLon'],6)) not in occupied:anchors.append(anchor)
+        located_pending.extend(zip(chunk,located))
+    anchors.extend(recover_nearby_anchors(located_pending,seeds,actor))
     for s in platform_stops:
         platform_actor=station_actor if s.get('accessSeconds') else actor
         result=platform_actor.locate({'locations':[{**LOCATION,'lat':s['platformLat'],'lon':s['platformLon']}],'costing':'pedestrian','verbose':True})[0]
@@ -210,7 +244,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     counts=Counter(key(s) for s in anchors)
     anchors=[s for s in anchors if counts[key(s)]==1 or ('platformWay' in s and all(t.get('platformWay')==s['platformWay'] for t in anchors if key(t)==key(s)))]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; nearby bus endpoint <=10m, real graph junction <=50m and bidirectional network <=500m to existing bus anchor <=250m; timed offsets; identified surface OSM platforms by named stop-area membership and platform code"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; original GTFS unique pedestrian way <=5m when matched pole is displaced; fixed-point independently verified endpoint recovery; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; nearby bus endpoint <=10m, real graph junction <=50m and bidirectional network <=500m to existing bus anchor <=250m; timed offsets; identified surface OSM platforms by named stop-area membership and platform code"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -236,7 +270,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-station-access-v10','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-station-access-v11','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     from walking_audit import audit
     reference_file=Path('data/walking-reference-pairs.json')
     references=json.loads(reference_file.read_text()) if reference_file.exists() else []

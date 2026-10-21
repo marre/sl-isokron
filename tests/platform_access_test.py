@@ -137,3 +137,52 @@ class PlatformAccessTests(unittest.TestCase):
         self.assertEqual(anchor['way'],1)
         self.assertEqual(anchor['verifiedNearby'],'b')
         self.assertIsNone(nearby_network_anchor(stop,{'edges':rail},[seed],Actor()))
+
+    def test_identified_pole_can_validate_closer_gtfs_geometry_without_moving_the_stop(self):
+        from valhalla_walks import identified_gtfs_anchor
+        from stop_matching_test import segment
+        stop={'id':'bus','busOnly':True,'lat':59.,'lon':18.}
+        pole={'id':123,'lat':59.,'lon':18.00022}
+        result={'edges':segment(1,'path',10,20,10,.5,18.00007)}
+        anchor=identified_gtfs_anchor(stop,pole,result)
+        self.assertEqual(anchor['osmNode'],123)
+        self.assertEqual(anchor['lat'],stop['lat'])
+        self.assertEqual(anchor['lon'],stop['lon'])
+        self.assertGreater(anchor['offsetMetres'],3)
+        self.assertLess(anchor['offsetMetres'],5)
+        self.assertIsNone(identified_gtfs_anchor(stop,{**pole,'lon':18.001},result))
+        self.assertIsNone(identified_gtfs_anchor({**stop,'busOnly':False},pole,result))
+        self.assertIsNone(identified_gtfs_anchor(stop,pole,{'edges':segment(1,'far',10,20,10,.5,18.0001)}))
+        self.assertIsNone(identified_gtfs_anchor(stop,pole,{'edges':result['edges']+segment(2,'unconnected',30,40,10,.5,18.00007)}))
+
+    def test_recovered_neighbors_still_require_independent_physical_paths(self):
+        from valhalla_walks import nearby_network_anchor
+        from stop_matching_test import segment
+        stop={'id':'next','busOnly':True,'lat':59.,'lon':18.}
+        seed={'id':'recovered','binding':'nearby-pedestrian-network','verifiedNearby':'original',
+              'busOnly':True,'lat':59.0001,'lon':18.,'anchorLat':59.0001,'anchorLon':18.,'offsetMetres':2}
+        class Actor:
+            def __init__(self,distances):self.distances=iter(distances)
+            def matrix(self,request):
+                km=next(self.distances)
+                return {'sources_to_targets':{'distances':[[km]],'durations':[[75 if km is not None else None]]}}
+        result={'edges':segment(1,'path',10,20)}
+        self.assertEqual(nearby_network_anchor(stop,result,[seed],Actor([.1,.1]))['verifiedNearby'],'recovered')
+        self.assertIsNone(nearby_network_anchor(stop,result,[seed],Actor([.1,None])))
+        self.assertIsNone(nearby_network_anchor(stop,{'edges':result['edges']+segment(2,'bridge',30,40)},[seed],Actor([])))
+
+    def test_endpoint_recovery_reaches_a_fixed_point_independent_of_input_order(self):
+        from valhalla_walks import recover_nearby_anchors
+        from stop_matching_test import segment
+        seed={'id':'seed','busOnly':True,'lat':59.,'lon':18.,'anchorLat':59.,'anchorLon':18.,'offsetMetres':0}
+        b={'id':'b','busOnly':True,'lat':59.,'lon':18.0035}
+        c={'id':'c','busOnly':True,'lat':59.,'lon':18.007}
+        def result(s):return {'edges':segment(1,'path',10,20,10,.5,s['lon'])}
+        class Actor:
+            def matrix(self,request):return {'sources_to_targets':{'distances':[[.2]],'durations':[[150]]}}
+        pending=[(c,result(c)),(b,result(b))] # c needs b, which is not a seed yet.
+        for ordered in (pending,pending[::-1]):
+            recovered=recover_nearby_anchors(ordered,[seed],Actor())
+            self.assertEqual({s['id']:s['verifiedNearby'] for s in recovered},{'b':'seed','c':'b'})
+        disconnected={'edges':result(c)['edges']+segment(2,'bridge',30,40,10,.5,c['lon'])}
+        self.assertEqual([s['id'] for s in recover_nearby_anchors([(c,disconnected),(b,result(b))],[seed],Actor())],['b'])

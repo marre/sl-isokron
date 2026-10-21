@@ -174,5 +174,21 @@
       "9022001050501001"
     ],
     "maxSeconds": 300
+  },
+  {
+    "name": "Söderberga allé–Bromma sjukhus",
+    "stops": [
+      "9022001012500002",
+      "9022001012060001"
+    ],
+    "maxSeconds": 900
+  },
+  {
+    "name": "Kvarnhagen–Hässelby slott",
+    "stops": [
+      "9022001016727001",
+      "9022001016725001"
+    ],
+    "maxSeconds": 420
   }
 ]
