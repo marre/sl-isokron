@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "description": "Individually reviewed public station connections missing from the OSM graph. Durations and distances are conservative estimates, never native OSM paths. Add other complexes only with an identified public passage and a source; no general nearest-stop links.",
+  "links": [
+    {
+      "id": "arlanda-terminal-4-skycity",
+      "reviewedOn": "2026-10-21",
+      "from": {"id": "9022001057310001", "name": "Arlanda terminal 4", "lat": 59.647775, "lon": 17.928574},
+      "to": {"id": "9022001057342001", "name": "Sky City", "lat": 59.648944, "lon": 17.930153},
+      "seconds": 360,
+      "metres": 400,
+      "bidirectional": true,
+      "source": "https://www.swedavia.com/contentassets/333ee1bb4b644015a92dc5cb2c8d1b7f/arlanda-airport-oversiktskarta-arn.pdf",
+      "via": "Public terminal connection between the former Terminal 4 / current Terminal 5 C-gate hall and SkyCity; use public entrances and the terminal corridor, not the restricted airport carriageways or construction bridges.",
+      "estimate": "Swedavia overview marks 4 minutes between the former Terminal 4 hall and SkyCity. Allow 2 additional minutes for bus-stop access: 6 minutes total, approximately 400 metres. No airport rail-platform access is inferred."
+    }
+  ]
+}

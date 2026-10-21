@@ -92,3 +92,13 @@ test('assumed access remains labelled and shares the continuous walking budget',
   assert.equal(merged[0].arrival-merged[0].departure,660);
   assert.equal(JSON.stringify(longer.journeys),before);
 });
+
+test('reviewed station access is estimated and cannot reset the walking allowance', () => {
+  const n=network();
+  n.walks=[{from:0,to:1,seconds:360,source:'Assumed reviewed station access; terminal',metres:400}, {from:1,to:2,seconds:300,source:'mapped',metres:400}];
+  const settings={...defaults(n.stops[0]),date:'2026-10-19',time:'08:00',walkMinutes:10};
+  const r=search(n,settings);
+  assert.equal(journeyFor(r,1)[0].estimated,true);
+  assert.equal(r.values[1]?.seconds,360);
+  assert.equal(r.values[2],null);
+});

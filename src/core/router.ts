@@ -143,7 +143,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
       let node: JourneyNode;
       if ('seconds' in via) {
-        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres, estimated: via.source.startsWith('Assumed same-name stop transfer;') || undefined };
+        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres, estimated: via.source.startsWith('Assumed ') || undefined };
       } else {
         const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
         node = { previous, kind: 'transit', from: via.from, to: l.stop, departure: via.departure, arrival: l.time, route: via.route, stops: [via.from, ...path.map(c => c.to)], requestStop: !!via.pickupRequest || !!l.alight!.dropoffRequest };

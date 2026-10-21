@@ -211,3 +211,44 @@ and cached by the browser. A query selects profiles using arrival time and its
 remaining continuous walking budget. Viewport changes load only nearby profiles;
 the browser combines and draws the polygons. Reusing the prepared walking cache
 allows station-name corrections to publish without redoing OSM routing or contours.
+
+### Reviewed public station passages (2026-10-21)
+
+The Arlanda Terminal 4 search at 22:26 on 2026-10-21 reached only the origin
+and three same-name positions. This was an exit-data gap, not an absence of
+transport: SkyCity has bus 583 at 22:38, arriving at Märsta station at 22:53,
+with train 41 at 23:00 arriving at Stockholm City at 23:37.
+
+The pinned OSM extract has restricted bus carriageways, construction bridges,
+and disconnected pedestrian fragments at Terminal 4. They remain restricted;
+no global snap radius or road access rule was relaxed. The user authorized
+individually reviewed walking links at airports and other similar places.
+
+`data/reviewed-walking-access.json` records these passages separately from the
+native OSM graph. Each connection needs named stop IDs, exact reviewed GTFS
+coordinates, direction, positive duration/distance, a source, review date, public
+passage description, and explanation of the estimate. The compiler validates
+active endpoints every build; moved or renamed endpoints fail for another review,
+and retired positions are not reintroduced. Native paths and their contours are
+retained unchanged. These links have no native walking profile of their own;
+ordinary continuous walking budget and remaining-time contour rules apply at
+any native profiles reached through them. They do not create straight-line areas.
+
+The first connection is Terminal 4 ↔ SkyCity, estimated at 6 minutes / 400 metres.
+[Swedavia's terminal overview](https://www.swedavia.com/contentassets/333ee1bb4b644015a92dc5cb2c8d1b7f/arlanda-airport-oversiktskarta-arn.pdf)
+shows the public terminal connection and 4 minutes between the former Terminal 4
+hall (now the Terminal 5 C-gate hall) and SkyCity. Two additional minutes cover
+bus-stop access. Airport rail-platform access is not inferred from this diagram.
+Journeys explicitly label estimated walking; manifest warnings retain sources.
+This mechanism supports other reviewed complexes, rather than linking arbitrary
+nearby stops across different names, barriers or levels.
+
+Replaying the exact public dataset with this connection reaches 5,885 stop
+positions instead of 4. Stockholm City platform 2 is reached in 65 modelled
+minutes (initial waiting excluded): walk 6 minutes, bus 583, walk at Märsta,
+then train 41. The search witness/feasible-walk audit has zero violations.
+Tests verify direction, provenance, coordinate drift, retired endpoints, cost
+bounds, idempotent refresh, estimated journey labels and continuous walking
+limits. An origin confined to a walking-only component without any mapped
+profile now displays “Gångdata saknas” and explains that possible journeys can
+be missing, rather than presenting the island as complete transport coverage.
