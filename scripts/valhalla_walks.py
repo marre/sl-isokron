@@ -84,6 +84,36 @@ def station_anchor(stop, result, seeds, actor):
     return None
 
 
+def nearby_network_anchor(stop, result, seeds, actor):
+    """Recover a surface endpoint using physical topology, independent of names.
+
+    A maximum 10 m timed coordinate offset is allowed only when competing ways
+    join through actual graph nodes within 50 m, and a previously bound bus stop
+    within 250 m has pedestrian paths in BOTH directions of at most 500 m.
+    Newly recovered stops never serve as evidence for another recovery.
+    """
+    if not stop.get('busOnly'):return None
+    if any(any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[])) for e in result.get('edges') or []):return None
+    neighbors=sorted((s for s in seeds if s.get('busOnly') and distance((s['lat'],s['lon']),(stop['lat'],stop['lon']))<=250),
+        key=lambda s:distance((s['lat'],s['lon']),(stop['lat'],stop['lon'])))
+    if not neighbors:return None
+    edge=junction_edge(stop,result,tolerance=10,max_metres=50,graph_tolerance=50)
+    if edge is None:return None
+    anchor=select_anchor(stop,{'edges':[edge]},10)
+    if anchor is None:return None
+    loc=lambda s:{**LOCATION,'lat':s['anchorLat'],'lon':s['anchorLon'],'search_cutoff':1}
+    for neighbor in neighbors:
+        valid=True
+        for a,b in [(anchor,neighbor),(neighbor,anchor)]:
+            try:
+                r=actor.matrix({'sources':[loc(a)],'targets':[loc(b)],'costing':'pedestrian','units':'kilometers','verbose':False})
+                seconds=r['sources_to_targets']['durations'][0][0];km=r['sources_to_targets']['distances'][0][0]
+                if seconds is None or km is None or not math.isfinite(seconds) or not math.isfinite(km) or seconds<0 or km<0 or km*1000+a['offsetMetres']+b['offsetMetres']>500:valid=False;break
+            except Exception:valid=False;break
+        if valid:return {**anchor,'binding':'nearby-pedestrian-network','verifiedNearby':neighbor['id']}
+    return None
+
+
 def surface_stops(feed):
     from build_data import rows
     with zipfile.ZipFile(feed) as z:
@@ -146,6 +176,21 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         for stop,result in zip(chunk,located):
             anchor=station_anchor(stop,result,seeds,actor)
             if anchor:anchors.append(anchor)
+    # Spatial recovery covers differently named stops and whole stop areas with
+    # no mapped pole. Use a fixed snapshot, never a cascade of inferred anchors.
+    bound={s['id'] for s in anchors};seeds=list(anchors);seed_bins={}
+    for s in seeds:
+        if s.get('busOnly'):seed_bins.setdefault((math.floor(s['lat']*400),math.floor(s['lon']*200)),[]).append(s)
+    occupied={(round(s['anchorLat'],6),round(s['anchorLon'],6)) for s in seeds}
+    pending=[s for s in candidates if s['id'] not in bound and s.get('busOnly')]
+    for at in range(0,len(pending),100):
+        chunk=pending[at:at+100]
+        located=actor.locate({'locations':[{**LOCATION,'radius':50,'search_cutoff':50,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
+        for stop,result in zip(chunk,located):
+            cell=(math.floor(stop['lat']*400),math.floor(stop['lon']*200))
+            nearby=[s for a in range(-1,2) for b in range(-1,2) for s in seed_bins.get((cell[0]+a,cell[1]+b),[])]
+            anchor=nearby_network_anchor(stop,result,nearby,actor)
+            if anchor and (round(anchor['anchorLat'],6),round(anchor['anchorLon'],6)) not in occupied:anchors.append(anchor)
     for s in platform_stops:
         platform_actor=station_actor if s.get('accessSeconds') else actor
         result=platform_actor.locate({'locations':[{**LOCATION,'lat':s['platformLat'],'lon':s['platformLon']}],'costing':'pedestrian','verbose':True})[0]
@@ -162,7 +207,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     counts=Counter(key(s) for s in anchors)
     anchors=[s for s in anchors if counts[key(s)]==1 or ('platformWay' in s and all(t.get('platformWay')==s['platformWay'] for t in anchors if key(t)==key(s)))]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; timed offsets; explicitly identified OSM platforms only"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; same-station surface junction <=5m and bidirectional network <=250m; nearby bus endpoint <=10m, real graph junction <=50m and bidirectional network <=500m to existing bus anchor <=250m; timed offsets; explicitly identified OSM platforms only"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -188,7 +233,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-bus-assignment-junction-platform-v7','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-bus-assignment-junction-platform-v8','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     from walking_audit import audit
     reference_file=Path('data/walking-reference-pairs.json')
     references=json.loads(reference_file.read_text()) if reference_file.exists() else []
@@ -198,7 +243,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     if quality['referenceFailures']:
         raise ValueError('Walking reference regressions; inspect '+str(output)+'.audit.json: '+json.dumps(quality['referenceFailures'],ensure_ascii=False))
     Path(output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')))
-    report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(pairs),'identifiedPositionBindings':identified_count,'stationNetworkBindings':sum(s.get('binding')=='same-station-pedestrian-network' for s in anchors),'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
+    report={'surfaceCandidates':len(candidates),'boundStops':len(anchors),'totalStops':len(all_stops),'directedPairs':len(pairs),'identifiedPositionBindings':identified_count,'stationNetworkBindings':sum(s.get('binding')=='same-station-pedestrian-network' for s in anchors),'nearbyNetworkBindings':sum(s.get('binding')=='nearby-pedestrian-network' for s in anchors),'matrixErrors':errors,'elapsedSeconds':round(time.monotonic()-started,2),'profile':source,'reviewed':False}
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     Path(str(output)+'.anchors.json').write_text(json.dumps(anchors,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(report),flush=True)

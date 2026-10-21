@@ -63,7 +63,7 @@ def way_id(edge):
     return edge.get('way_id',edge.get('edge_info',{}).get('way_id'))
 
 
-def junction_edge(stop, result, tolerance=5, max_metres=15):
+def junction_edge(stop, result, tolerance=5, max_metres=15, graph_tolerance=None):
     """Accept nearby branches only with short paths through real graph node IDs.
 
     Uses Valhalla verbose correlation's directed edge endpoints. Equal coordinates
@@ -73,7 +73,8 @@ def junction_edge(stop, result, tolerance=5, max_metres=15):
     if not edges:return None
     key=lambda e:(way_id(e),e.get('edge_info',{}).get('shape'))
     groups=defaultdict(list)
-    for e in edges:groups[key(e)].append(e)
+    for e in result.get('edges') or []:
+        if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= (graph_tolerance or tolerance):groups[key(e)].append(e)
     graph=defaultdict(list); ends={}
     for group, entries in groups.items():
         if group[0] is None or not group[1] or len(entries)!=2:continue

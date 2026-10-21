@@ -57,3 +57,25 @@ class MatchingTests(unittest.TestCase):
         self.assertEqual(result['nearbyStopPairFindings'],1)
         self.assertEqual(len(result['referenceFailures']),2)
         self.assertEqual(len(edges),1)
+
+    def test_matching_ignores_punctuation_but_keeps_assignment_and_distance_limits(self):
+        s={**stop('a',59,18),'name':'Folkets hus, Ölsta'}
+        f={**feature('A',59,18),'tags':{'highway':'bus_stop','name':'Folkets hus Ölsta'}}
+        self.assertEqual(match_bus_stops([s],[f])['a']['id'],'A')
+        self.assertEqual(match_bus_stops([s],[{**f,'lat':59.01}]),{})
+
+    def test_spatial_audit_checks_different_names_and_unbound_neighbors(self):
+        stops=[stop('a',59,18),{**stop('b',59.0001,18),'name':'Another stop'},stop('far',60,18)]
+        result=audit(stops,stops[:1],[])
+        self.assertEqual(result['checkedNearbyPairs'],1)
+        self.assertEqual(result['differentNameFindings'],1)
+        self.assertEqual(result['findings'][0]['unboundStops'],['b'])
+        self.assertEqual(result['findings'][0]['reason'],'unbound-endpoint')
+
+    def test_expanded_junction_uses_real_connecting_edges_beyond_endpoint_radius(self):
+        s={'lat':59,'lon':18}
+        edges=segment(1,'a',10,20,10,.8)+segment(2,'b',30,40,8,.5,18.00002)
+        # Connector is outside the 5 m candidate radius but part of the local graph.
+        connector=segment(3,'crossing',20,30,8,.5,18.0002)
+        self.assertIsNone(junction_edge(s,{'edges':edges},graph_tolerance=50,max_metres=50))
+        self.assertIsNotNone(junction_edge(s,{'edges':edges+connector},graph_tolerance=50,max_metres=50))

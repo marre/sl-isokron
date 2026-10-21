@@ -102,5 +102,53 @@
       "9022001015825002"
     ],
     "maxSeconds": 300
+  },
+  {
+    "name": "Kungsberga",
+    "stops": [
+      "9022001015893001",
+      "9022001015893002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Folkets hus, Ölsta",
+    "stops": [
+      "9022001015865001",
+      "9022001015865002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Esplanaden södra–Stationsgatan",
+    "stops": [
+      "9022001012344003",
+      "9022001050305002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Esplanaden norra–Stationsgatan",
+    "stops": [
+      "9022001012344004",
+      "9022001050305002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Ekbacken–Ekbackens äldreboende",
+    "stops": [
+      "9022001050067001",
+      "9022001051847001"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Stationsgatan",
+    "stops": [
+      "9022001050305001",
+      "9022001050305002"
+    ],
+    "maxSeconds": 300
   }
 ]

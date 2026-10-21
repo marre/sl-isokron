@@ -179,3 +179,11 @@ och full källtext bevaras. Läsaren stöder också äldre oföränderliga JSON-
 Närliggande gångområden (cirka 110-metersrutor) samlas i filer med högst fyra
 lägen. Gammalt genererat shardmaterial tas bort efter ett lyckat nytt index;
 andra filer lämnas orörda. Detta begränsar filantal och upprepade hämtningar.
+
+Profil v8 kompletterar samma-stationsregeln med spatial nätverifiering för
+busslägen oavsett namn: högst 10 meters tidsatt avvikelse, verklig korsning
+inom 50 meter och gång i båda riktningar inom 500 meter till ett etablerat
+bussläge högst 250 meter bort. Återställda lägen kedjas inte som bevis.
+Alla närliggande par granskas nu i byggets diagnostik, även olika namn.
+Se [nät- och resultataudit](../docs/walking-network-audit.md) för gränser,
+regressioner och kommandot som kontrollerar en hel delad sökning.

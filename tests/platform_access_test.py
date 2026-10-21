@@ -84,3 +84,22 @@ class PlatformAccessTests(unittest.TestCase):
         self.assertIsNone(station_anchor(stop,{'edges':edges},[{**seed,'binding':'unknown'}],Actor([])))
         disconnected=edges+[{**e,'edge_info':{'way_id':43,'shape':'bridge'},'edge':{**e['edge'],'end_node':{'value':e['edge']['end_node']['value']+10}}} for e in edges]
         self.assertIsNone(station_anchor(stop,{'edges':disconnected},[seed],Actor([])))
+
+    def test_spatial_recovery_does_not_depend_on_station_or_name(self):
+        from valhalla_walks import nearby_network_anchor
+        from stop_matching_test import segment
+        stop={'id':'a','name':'Care home','busOnly':True,'lat':59.,'lon':18.}
+        seed={'id':'b','name':'Main street','busOnly':True,'lat':59.0001,'lon':18.,'anchorLat':59.0001,'anchorLon':18.,'offsetMetres':2}
+        class Actor:
+            def __init__(self,km):self.km=iter(km)
+            def matrix(self,request):
+                km=next(self.km)
+                return {'sources_to_targets':{'distances':[[km]],'durations':[[30 if km is not None else None]]}}
+        result={'edges':segment(1,'footway',10,20)}
+        anchor=nearby_network_anchor(stop,result,[seed],Actor([.1,.1]))
+        self.assertEqual(anchor['verifiedNearby'],'b')
+        self.assertEqual(anchor['binding'],'nearby-pedestrian-network')
+        for km in [[.1,None],[.1,.6]]:self.assertIsNone(nearby_network_anchor(stop,result,[seed],Actor(km)))
+        self.assertIsNone(nearby_network_anchor({**stop,'busOnly':False},result,[seed],Actor([])))
+        self.assertIsNone(nearby_network_anchor(stop,result,[{**seed,'lat':59.01}],Actor([])))
+        self.assertIsNone(nearby_network_anchor(stop,{'edges':result['edges']+segment(2,'bridge',30,40)},[seed],Actor([])))

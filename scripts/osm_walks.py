@@ -56,7 +56,7 @@ def distance(a,b):
     return 6371000*2*math.atan2(math.sqrt(x),math.sqrt(max(0,1-x)))
 
 def normalize(s):
-    return ' '.join(unicodedata.normalize('NFC',s).casefold().split())
+    return ' '.join(''.join(' ' if unicodedata.category(c).startswith('P') else c for c in unicodedata.normalize('NFC',s).casefold()).split())
 
 def load_stops(feed):
     with zipfile.ZipFile(feed) as z:
