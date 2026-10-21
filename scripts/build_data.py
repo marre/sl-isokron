@@ -92,7 +92,16 @@ def validate_walks(data, stops):
             stop, bound = stops[ids[sid]], bindings[sid]
             if abs(stop['lat'] - bound['lat']) > 0.000001 or abs(stop['lon'] - bound['lon']) > 0.000001:
                 raise ValueError('Walking index has stale coordinates: ' + sid)
-        edge = dict(from_=ids[e['from']], to=ids[e['to']], seconds=e['seconds'], source=e['source'])
+        seconds=e['seconds']
+        a,b=bindings[e['from']],bindings[e['to']]
+        # The raw station index includes endpoint access allowances. Moving
+        # between two positions on the same identified platform uses no lift
+        # or station entrance, so retain only its mapped walking cost.
+        if a.get('platformWay') and a.get('platformWay')==b.get('platformWay') and a.get('binding')==b.get('binding')=='identified-osm-platform':
+            allowance=a.get('accessSeconds',0)+b.get('accessSeconds',0)
+            if not 0<=allowance<=seconds:raise ValueError('Invalid station access allowance')
+            seconds=max(1,seconds-allowance)
+        edge = dict(from_=ids[e['from']], to=ids[e['to']], seconds=seconds, source=e['source'])
         if e.get('metres') is not None: edge['metres'] = e['metres']
         edges.append(edge)
     return [{'from': e.pop('from_'), **e} for e in edges], excluded

@@ -26,6 +26,16 @@ class DataTests(unittest.TestCase):
         with self.assertRaises(ValueError):gtfs_seconds('00:70:00')
     def walks(self):
         return dict(version='v1',maxMinutes=30,speedKmh=4.8,stops=[dict(id='a',lat=59,lon=18),dict(id='b',lat=59.1,lon=18)],edges=[{'from':'a','to':'b','seconds':240,'source':'audited fixture'}])
+    def test_same_platform_walk_does_not_pay_station_entrance_allowances(self):
+        data=self.walks();data['edges'][0]['seconds']=264
+        for s in data['stops']:s.update(platformWay=42,binding='identified-osm-platform',accessSeconds=120)
+        self.assertEqual(validate_walks(data,self.stops())[0][0]['seconds'],24)
+        data['stops'][1]['platformWay']=43
+        self.assertEqual(validate_walks(data,self.stops())[0][0]['seconds'],264)
+        data['stops'][1]['platformWay']=42;data['edges'][0]['seconds']=240
+        self.assertEqual(validate_walks(data,self.stops())[0][0]['seconds'],1)
+        data['edges'][0]['seconds']=239
+        with self.assertRaisesRegex(ValueError,'station access'):validate_walks(data,self.stops())
     def stops(self):
         return self.walks()['stops']
     def test_A20_known_time_restrictions_excluded(self):

@@ -158,3 +158,9 @@ hållplatsidentifiering, och bara när samtliga närliggande kandidater hör til
 samma vanliga väg. Konkurrerande gångbanor, vägar eller plattformar avvisas.
 Det löser Barkarbys vägrensläge cirka sex meter från vägens mittlinje utan att
 vidga den vanliga GTFS-projektionen till godtyckligt närmaste väg.
+
+Råindexet inkluderar stationstillägget vid plattformsändpunkterna. Vid
+kompilering undantas gång mellan två uttryckligt identifierade lägen på
+**samma plattformsyta**: ingen hiss eller entré behövs för detta. Den verkliga
+kartlagda gångtiden och koordinatavvikelserna behålls, med minst en sekund.
+Anslutningar till gatan eller en annan plattform behåller stationstillägget.
