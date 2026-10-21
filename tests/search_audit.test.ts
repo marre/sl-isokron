@@ -18,3 +18,10 @@ test('geographic outliers include different names without claiming a walking rou
  assert.ok(a.outliers.some(o=>o.from==='a'&&o.to==='c'));
  assert.deepEqual(a.violations,[]);assert.equal(n.walks.length,2);
 });
+
+test('unused timetable positions do not crowd out actionable geographic findings',()=>{
+ const n=fixture();n.stops.push({...n.stops[2],id:'unused'});
+ const s={...defaults(n.stops[0]),date:'2026-10-21',time:'08:07',walkMinutes:15};
+ const audit=auditSearch(n,search(n,s),s);
+ assert.ok(audit.outliers.every(o=>o.to!=='unused'));
+});

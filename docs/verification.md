@@ -60,3 +60,8 @@ Solbacka/Sundby by kontrolleras i båda riktningar i det byggstoppande
 referensregistret. Kompakt gångdata testas både för full bevarad information
 (inklusive riktning, bråkdelar, okänt avstånd och källtext), skadade rader och
 verklig workerhämtning i dator- och mobilvy. Äldre JSON-paket stöds fortsatt.
+
+Den spatiala återställningen och [nät-/resultatauditen](walking-network-audit.md)
+testar även olika hållplatsnamn, verkliga korsningskanter utanför själva
+lägesradien, oanslutna broplan, saknad gångriktning, långa nätomvägar och
+kvarvarande sammanhängande gångbudget. 43 TypeScript- och 52 Pythonfall.

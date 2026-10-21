@@ -27,7 +27,7 @@ automatiskt underlag, inte en platsgranskning.
 ## Kontroller vid varje gångbygge
 
 `walking_audit.py` använder ett spatialt index för **samtliga hållplatspar inom
-250 meter**, även olika namn. Rapporten skiljer obundna ändpunkter från
+250 meter bland gångbyggets kandidater**, även olika namn. Rapporten skiljer obundna ändpunkter från
 saknade riktningar/nätomvägar mellan bundna lägen. Alla rapporterade avstånd
 är diagnostik; rapporten skapar inga gångvägar. Referensparen är regressionslarm
 för konkreta exempel, inte regler som genererar anslutningar.
@@ -46,7 +46,8 @@ resa plus gångtiden. Kvarvarande sammanhängande gångbudget och maxrestid
 respekteras; överträdelser ger felstatus.
 
 Dessutom rangordnas alla närliggande par med minst tio minuters misstänkt
-skillnad, oavsett namn. Dessa kräver granskning: en flod, järnväg, nivåskillnad
+skillnad, oavsett namn. Oanvända tidtabellslägen sorteras bort och par med två nåbara lägen prioriteras.
+Dessa kräver granskning: en flod, järnväg, nivåskillnad
 eller uttömd gångbudget kan förklara en skillnad. Misstänkta geografiska
 skillnader räknas inte som bevisade routerfel.
 
