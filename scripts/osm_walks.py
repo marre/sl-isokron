@@ -30,12 +30,13 @@ def walkable(tags):
         return False
     if tags.get('access') in FORBIDDEN and tags.get('foot') not in ('yes','designated','permissive'):
         return False
-    # Swedish ordinary urban tertiary streets permit walking by default.
-    # Known <=50 km/h limits bound this fallback; motorway/high-speed roads
-    # still require explicit pedestrian evidence or remain excluded.
-    speed=tags.get('maxspeed','')
-    urban_tertiary=h in {'tertiary','tertiary_link'} and (speed in {'SE:urban'} or (speed.isdigit() and 0<int(speed)<=50))
-    if h in EXPLICIT and not urban_tertiary and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
+    # In Sweden ordinary tertiary roads permit pedestrians by default, including
+    # rural roads without a tagged sidewalk. A vehicle speed limit is not a foot
+    # access restriction. This models access, not walking comfort or road safety.
+    if tags.get('motorroad') == 'yes':
+        return False
+    default_tertiary = h in {'tertiary','tertiary_link'}
+    if h in EXPLICIT and not default_tertiary and tags.get('foot') not in ('yes','designated','permissive') and tags.get('sidewalk') not in ('yes','both','left','right'):
         return False
     if tags.get('construction') or tags.get('proposed') or tags.get('route') == 'ferry' or tags.get('conveying') in ('forward','backward','reversible','yes'):
         return False
@@ -95,34 +96,49 @@ def extract(pbf,feed,output,reviewed=None):
     bounds=(min(s['lon'] for s in stops)-.05,min(s['lat'] for s in stops)-.05,max(s['lon'] for s in stops)+.05,max(s['lat'] for s in stops)+.05)
     def inside(lat,lon):return bounds[0]<=lon<=bounds[2] and bounds[1]<=lat<=bounds[3]
     blocked=set();features=[]
+    platform_file=Path('data/platform-bindings.json')
+    platform_bindings=json.loads(platform_file.read_text()) if platform_file.exists() else []
+    platform_ids={b['osmWay'] for b in platform_bindings};platform_ways={}
+    access_file=Path('data/station-access.json')
+    access=json.loads(access_file.read_text()) if access_file.exists() else {}
+    elevators=set(access.get('elevators',[]));fare_gates=set(access.get('fareGates',[]))
     keys=osmium.filter.KeyFilter('barrier','access','foot','opening_hours','access:conditional','foot:conditional','highway','public_transport')
     processor=osmium.FileProcessor(str(pbf)).with_filter(osmium.filter.EntityFilter(osmium.osm.NODE)).with_filter(keys)
     for n in processor:
         if not inside(n.location.lat,n.location.lon):continue
         tags=dict(n.tags)
-        if blocked_node(tags):blocked.add(n.id)
+        gate_tags={**tags,'barrier':'no'} if n.id in fare_gates and tags.get('amenity')=='ticket_validator' and tags.get('operator')=='SL' else tags
+        if blocked_node(gate_tags):blocked.add(n.id)
         if tags.get('highway')=='bus_stop':features.append(dict(id=str(n.id),lat=n.location.lat,lon=n.location.lon,tags=tags))
     print(f'OSM restriction scan: {len(blocked)} blocked nodes, {len(features)} bus-stop nodes',flush=True)
     edges=[];nodes=set();accepted_ways=0;excluded_ways=0
-    wayfilter=osmium.filter.TagFilter(*[('highway',h) for h in sorted(SAFE|EXPLICIT)])
+    wayfilter=osmium.filter.TagFilter(*[('highway',h) for h in sorted(SAFE|EXPLICIT)],('railway','platform'),('highway','platform'),('highway','elevator'))
     processor=osmium.FileProcessor(str(pbf)).with_locations().with_filter(osmium.filter.EntityFilter(osmium.osm.WAY)).with_filter(wayfilter)
     for w in processor:
         tags=dict(w.tags)
-        if not walkable(tags):
+        is_platform=w.id in platform_ids
+        is_elevator=w.id in elevators and tags.get('highway')=='elevator'
+        if is_platform:
+            platform_ways[w.id]={'tags':tags,'points':[{'lat':n.lat,'lon':n.lon} for n in w.nodes if n.location.valid()]}
+        from platform_access import platform_allowed
+        if not (platform_allowed(tags) if is_platform else walkable({**tags,'highway':'footway'}) if is_elevator else walkable(tags)):
             excluded_ways+=1;continue
         relevant=False
         for a,b in pairwise(w.nodes):
             if a.ref in blocked or b.ref in blocked or not a.location.valid() or not b.location.valid():continue
             if not inside(a.lat,a.lon) or not inside(b.lat,b.lon):continue
             metres=distance((a.lat,a.lon),(b.lat,b.lon))
-            if metres<=.001:continue
+            if metres<=.001 and not is_elevator:continue
             edges.append(dict(from_=str(a.ref),to=str(b.ref),metres=round(metres,3),source=f'OSM way/{w.id} version/{w.version}',oneWay=tags.get('oneway:foot')=='yes'))
+            if is_elevator:edges[-1]['kind']='elevator';edges[-1]['level']=tags.get('level','')
             # Foot-specific -1 is supported independently of vehicle one-way rules.
             if tags.get('oneway:foot')=='-1':edges[-1]['from_'],edges[-1]['to']=edges[-1]['to'],edges[-1]['from_'];edges[-1]['oneWay']=True
             nodes.update((str(a.ref),str(b.ref)));relevant=True
         if relevant:
             accepted_ways+=1
             if accepted_ways%50000==0:print(f'OSM walking ways: {accepted_ways}; segments: {len(edges)}',flush=True)
+    from platform_access import platform_positions
+    platforms=platform_positions(platform_bindings,stops,platform_ways)
     accepted=bindings(stops,features,nodes)
     if reviewed:
         overrides=json.loads(Path(reviewed).read_text())
@@ -137,10 +153,10 @@ def extract(pbf,feed,output,reviewed=None):
     digest=hashlib.sha256()
     with Path(pbf).open('rb') as f:
         while b:=f.read(4*1024*1024):digest.update(b)
-    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-urban-tertiary-v2'
-    graph=dict(version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=[{'from':e.pop('from_'),**e} for e in edges])
+    version='geofabrik-sweden-'+digest.hexdigest()[:20]+'-default-tertiary-platform-lift-v5'
+    graph=dict(platforms=platforms,platformWays=sorted(platform_ids),version=version,attribution=['© OpenStreetMap contributors · ODbL','OSM extract: Geofabrik'],nodes=sorted(nodes),stops=accepted,edges=[{'from':e.pop('from_'),**e} for e in edges])
     with gzip.open(output,'wt',encoding='utf-8') as f:json.dump(graph,f,ensure_ascii=False,separators=(',',':'))
-    report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)
+    report=dict(osmSha256=digest.hexdigest(),bounds=bounds,nodes=len(nodes),segments=len(edges),walkingWays=accepted_ways,excludedWays=excluded_ways,blockedNodes=len(blocked),gtfsStops=len(stops),boundStops=len(accepted),unboundStops=len(stops)-len(accepted),elapsedSeconds=round(time.monotonic()-started,2),platforms=platforms,profile='4.8 km/h. Conservative access. No spatially invented connectors; many unbound stops expected.',version=version)
     Path(str(output)+'.bus-stops.json').write_text(json.dumps(features,ensure_ascii=False,separators=(',',':')))
     Path(str(output)+'.report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(report,ensure_ascii=False),flush=True)

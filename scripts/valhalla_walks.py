@@ -1,7 +1,7 @@
 """Build walking pairs locally over filtered OSM geometry with conservative endpoint checks.
 Surface stops need an unambiguous pedestrian way. An identified OSM bus-stop
 position can resolve ambiguous/inaccurate GTFS coordinates; all offsets are timed.
-No broad nearest-road access; rail platforms and ambiguous points remain data gaps.
+No broad nearest-road access; only explicitly identified rail platforms are included.
 """
 import argparse
 import csv
@@ -32,7 +32,15 @@ def identified_anchor(stop, feature, result):
     position={**stop,'lat':feature['lat'],'lon':feature['lon']}
     anchor=select_anchor(position,result,5)
     if anchor is None:
-        edge=junction_edge(position,result)
+        # A named roadside stop can sit beyond 5 m from a road centerline.
+        # Accept at most 10 m only when every nearby candidate is the same
+        # ordinary road corridor, with no competing walkway or platform.
+        nearby=[e for e in result.get('edges') or [] if distance((position['lat'],position['lon']),(e['correlated_lat'],e['correlated_lon']))<=10]
+        if nearby and all('sliso:default-road' in e.get('edge_info',{}).get('names',[]) for e in nearby):
+            anchor=select_anchor(position,{'edges':nearby},10)
+    if anchor is None:
+        surface_result={**result,'edges':[e for e in result.get('edges') or [] if not any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[]))]}
+        edge=junction_edge(position,surface_result)
         if edge is None:return None
         anchor=select_anchor(position,{'edges':[edge]},5)
         anchor['junctionVerified']=True
@@ -42,9 +50,10 @@ def identified_anchor(stop, feature, result):
         'offsetMetres':shift+anchor['offsetMetres']}
 
 
-def select_anchor(stop,result,tolerance=1):
+def select_anchor(stop,result,tolerance=1,platform=False):
     edges=[e for e in result.get('edges') or [] if distance((stop['lat'],stop['lon']),(e['correlated_lat'],e['correlated_lon'])) <= tolerance]
-    legacy=[e for e in edges if not any('sliso:urban-default' in str(n) for n in e.get('edge_info',{}).get('names',e.get('names',[])))]
+    if not platform:edges=[e for e in edges if not any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[]))]
+    legacy=[e for e in edges if not any('sliso:default-road' in str(n) for n in e.get('edge_info',{}).get('names',e.get('names',[])))]
     if legacy:edges=legacy
     if not edges or len({way_id(e) for e in edges}) != 1:
         return None
@@ -64,24 +73,29 @@ def surface_stops(feed):
 def walking_pair(source_stop, target_stop, seconds, kilometres, provenance, max_minutes):
     if seconds is None or kilometres is None: return None
     offset=source_stop['offsetMetres']+target_stop['offsetMetres']
-    duration=math.ceil(seconds+offset/(80/60))
+    duration=math.ceil(seconds+offset/(80/60)+source_stop.get('accessSeconds',0)+target_stop.get('accessSeconds',0))
     if not 0<duration<=max_minutes*60: return None
     return {'from':source_stop['id'],'to':target_stop['id'],'seconds':duration,
         'metres':round(kilometres*1000+offset),'source':provenance}
 
 
-def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None):
+def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None,station_config=None):
     import valhalla
     if not 5<=max_minutes<=30:raise ValueError('Maximum walking minutes must be 5–30')
     started=time.monotonic();config=json.loads(Path(config_file).read_text())
     config['mjolnir']['max_cache_size']=128*1024*1024
     actor=valhalla.Actor(config)
+    station_actor=valhalla.Actor(json.loads(Path(station_config).read_text())) if station_config else actor
+    geo=json.loads(Path(graph_report).read_text())
     candidates=surface_stops(feed);anchors=[]
+    platform_stops=geo.get('platforms',[])
+    candidates.extend({**s,'busOnly':False} for s in platform_stops)
     features=json.loads(Path(stop_features).read_text()) if stop_features else []
     by_name={}
     for feature in features: by_name.setdefault(normalize(feature['tags'].get('name','')),[]).append(feature)
     for at in range(0,len(candidates),100):
-        chunk=candidates[at:at+100]
+        chunk=[s for s in candidates[at:at+100] if 'platformWay' not in s]
+        if not chunk:continue
         result=actor.locate({'locations':[{**LOCATION,'lat':s['lat'],'lon':s['lon']} for s in chunk],'costing':'pedestrian','verbose':True})
         for s,r in zip(chunk,result):
             anchor=select_anchor(s,r,endpoint_tolerance(s,by_name.get(normalize(s['name']),[])))
@@ -98,13 +112,23 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         for (stop,feature),result in zip(chunk,located):
             anchor=identified_anchor(stop,feature,result)
             if anchor:anchors.append(anchor);identified_count+=1
-    # Distinct GTFS platform IDs at the same projected point require review; no free platform hops.
+    for s in platform_stops:
+        platform_actor=station_actor if s.get('accessSeconds') else actor
+        result=platform_actor.locate({'locations':[{**LOCATION,'lat':s['platformLat'],'lon':s['platformLon']}],'costing':'pedestrian','verbose':True})[0]
+        marker=f"sliso:platform:{s['platformWay']}"
+        edges=[e for e in result.get('edges') or [] if marker in e.get('edge_info',{}).get('names',[])]
+        position={**s,'lat':s['platformLat'],'lon':s['platformLon']}
+        anchor=select_anchor(position,{'edges':edges},1,platform=True)
+        if anchor is None:raise ValueError('Mapped platform has no matching pedestrian edge: '+s['id'])
+        if anchor:
+            anchors.append({**anchor,'lat':s['lat'],'lon':s['lon'],'platformWay':s['platformWay'],'binding':'identified-osm-platform','offsetMetres':s['offsetMetres']+anchor['offsetMetres']})
+    # Coincident projections are accepted only on the same explicitly identified
+    # platform; timed endpoint offsets still apply. Other collisions are omitted.
     key=lambda s:(round(s['anchorLat'],6),round(s['anchorLon'],6))
     counts=Counter(key(s) for s in anchors)
-    anchors=[s for s in anchors if counts[key(s)]==1]
+    anchors=[s for s in anchors if counts[key(s)]==1 or ('platformWay' in s and all(t.get('platformWay')==s['platformWay'] for t in anchors if key(t)==key(s)))]
     print(f'Valhalla endpoint checks: {len(anchors)}/{len(candidates)} surface stops accepted',flush=True)
-    geo=json.loads(Path(graph_report).read_text())
-    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; timed offsets; rail access omitted"
+    source=f"{geo['version']} / Valhalla {valhalla.__version__} / one-to-one OSM bus-stop assignment <=25m; unique ways or graph-verified junction <=15m; named roadside corridor <=10m; timed offsets; explicitly identified OSM platforms only"
     bins={}
     for s in anchors:bins.setdefault((math.floor(s['lat']*100),math.floor(s['lon']*50)),[]).append(s)
     pairs=[];errors=0
@@ -113,10 +137,16 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
         cell=(math.floor(s['lat']*100),math.floor(s['lon']*50))
         # Bin radius over-covers 2400m at these latitudes; exact haversine then filters.
         targets=[t for a in range(-3,4) for b in range(-4,5) for t in bins.get((cell[0]+a,cell[1]+b),[]) if t['id']!=s['id'] and distance((s['anchorLat'],s['anchorLon']),(t['anchorLat'],t['anchorLon']))<=max_minutes*80]
-        for at in range(0,len(targets),100):
-            chunk=targets[at:at+100]
+        # Surface-to-surface routes use tiles with no vertical lifts, so they
+        # cannot shortcut through a station without paying access time.
+        chunks=[]
+        for access in (False,True):
+            group=[t for t in targets if bool(t.get('accessSeconds'))==access]
+            chunks.extend(group[at:at+100] for at in range(0,len(group),100))
+        for chunk in chunks:
+            routing_actor=station_actor if s.get('accessSeconds') or chunk[0].get('accessSeconds') else actor
             try:
-                result=actor.matrix({'sources':[loc(s)],'targets':[loc(t) for t in chunk],'costing':'pedestrian','units':'kilometers','costing_options':{'pedestrian':{'walking_speed':4.8,'step_penalty':0}},'expansion_max_distance':max_minutes*80,'verbose':False})
+                result=routing_actor.matrix({'sources':[loc(s)],'targets':[loc(t) for t in chunk],'costing':'pedestrian','units':'kilometers','costing_options':{'pedestrian':{'walking_speed':4.8,'step_penalty':0,'elevator_penalty':120}},'expansion_max_distance':max_minutes*80,'verbose':False})
             except valhalla.ValhallaError:
                 errors+=1;continue
             for t,seconds,kilometres in zip(chunk,result['sources_to_targets']['durations'][0],result['sources_to_targets']['distances'][0]):
@@ -124,7 +154,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-bus-assignment-junction-v4','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Stationsplattformar och övriga lägen kräver granskning.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-bus-assignment-junction-platform-v6','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     from walking_audit import audit
     reference_file=Path('data/walking-reference-pairs.json')
     references=json.loads(reference_file.read_text()) if reference_file.exists() else []
@@ -140,4 +170,4 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
     print(json.dumps(report),flush=True)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True);p.add_argument('--gtfs',required=True);p.add_argument('--graph-report',required=True);p.add_argument('--output',required=True);p.add_argument('--max-minutes',type=int,default=30);p.add_argument('--stop-features');a=p.parse_args();build(a.config,a.gtfs,a.graph_report,a.output,a.max_minutes,a.stop_features)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True);p.add_argument('--gtfs',required=True);p.add_argument('--graph-report',required=True);p.add_argument('--output',required=True);p.add_argument('--max-minutes',type=int,default=30);p.add_argument('--stop-features');p.add_argument('--station-config');a=p.parse_args();build(a.config,a.gtfs,a.graph_report,a.output,a.max_minutes,a.stop_features,a.station_config)

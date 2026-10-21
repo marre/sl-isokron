@@ -23,7 +23,7 @@ class WalkingAreaBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
             (root/'config').write_text(json.dumps({'service_limits':{'isochrone':{}}}))
-            (root/'anchors').write_text(json.dumps([{'id':'a','lat':59,'lon':18,'anchorLat':59,'anchorLon':18,'offsetMetres':4}]))
+            (root/'anchors').write_text(json.dumps([{'id':'a','lat':59,'lon':18,'anchorLat':59,'anchorLon':18,'offsetMetres':4},{'id':'b','lat':59,'lon':18,'anchorLat':59,'anchorLon':18,'offsetMetres':4,'accessSeconds':120}]))
             (root/'walks').write_text(json.dumps({'version':'fixture'}))
             with patch.dict(sys.modules,{'valhalla':types.SimpleNamespace(Actor=Actor)}),contextlib.redirect_stdout(io.StringIO()):
                 build(root/'config',root/'anchors',root/'walks',root/'areas')
@@ -32,3 +32,8 @@ class WalkingAreaBudgetTests(unittest.TestCase):
             self.assertAlmostEqual(contours[-1]['time']*60+4/(80/60),1800)
             output=json.loads((root/'areas/areas-0000.json').read_text())['a']
             self.assertEqual([c['minutes'] for c in output],list(range(1,31)))
+            station=requests[1]['contours']
+            self.assertGreater(station[0]['time'],0)
+            self.assertAlmostEqual(station[0]['time']*60+4/(80/60)+120,180)
+            station_output=json.loads((root/'areas/areas-0001.json').read_text())['b']
+            self.assertEqual([c['minutes'] for c in station_output],list(range(3,31)))

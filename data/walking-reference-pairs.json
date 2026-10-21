@@ -1,7 +1,90 @@
 [
-  {"name":"Skorpvägen","stops":["9022001012117001","9022001012117002"],"maxSeconds":300},
-  {"name":"Ankarstocksvägen","stops":["9022001012119001","9022001012119002"],"maxSeconds":300},
-  {"name":"Runstensplan","stops":["9022001012169001","9022001012169002"],"maxSeconds":300},
-  {"name":"Västerledstorget","stops":["9022001012017001","9022001012017002"],"maxSeconds":300},
-  {"name":"Grenvägen","stops":["9022001012030001","9022001012030002"],"maxSeconds":300}
+  {
+    "name": "Skorpvägen",
+    "stops": [
+      "9022001012117001",
+      "9022001012117002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Ankarstocksvägen",
+    "stops": [
+      "9022001012119001",
+      "9022001012119002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Runstensplan",
+    "stops": [
+      "9022001012169001",
+      "9022001012169002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Västerledstorget",
+    "stops": [
+      "9022001012017001",
+      "9022001012017002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Grenvägen",
+    "stops": [
+      "9022001012030001",
+      "9022001012030002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Barkarby på Lovön",
+    "stops": [
+      "9022001015411001",
+      "9022001015411002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Lovö kyrka 1–2",
+    "stops": [
+      "9022001015415001",
+      "9022001015415002"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Lovö kyrka 3–4",
+    "stops": [
+      "9022001015415003",
+      "9022001015415004"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Lovö kyrka vägskäl",
+    "stops": [
+      "9022001015415002",
+      "9022001015415003"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Vallentuna tåg–buss",
+    "stops": [
+      "9022001007361002",
+      "9022001060157003"
+    ],
+    "maxSeconds": 300
+  },
+  {
+    "name": "Stockholms östra–Tekniska högskolan",
+    "stops": [
+      "9022001006601003",
+      "9022001002221002"
+    ],
+    "maxSeconds": 600
+  }
 ]

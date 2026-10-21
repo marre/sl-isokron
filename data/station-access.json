@@ -1,0 +1,5 @@
+{
+  "description": "Mapped public lifts and SL ticket validators at Tekniska högskolan; fare required. IDs checked against the pinned OSM extract. Lift waiting/riding is estimated, not real-time.",
+  "elevators": [398632623, 1516917805],
+  "fareGates": [13848540295, 13848546983]
+}

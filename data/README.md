@@ -110,20 +110,51 @@ faktiska grafnod-ID:n och tillåtna dubbelriktade kanter. Närliggande koordinat
 kopplar aldrig ihop två grafnoder. Separata broplan eller frånkopplade gångbanor
 blir därför inte en ny passage genom denna korsningskontroll.
 
-OSM-profilen medger också svensk normal gångåtkomst på `tertiary`/
-`tertiary_link` med uttrycklig hastighetsgräns högst 50 km/h eller `SE:urban`.
-Explicit gångförbud, krav på separat sidoväg (`foot=use_sidepath`), privat
-åtkomst, kända tidsbegränsningar och barriärer har företräde. Högre eller okänd
-hastighet på dessa vägar kräver fortfarande det tidigare uttryckliga
-fotgängarunderlaget. En vanlig väg kan representera en gatukorridor även när
-trottoaren inte är separat kartlagd; detta är inte ett löfte om trottoarstandard.
+OSM-profilen medger svensk normal gångåtkomst på vanliga `tertiary`/
+`tertiary_link`-vägar, även på landsbygden. Bilarnas hastighetsgräns är inte
+ett gångförbud. `motorroad=yes`, explicit gångförbud, krav på separat sidoväg
+(`foot=use_sidepath`), privat åtkomst, kända tidsbegränsningar och barriärer
+har företräde. Primär-/sekundärvägar kräver fortsatt uttryckligt gångunderlag.
+En tillåten väg kan sakna trottoar; modellen bedömer åtkomst, inte trafikmiljö
+eller lämplighet för barn. Detta rättar de bortfiltrerade 60–70-vägarna vid
+Lovö kyrka och Barkarby på Lovön.
+
+`platform-bindings.json` identifierar uttryckligen plattformarna i Vallentuna,
+Stockholms östra och Tekniska högskolan med OSM-väg-ID och GTFS-läge.
+Vallentunas OSM-stop_area 19354312 anger plattformarna 40140423/40140424;
+övriga plattformsytor har också SL:s NeTEx-quay-ID:n. Plattformarnas egna
+kartlagda kanter läggs till gånggrafen och ansluts bara via verkligt gemensamma
+OSM-noder. Projektionen görs på den identifierade plattformen, aldrig på en
+närliggande gata eller en annan nivå. Högst 25 meters koordinatavvikelse räknas
+in i gångtid och avstånd; flyttat GTFS-läge, ändrat plattformsnummer, saknad
+eller tillträdesbegränsad OSM-yta stoppar bygget. Dessa identitetskontroller
+ersätter inte platsgranskning. Övriga järnvägs-/tunnelbaneplattformar ingår inte
+automatiskt, och täckningen förblir partiell.
 
 `scripts/walking_audit.py` granskar samtliga yttrafiklägen efter saknade
 riktade gångpar och orimligt långa nätvägar mellan närliggande lägen med samma
 namn. Fågelvägsavstånd används bara för diagnos, aldrig som gångtid. Resultatet
 publiceras som Actions-artefakten `sliso-walking-audit`. Kvarstående fynd kräver
-granskning; de fylls inte automatiskt med genvägar. De fem rapporterade fallen
+granskning; de fylls inte automatiskt med genvägar. De rapporterade fallen
 finns i `walking-reference-pairs.json`; bygget stoppas om en kontrollerad
-riktning saknas eller överstiger fem minuters nätgång. Borttagna hållplats-ID:n
+riktning saknas eller överstiger gränsen i referenslistan. Borttagna hållplats-ID:n
 redovisas som överhoppade referenser. Denna regressionstestlista är inte en
 manuell granskning av alla gångpassager.
+
+Vid Tekniska högskolan ingår de kartlagda hissarna 398632623 och 1516917805,
+och två uttryckligt identifierade SL-biljettspärrar (se `station-access.json`).
+Vanliga privata grindar är fortsatt uteslutna. Färd-/väntetid i hiss uppskattas
+till två minuter per plattformsanslutning, utöver gång över den kartlagda vägen.
+Detta är en modellparameter, inte en uppmätt väntetid eller tillgänglighetsgaranti.
+Två lokala Valhalla-grafer används: gång mellan yttrafiklägen och deras ytor
+använder grafen utan hissar; anslutningar till/från de utpekade underjordiska
+plattformarna använder stationsgrafen och betalar stationstiden. Därmed skapas
+inte tidsfria genvägar genom hissar mellan två vanliga ythållplatser. Även
+stationernas gångytor reserverar anslutningstiden före nätutvidgningen.
+
+Namngivna OSM-busshållplatser som har en enda vanlig vägkorridor inom tio meter
+får en tidsatt anslutning till denna. Detta tillägg gäller efter entydig
+hållplatsidentifiering, och bara när samtliga närliggande kandidater hör till
+samma vanliga väg. Konkurrerande gångbanor, vägar eller plattformar avvisas.
+Det löser Barkarbys vägrensläge cirka sex meter från vägens mittlinje utan att
+vidga den vanliga GTFS-projektionen till godtyckligt närmaste väg.

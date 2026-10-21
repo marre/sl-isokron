@@ -6,7 +6,7 @@ Kravkälla: [version 0.6](kravspec.md). Status 2026-10-19: körbar utvecklingsve
 
 - TypeScript-kontroll, Vite-produktionsbygge och filbudgetkontroll.
 - 39 TypeScript-tester av restidsmodell, gångbudget, avgångsfönster, transferkontext, daterade turer, på-/avstigning, natt, sommartid, hållplatssökning, delningsformat, reskedjor, tidsjusterad anslutningsgång och färgskalans gränser. Motorn jämförs med ett oberoende uttömmande orakel i 60 små slumpade nät och med en oprunad sökning i ytterligare 100 nät med villkorade bytesregler.
-- 39 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
+- 45 Python-tester av kalenderundantag, GTFS-tider, fysisk gång, koordinatmatchning, bokningsregler, trafikurval, atomisk manifestersättning, versionsrensning, kvotspärr/återanvändning samt verifierad releaseinstallation, trasiga arkiv och skydd mot sökvägstraversering.
 - 22 Chromium-integrationstester, 11 vardera för dator- och mobilvy: riktig worker och datahämtning, sökning/lägesval, resultat, förarsamordning, delning, tidszoner, avbrytning, dataluckor och resväg via hover, tangentbord och tryck. Kartinpassning, dolda hållplatser utan känd resa, nollställning inklusive avbrytning/länk, gångavstånd och gångområdens på-/avslag ingår. De använder isolerade syntetiska fixturer; riktiga data skrivs inte över. Bakgrundstiles blockeras avsiktligt.
 - Riktig GTFS Regional SL, feedversion 2026-10-19, hämtad genom Actions och kompilerad lokalt: 611 linjeposter, 14 219 hållplatslägen och cirka 5,76 miljoner daterade förbindelser. Alla aktörer ingår enligt beställarens uttryckliga beslut. Schema 2 partitionerar trafiken i UTC-timblock; största filen är cirka 9,6 MB, under gränsen 25 MiB.
 - Riktigt OSM-gångnät filtrerat och routat lokalt med Valhalla. 1 041 lägen har konservativa geometriska anslutningar, och 10 460 riktade gångpar har beräknats. Underlaget är **inte manuellt granskat**, och stationernas plattforms-/entréförbindelser saknas. Se [datakällor och reproduktion](../data/README.md).
@@ -50,3 +50,8 @@ Koordinatmatchningens rättning och det reproducerade användarfallet dokumenter
 [Runstensplan-regressionen](runstensplan-regression.md) kompletterar gångkontrollerna med identitetsbaserade OSM-positioner när GTFS ligger mellan flera gångvägar.
 
 [Västerledstorget/Grenvägen](vasterledstorget-grenvagen.md) omfattar gemensam hållplatstilldelning, verklig nodtopologi vid gångkorsningar, gångåtkomst på vanliga 40/50-gator och en automatisk granskning av närliggande lägens gångluckor.
+
+Gångytorna laddas och ritas nu successivt med räknare/procent, oberoende av
+ankomstordning, med snabbaste färg överst. Avbruten sökning tar bort även
+delvis ritade ytor. Separata browserfall för fördröjd andra fil och avbrytning
+körs i dator- och mobilvy. Se även [Lovön och Vallentuna](lovo-vallentuna.md).

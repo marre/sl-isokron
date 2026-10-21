@@ -1,0 +1,84 @@
+[
+  {
+    "id": "9022001007361001",
+    "name": "Vallentuna",
+    "platform": "1",
+    "lat": 59.533704,
+    "lon": 18.079804,
+    "osmWay": 40140423
+  },
+  {
+    "id": "9022001007361002",
+    "name": "Vallentuna",
+    "platform": "2",
+    "lat": 59.533801,
+    "lon": 18.079881,
+    "osmWay": 40140424
+  },
+  {
+    "id": "9022001006601002",
+    "name": "Stockholms östra",
+    "platform": "2",
+    "lat": 59.34677,
+    "lon": 18.070074,
+    "osmWay": 654771359
+  },
+  {
+    "id": "9022001006601003",
+    "name": "Stockholms östra",
+    "platform": "3",
+    "lat": 59.346807,
+    "lon": 18.070024,
+    "osmWay": 654771359
+  },
+  {
+    "id": "9022001006601004",
+    "name": "Stockholms östra",
+    "platform": "4",
+    "lat": 59.346796,
+    "lon": 18.070061,
+    "osmWay": 654771360
+  },
+  {
+    "id": "9022001006601005",
+    "name": "Stockholms östra",
+    "platform": "5",
+    "lat": 59.346816,
+    "lon": 18.070043,
+    "osmWay": 654771360
+  },
+  {
+    "id": "9022001006601006",
+    "name": "Stockholms östra",
+    "platform": "6",
+    "lat": 59.346824,
+    "lon": 18.070079,
+    "osmWay": 654771363
+  },
+  {
+    "id": "9022001006601007",
+    "name": "Stockholms östra",
+    "platform": "7",
+    "lat": 59.346797,
+    "lon": 18.070094,
+    "osmWay": 654771363
+  },
+  {
+    "id": "9022001002221001",
+    "name": "Tekniska högskolan",
+    "platform": "1",
+    "lat": 59.346541,
+    "lon": 18.069315,
+    "osmWay": 398632637,
+    "accessSeconds": 120
+  },
+  {
+    "id": "9022001002221002",
+    "name": "Tekniska högskolan",
+    "platform": "2",
+    "lat": 59.34654,
+    "lon": 18.069333,
+    "osmWay": 398632637,
+    "accessSeconds": 120
+  }
+]

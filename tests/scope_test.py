@@ -31,7 +31,10 @@ class OSMTests(unittest.TestCase):
         self.assertFalse(walkable({'highway':'motorway','foot':'yes'}))
         self.assertFalse(walkable({'highway':'primary'}))
         self.assertTrue(walkable({'highway':'tertiary','maxspeed':'40'}))
-        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'70'}))
+        self.assertTrue(walkable({'highway':'tertiary','maxspeed':'70'}))
+        self.assertTrue(walkable({'highway':'tertiary'}))
+        self.assertFalse(walkable({'highway':'tertiary','motorroad':'yes'}))
+        self.assertFalse(walkable({'highway':'tertiary','maxspeed':'70','foot':'no'}))
         self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','foot':'no'}))
         self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','foot':'use_sidepath'}))
         self.assertFalse(walkable({'highway':'tertiary','maxspeed':'40','access':'private'}))
@@ -57,7 +60,7 @@ class EndpointTests(unittest.TestCase):
         self.assertIsNotNone(select_anchor(stop,{'edges':[edge,{**edge,'percent_along':1}]}))
         self.assertIsNone(select_anchor(stop,{'edges':[edge,{**edge,'way_id':2}]}))
         self.assertIsNone(select_anchor(stop,{'edges':[{**edge,'correlated_lon':18.001}]}))
-        urban={**edge,'way_id':2,'correlated_lon':18.0000001,'edge_info':{'names':['sliso:urban-default']}}
+        urban={**edge,'way_id':2,'correlated_lon':18.0000001,'edge_info':{'names':['sliso:default-road']}}
         self.assertEqual(select_anchor(stop,{'edges':[edge,urban]})['way'],1)
         self.assertEqual(select_anchor(stop,{'edges':[urban]})['way'],2)
 

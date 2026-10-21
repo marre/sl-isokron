@@ -20,11 +20,12 @@ def prepare(gtfs, output):
         with pbf.open('rb') as stream: checksum = hashlib.file_digest(stream, 'sha256').hexdigest()
         if checksum != provenance['sha256']: raise ValueError('OSM source checksum mismatch')
         def run(script, *args): subprocess.run([sys.executable, 'scripts/'+script, *map(str, args)], check=True)
-        graph = root/'graph.json.gz'; tiles = root/'valhalla'; walks = output/'walks.json'
+        graph = root/'graph.json.gz'; tiles = root/'valhalla'; station_tiles=root/'station-valhalla'; walks = output/'walks.json'
         run('osm_walks.py', '--pbf', pbf, '--gtfs', gtfs, '--output', graph)
         run('prepare_pedestrian_tiles.py', '--graph', graph, '--pbf', pbf, '--directory', tiles)
-        run('valhalla_walks.py', '--config', tiles/'config.json', '--gtfs', gtfs, '--graph-report', str(graph)+'.report.json', '--stop-features', str(graph)+'.bus-stops.json', '--output', walks)
-        run('walking_areas.py', '--config', tiles/'config.json', '--anchors', str(walks)+'.anchors.json', '--walks', walks, '--output', output/'areas')
+        run('prepare_pedestrian_tiles.py', '--graph', graph, '--pbf', pbf, '--directory', station_tiles,'--station-access')
+        run('valhalla_walks.py', '--config', tiles/'config.json', '--gtfs', gtfs, '--graph-report', str(graph)+'.report.json', '--stop-features', str(graph)+'.bus-stops.json', '--output', walks,'--station-config',station_tiles/'config.json')
+        run('walking_areas.py', '--config', tiles/'config.json', '--anchors', str(walks)+'.anchors.json', '--walks', walks, '--output', output/'areas','--station-config',station_tiles/'config.json')
         for name, path in [('osm-report.json', Path(str(graph)+'.report.json')), ('tiles-report.json', tiles/'report.json')]:
             shutil.copyfile(path, output/name)
 
