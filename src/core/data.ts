@@ -52,14 +52,25 @@ export function decodeWalks(payload: unknown): Walk[] {
   });
 }
 
-export async function loadNetwork(m: Manifest, t0: number, end: number, signal?: AbortSignal): Promise<Network> {
-  const [stops, walks, routes, transfers, trips] = await Promise.all([loadJSON<Network['stops']>(m.stops, signal), loadJSON<unknown>(m.walks, signal).then(decodeWalks), loadJSON<Network['routes']>(m.routes, signal), loadJSON<Network['transfers']>(m.transfers, signal), loadJSON<string[]>(m.trips, signal)]);
-  // Daily packages are bucketed by ACTUAL UTC departure, not service-day label.
+export interface LoadProgress { completed: number; total: number; bytesCompleted: number; bytesTotal: number }
+export async function loadNetwork(m: Manifest, t0: number, end: number, signal?: AbortSignal, onProgress?: (progress: LoadProgress) => void): Promise<Network> {
   const first = new Date(t0 * 1000).toISOString().slice(0,10), last = new Date(end * 1000).toISOString().slice(0,10);
   const selected = Object.entries(m.days).filter(([d]) => d >= first && d <= last);
   const wanted = Math.round((Date.parse(last) - Date.parse(first)) / 86400000) + 1;
   if (selected.length !== wanted) throw new Error('Tidtabell saknas för hela resan, inklusive trafik efter midnatt. Välj ett annat datum.');
-  const connections = (await Promise.all(selected.flatMap(([, refs]) => refs.filter(ref => ref.from <= end && ref.until > t0)).map(async ref => decodeConnections(await verified(ref, signal), trips)))).flat().filter(c => c.departure >= t0 && c.departure <= end);
+  const hourly=selected.flatMap(([,refs])=>refs.filter(ref=>ref.from<=end&&ref.until>t0));
+  const refs=[...new Map([m.stops,m.walks,m.routes,m.transfers,m.trips,...hourly].map(r=>[r.url,r])).values()];
+  const done=new Set<string>(),bytesTotal=refs.reduce((n,r)=>n+r.bytes,0);let bytesCompleted=0;
+  const progress=()=>onProgress?.({completed:done.size,total:refs.length,bytesCompleted,bytesTotal});
+  progress();
+  async function buffer(ref: FileRef) {
+    const bytes=await verified(ref,signal);
+    if(!done.has(ref.url)){done.add(ref.url);bytesCompleted+=ref.bytes;progress();}
+    return bytes;
+  }
+  async function json<T>(ref: FileRef): Promise<T> { return JSON.parse(new TextDecoder().decode(await buffer(ref))) as T; }
+  const [stops, walks, routes, transfers, trips] = await Promise.all([json<Network['stops']>(m.stops), json<unknown>(m.walks).then(decodeWalks), json<Network['routes']>(m.routes), json<Network['transfers']>(m.transfers), json<string[]>(m.trips)]);
+  const connections=(await Promise.all(hourly.map(async ref=>decodeConnections(await buffer(ref),trips)))).flat().filter(c=>c.departure>=t0&&c.departure<=end);
   return { stops, walks, routes, transfers, connections };
 }
 export async function cacheAvailable(): Promise<boolean> {

@@ -29,8 +29,10 @@
       "distanceMultiplier": 1.25,
       "minimumSeconds": 60,
       "mappedDirectionsPreserved": true,
-      "reviewed": false
-    }
+      "reviewed": false,
+      "nameNormalization": "case-space-station-suffix-v2"
+    },
+    "surfaceEndpointCandidatesExcludeRailPlatforms": true
   },
   "historicalBaselineQuality": {
     "surfaceCandidates": 11181,

@@ -32,3 +32,8 @@ class AssumedWalkTests(unittest.TestCase):
         self.assertEqual({(e['from'],e['to']) for e in data['edges']},{('a','c'),('c','a')})
         self.assertEqual(len(data['warnings']),1)
         self.assertEqual({s['id'] for s in data['stops']},{'a','c'})
+
+    def test_station_suffix_is_the_same_place_but_directional_names_remain_distinct(self):
+        stops=[dict(id='rail',name='Upplands Väsby',lat=59.,lon=18.),dict(id='bus',name='Upplands Väsby station',lat=59.001,lon=18.),dict(id='west',name='Upplands Väsby station västra',lat=59.,lon=18.),dict(id='far',name='Upplands Väsby station',lat=59.01,lon=18.)]
+        result=add_assumed_walks(stops,[])
+        self.assertEqual({(e['from'],e['to']) for e in result},{('rail','bus'),('bus','rail')})

@@ -166,5 +166,13 @@
       "9022001005121002"
     ],
     "maxSeconds": 600
+  },
+  {
+    "name": "Tingsvägen–Sollentuna station",
+    "stops": [
+      "9022001052709001",
+      "9022001050501001"
+    ],
+    "maxSeconds": 300
   }
 ]

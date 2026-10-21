@@ -17,7 +17,7 @@ export class WalkingView {
   private panes: HTMLElement[] = [];
   private pane: HTMLElement;
 
-  constructor(private map: L.Map, private status: (text: string) => void, private ready: () => void) {
+  constructor(private map: L.Map, private status: (text: string) => void, private ready: () => void, private progress?: (completed: number, total: number, failed: number) => void) {
     this.pane = map.createPane('walking-areas');
     this.pane.style.zIndex = '250'; this.pane.style.opacity = '.4'; this.pane.style.pointerEvents = 'none';
     this.layer.addTo(map);
@@ -38,12 +38,12 @@ export class WalkingView {
   toggle(enabled: boolean) { this.enabled = enabled; this.clear(); void this.draw(); }
 
   private async draw() {
-    if (!this.data || !this.enabled) { this.status('Gångområden är dolda.'); return; }
+    if (!this.data || !this.enabled) { this.progress?.(0,0,0); this.status('Gångområden är dolda.'); return; }
     const { result, settings, manifest, stops } = this.data, areas = manifest.walkingAreas;
-    if (!areas) { this.status('Gångområden saknas i detta dataset.'); return; }
+    if (!areas) { this.progress?.(0,0,0); this.status('Gångområden saknas i detta dataset.'); return; }
     const available = walkingMinutes(result.walkSources, settings.maxMinutes * 60, settings.walkMinutes * 60);
     const files = [...new Set([...available.keys()].map(i => areas.index[stops[i].id]).filter(i => i !== undefined))];
-    if (!files.length) { this.status('Inga gångområden finns för de nådda lägena. Gångtäckningen är ofullständig.'); return; }
+    if (!files.length) { this.progress?.(0,0,0); this.status('Inga gångområden finns för de nådda lägena. Gångtäckningen är ofullständig.'); return; }
     const controller = this.controller = new AbortController();
     // Fixed band order makes the fastest color win even when files arrive out of
     // order. All opaque canvases share one translucent parent, avoiding dark seams.
@@ -60,37 +60,64 @@ export class WalkingView {
         needed.set(id, entries);
       }
     }
-    let cursor = 0, completed = 0, failed = 0;
-    const progress = () => this.status(`Laddar och visar gångområden: ${completed} av ${files.length} (${Math.floor(completed / files.length * 100)} %)${failed ? ` · ${failed} kunde inte laddas` : ''}…`);
-    progress();
-    await Promise.all(Array.from({ length: Math.min(6, files.length) }, async () => {
-      while (cursor < files.length && !controller.signal.aborted) {
-        const file = files[cursor++];
-        try {
-          const profiles = await loadJSON<Profiles>(areas.files[file], controller.signal);
-          if (controller.signal.aborted) return;
-          for (const [id, contours] of Object.entries(profiles)) {
-            for (const { minutes, band, renderer } of needed.get(id) ?? []) {
-              const contour = contours.find(c => c.minutes === minutes);
-              if (contour) L.geoJSON(contour.geometry, {
-                interactive: false,
-                style: { renderer, stroke: false, fillOpacity: 1, fillColor: colorFor(band * 60, settings.maxMinutes) },
-              }).addTo(this.layer);
-            }
-          }
-        } catch {
-          if (controller.signal.aborted) return;
-          failed++;
-        }
-        completed++; progress();
-        // Let the browser paint each batch and handle input before loading more.
-        await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    const completed=new Set<number>(), failed=new Set<number>(), inFlight=new Set<number>();
+    let wanted=new Set<number>(), queue:number[]=[];
+    const positions=new Map<number,number[]>();
+    for(const index of available.keys()){
+      const file=areas.index[stops[index].id];
+      if(file!==undefined)positions.set(file,[...(positions.get(file)??[]),index]);
+    }
+    const progress=()=>{
+      if(controller.signal.aborted)return;
+      const done=[...wanted].filter(f=>completed.has(f)).length;
+      const failures=[...wanted].filter(f=>failed.has(f)).length;
+      this.progress?.(done,wanted.size,failures);
+      if(done<wanted.size)this.status(`Laddar och visar gångområden: ${done} av ${wanted.size} (${Math.floor(done/wanted.size*100)} %) i kartvyn${failures?` · ${failures} kunde inte laddas`:''}…`);
+      else if(!wanted.size)this.status('Inga gångområden i denna kartvy. Flytta kartan till nådda hållplatser.');
+      else {
+        this.status(failures?`Gångområden visas delvis · ${failures} underlag kunde inte laddas. Slå av och på gångområden för att försöka igen.`:'Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.');
+        this.ready();
       }
-    }));
-    if (controller.signal.aborted) return;
-    this.status(failed
-      ? `Gångområden visas delvis · ${failed} av ${files.length} underlag kunde inte laddas. Slå av och på gångområden för att försöka igen.`
-      : 'Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.');
-    this.ready();
+    };
+    const pump=()=>{
+      while(inFlight.size<6&&queue.length){
+        const file=queue.shift()!;
+        if(completed.has(file)||inFlight.has(file)||!wanted.has(file))continue;
+        inFlight.add(file);
+        void (async()=>{
+          try {
+            const profiles=await loadJSON<Profiles>(areas.files[file],controller.signal);
+            if(controller.signal.aborted)return;
+            for(const [id,contours] of Object.entries(profiles)){
+              for(const {minutes,band,renderer} of needed.get(id)??[]){
+                const contour=contours.find(c=>c.minutes===minutes);
+                if(contour)L.geoJSON(contour.geometry,{interactive:false,style:{renderer,stroke:false,fillOpacity:1,fillColor:colorFor(band*60,settings.maxMinutes)}}).addTo(this.layer);
+              }
+            }
+          }catch{if(controller.signal.aborted)return;failed.add(file);}
+          if(controller.signal.aborted)return;
+          completed.add(file);inFlight.delete(file);progress();
+          // Paint a batch before requesting the next one. New map views take priority.
+          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+          if(!controller.signal.aborted)pump();
+        })();
+      }
+    };
+    const updateView=()=>{
+      if(controller.signal.aborted)return;
+      // A source outside the viewport can still have a contour reaching into it.
+      const bounds=this.map.getBounds(),d=(settings.walkMinutes*80+50)/111320;
+      const lon=d/Math.max(.1,Math.cos(this.map.getCenter().lat*Math.PI/180));
+      const expanded=L.latLngBounds([bounds.getSouth()-d,bounds.getWest()-lon],[bounds.getNorth()+d,bounds.getEast()+lon]);
+      wanted=new Set(files.filter(file=>positions.get(file)?.some(i=>expanded.contains([stops[i].lat,stops[i].lon]))));
+      queue=[...wanted].filter(f=>!completed.has(f)&&!inFlight.has(f)).sort((a,b)=>{
+        const score=(file:number)=>Math.min(...positions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));
+        return score(a)-score(b);
+      });
+      progress();pump();
+    };
+    this.map.on('moveend zoomend resize',updateView);
+    controller.signal.addEventListener('abort',()=>this.map.off('moveend zoomend resize',updateView),{once:true});
+    updateView();
   }
 }

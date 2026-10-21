@@ -13,6 +13,7 @@ export interface JourneyNode extends JourneyLeg { previous: number | null }
 export interface Reach { seconds: number; kind: 'walk' | 'transit'; arrival: number; boardings: number; requestStop?: boolean; journey: number | null }
 export interface WalkSource { stop: number; seconds: number; walked: number }
 export interface SearchResult { values: (Reach | null)[]; journeys: JourneyNode[]; routes: Route[]; walkSources: WalkSource[]; labels: number; elapsed: number; complete: true }
+export interface StationProgress { completedRounds: number; totalRounds: number; processedLabels: number; queuedLabels: number; changes: { stop: number; value: Reach }[] }
 export interface FileRef { url: string; sha256: string; bytes: number }
 export interface Manifest {
   sourceVersion?: string; sourceUpdated?: string | null;

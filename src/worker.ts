@@ -8,9 +8,9 @@ self.onmessage = async (event: MessageEvent<{ id: number; manifest: Manifest; se
   try {
     self.postMessage({ id, type: 'status', message: 'Laddar tidtabell och gånganslutningar…' });
     const t0 = stockholmInstant(settings.date, settings.time);
-    const network = await loadNetwork(manifest, t0, t0 + (settings.windowMinutes + settings.maxMinutes) * 60);
+    const network = await loadNetwork(manifest, t0, t0 + (settings.windowMinutes + settings.maxMinutes) * 60, undefined, progress=>self.postMessage({id,type:'progress',phase:'data',...progress}));
     self.postMessage({ id, type: 'status', message: 'Beräknar bästa restid utan initial väntan…' });
-    const result = search(network, settings);
+    const result = search(network, settings, {onProgress:progress=>self.postMessage({id,type:'stations',...progress})});
     self.postMessage({ id, type: 'result', result });
   } catch (error) { self.postMessage({ id, type: 'error', message: error instanceof Error ? error.message : 'Beräkningen misslyckades.' }); }
 };

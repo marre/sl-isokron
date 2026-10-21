@@ -82,3 +82,20 @@ test('request-stop pickup/dropoff remains usable and carries a rider notice',()=
  const n=net();leg(n,0,1,10,20,'bus');n.connections[0].pickupRequest=true;n.connections[0].dropoffRequest=true;
  const r=result(n);assert.equal(r[1]?.seconds,600);assert.equal(r[1]?.requestStop,true);
 });
+
+test('station progress is provisional, monotone and ends with the exact final values',()=>{
+ const n=net(5);leg(n,0,1,0,10,'a');leg(n,1,2,12,15,'b');walk(n,2,3,3);
+ const seen=new Map<number,number>(),rounds:number[]=[];
+ const r=search(n,settings(n),{onProgress:p=>{
+  rounds.push(p.completedRounds);
+  for(const {stop,value} of p.changes){
+   assert.equal(value.journey,null);
+   assert.ok(value.seconds<=(seen.get(stop)??Infinity));seen.set(stop,value.seconds);
+  }
+ }});
+ assert.ok(rounds.length>2);
+ assert.deepEqual(rounds,[...rounds].sort((a,b)=>a-b));
+ assert.equal(rounds.at(-1),settings(n).maxTransfers+2);
+ assert.deepEqual(n.stops.map((_,i)=>seen.get(i)??null),r.values.map(v=>v?.seconds??null));
+ assert.deepEqual(r.values.map(v=>v?.seconds??null),search(n,settings(n),{prune:false}).values.map(v=>v?.seconds??null));
+});

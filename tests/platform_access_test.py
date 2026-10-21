@@ -124,3 +124,16 @@ class PlatformAccessTests(unittest.TestCase):
         self.assertEqual(endpoint_tolerance(s,[{**feature,'lat':59.0003}]),1)
         self.assertEqual(endpoint_tolerance(s,[{**feature,'tags':{**feature['tags'],'ref':'57343'}}]),1)
         self.assertEqual(endpoint_tolerance(s,[feature,{**feature,'id':'other'}]),1)
+
+    def test_nearby_rail_geometry_does_not_hide_a_verified_surface_junction(self):
+        from valhalla_walks import nearby_network_anchor
+        from stop_matching_test import segment
+        stop={'id':'a','name':'Street','busOnly':True,'lat':59.,'lon':18.}
+        seed={'id':'b','name':'Bus terminal','busOnly':True,'lat':59.0001,'lon':18.,'anchorLat':59.0001,'anchorLon':18.,'offsetMetres':2}
+        rail=[{**e,'edge_info':{**e['edge_info'],'names':['sliso:platform:99']}} for e in segment(99,'rail',30,40,10,.5,18.0005)]
+        class Actor:
+            def matrix(self,request):return {'sources_to_targets':{'distances':[[.1]],'durations':[[75]]}}
+        anchor=nearby_network_anchor(stop,{'edges':segment(1,'street',10,20)+rail},[seed],Actor())
+        self.assertEqual(anchor['way'],1)
+        self.assertEqual(anchor['verifiedNearby'],'b')
+        self.assertIsNone(nearby_network_anchor(stop,{'edges':rail},[seed],Actor()))

@@ -92,3 +92,23 @@ plattform inom 25 meter. Underjordiska, osäkert uppskattade, tillträdesbegrän
 och tvetydiga plattformar avvisas. En biljettvalidator får användas när dess
 kartlagda gångväg delar en verklig OSM-nod med en identifierad plattform.
 Det möjliggör granskning av busstågbytet i Märsta utan hållplatsspecifika undantag.
+
+## Stationsåtkomst och synlig kartvy (v10)
+
+Närliggande järnvägsgeometri får inte blockera ett busshållplatsläge på en
+separat, topologiskt verifierad gångväg. Plattformskanter filtreras nu bort
+före val av ytankare, i stället för att hela hållplatsen avvisas när någon
+plattform finns inom sökradien. Krav på verkliga grafnoder, korta tillåtna
+nätvägar i båda riktningarna och betalda koordinatavvikelser kvarstår.
+Tingsvägen–Sollentuna station är ett fysiskt referenspar: 153 meter / 116 sekunder
+i den låsta extrakten, inte en specialregel i genereringen.
+
+Namnnormaliseringen för **uppskattade** byten jämställer även ett avslutande
+“station”: exempelvis “Upplands Väsby” och “Upplands Väsby station”.
+250-metersgränsen och gångbudgeten kvarstår; riktningar som “station västra”
+jämställs inte med grundnamnet. Det ger åtkomst via kartlagda bussterminaler
+när tågens plattformsnummer saknas i OSM. Det skapar inga påhittade tågytor.
+
+Gångytor hämtas för den synliga kartvyn med marginal för gångradien, och nya
+underlag laddas vid panorering. Därmed kan inte tusentals avlägsna profiler
+fördröja gångytorna runt den plats användaren tittar på.

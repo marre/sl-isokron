@@ -23,7 +23,7 @@ async function walkingFixture(page: import('@playwright/test').Page) {
     const view = new WalkingView(L.map(el).setView([59.33,18],14), (text:string) => { status.textContent = text; }, () => {});
     (window as any).progressiveView = view;
     view.setData({ walkSources: [{ stop:0,seconds:0,walked:0 },{ stop:1,seconds:600,walked:0 }] },
-      { maxMinutes:20,walkMinutes:10 }, { walkingAreas: { index:{ a:0,b:1 },files:refs } }, [{ id:'a' },{ id:'b' }]);
+      { maxMinutes:20,walkMinutes:10 }, { walkingAreas: { index:{ a:0,b:1 },files:refs } }, [{ id:'a',lat:59.33,lon:18 },{ id:'b',lat:59.33,lon:18 }]);
   }, refs);
   return release;
 }
@@ -71,4 +71,24 @@ test('estimated same-name walking is labelled in journey details', async ({page}
   await expect(page.locator('#journey-panel')).toContainText('Gång · uppskattad');
   await expect(page.locator('#journey-panel')).toContainText('samma namn inom 250 meter');
   await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 1 min · 70 m');
+});
+
+test('walking profiles load for the visible map then follow a new viewport',async({page})=>{
+ await page.route('https://tile.openstreetmap.org/**',r=>r.abort());await page.goto('/');
+ const bodies=[JSON.stringify({a:[{minutes:10,geometry:{type:'Polygon',coordinates:[[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]]}}]}),JSON.stringify({b:[{minutes:10,geometry:{type:'Polygon',coordinates:[[[17.89,59.51],[17.91,59.51],[17.91,59.53],[17.89,59.53],[17.89,59.51]]]}}]})];
+ const refs=bodies.map((body,i)=>({url:`/data/viewport/${i}.json`,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}));
+ const requested:number[]=[];
+ await page.route('**/data/viewport/*.json',async route=>{const i=Number(new URL(route.request().url()).pathname.split('/').at(-1)!.split('.')[0]);requested.push(i);await route.fulfill({contentType:'application/json',body:bodies[i]});});
+ await page.evaluate(async refs=>{
+  const component='/src/walking-view.ts',leaflet='/node_modules/leaflet/dist/leaflet-src.esm.js';const {WalkingView}=await import(component),L=await import(leaflet);
+  const el=document.createElement('div');el.id='viewport-map';el.style.cssText='position:fixed;left:0;top:0;width:300px;height:300px;z-index:10000';document.body.append(el);
+  const status=document.createElement('p');status.id='viewport-status';document.body.append(status);
+  const map=L.map(el).setView([59.33,18],15);(window as any).viewportMap=map;
+  const view=new WalkingView(map,(text:string)=>status.textContent=text,()=>{});
+  view.setData({walkSources:[{stop:0,seconds:0,walked:0},{stop:1,seconds:0,walked:0}]},{maxMinutes:20,walkMinutes:10},{walkingAreas:{index:{a:0,b:1},files:refs}},[{id:'a',lat:59.33,lon:18},{id:'b',lat:59.52,lon:17.9}]);
+ },refs);
+ await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');expect(requested).toEqual([0]);
+ await page.evaluate(()=>(window as any).viewportMap.setView([59.52,17.9],15,{animate:false}));
+ await expect.poll(()=>requested).toEqual([0,1]);
+ await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');
 });

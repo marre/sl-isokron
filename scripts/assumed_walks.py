@@ -4,12 +4,14 @@ import math
 import unicodedata
 from osm_walks import distance
 
-POLICY = {'maxMetres':250,'distanceMultiplier':1.25,'speedKmh':4.8,'minimumSeconds':60}
+POLICY = {'maxMetres':250,'distanceMultiplier':1.25,'speedKmh':4.8,'minimumSeconds':60,'nameNormalization':'case-space-station-suffix-v2'}
 SOURCE = 'Assumed same-name stop transfer; <=250m; distance x1.25; 4.8km/h; minimum 60s'
 
 def name_key(name):
     # Preserve punctuation: similar names must not become the same stop name.
-    return ' '.join(unicodedata.normalize('NFC',name).casefold().split())
+    key=' '.join(unicodedata.normalize('NFC',name).casefold().split())
+    # Rail and bus parts of the same station often differ only by this suffix.
+    return key[:-8] if key.endswith(' station') else key
 
 def add_assumed_walks(stops, edges):
     groups=defaultdict(list)
@@ -34,7 +36,7 @@ def extend_index(data, stops):
     used={e[k] for e in data['edges'] for k in ('from','to')}
     missing=used-included
     data['stops'].extend({k:s[k] for k in ('id','lat','lon')} | {'binding':'assumed-same-name'} for s in stops if s['id'] in missing)
-    warning=('Antagna gångbyten: hållplatser med samma namn högst 250 meter från varandra kopplas när kartlagd gångväg saknas. Avstånd uppskattas till fågelvägen × 1,25, tid vid 4,8 km/h, minst en minut. Dessa passager är inte verifierade i gångkartan.')
+    warning=('Antagna gångbyten: hållplatser med samma namn (med eller utan suffixet station) högst 250 meter från varandra kopplas när kartlagd gångväg saknas. Avstånd uppskattas till fågelvägen × 1,25, tid vid 4,8 km/h, minst en minut. Dessa passager är inte verifierade i gångkartan.')
     if warning not in data.setdefault('warnings',[]):data['warnings'].append(warning)
     data['sameNameTransfers']=POLICY.copy()
     return data

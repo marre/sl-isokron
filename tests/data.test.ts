@@ -48,3 +48,19 @@ test('compact walking data preserves directions, fractions, distance and provena
  for(const row of [[1,2,0,80,0],[1,2,60,-1,0],[1,2,60,80,3],[1,2,60,80,-1],[1.5,2,60,80,0]])assert.throws(()=>decodeWalks({...payload,edges:[row]}),/ogiltig/);
  assert.throws(()=>decodeWalks({...payload,schema:2}),/ogiltigt/);
 });
+
+test('load progress counts each verified file once including cached and shared core assets',async()=>{
+ const oldFetch=globalThis.fetch;
+ try{
+  const core=await refFor('/data/progress/core.json','[]'),hour=await refFor('/data/progress/hour.bin','');
+  globalThis.fetch=async input=>new Response(String(input).endsWith('.json')?'[]':'');
+  const t0=Date.parse('2026-10-19T08:00Z')/1000;
+  const m={stops:core,routes:core,walks:core,transfers:core,trips:core,days:{'2026-10-19':[{...hour,from:t0,until:t0+3600}]}} as unknown as Manifest;
+  for(let repeat=0;repeat<2;repeat++){
+   const progress:{completed:number;total:number;bytesCompleted:number;bytesTotal:number}[]=[];
+   await loadNetwork(m,t0,t0+60,undefined,p=>progress.push(p));
+   assert.deepEqual(progress.map(p=>p.completed),[0,1,2]);
+   assert.deepEqual(progress.at(-1),{completed:2,total:2,bytesCompleted:2,bytesTotal:2});
+  }
+ }finally{globalThis.fetch=oldFetch;}
+});

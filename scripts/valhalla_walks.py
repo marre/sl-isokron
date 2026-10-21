@@ -69,7 +69,9 @@ def station_anchor(stop, result, seeds, actor):
     if not stop.get('busOnly') or not stop.get('station'):return None
     siblings=[s for s in seeds if s.get('station')==stop['station'] and normalize(s['name'])==normalize(stop['name']) and s.get('binding')=='identified-osm-bus-stop' and distance((s['lat'],s['lon']),(stop['lat'],stop['lon']))<=150]
     if not siblings:return None
-    if any(any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[])) for e in result.get('edges') or []):return None
+    # Nearby rail geometry must not disqualify a real street-level footpath.
+    # Remove rail candidates before endpoint/junction selection instead.
+    result={**result,'edges':[e for e in result.get('edges') or [] if not any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[]))]}
     edge=junction_edge(stop,result)
     if edge is None:return None
     anchor=select_anchor(stop,{'edges':[edge]},5)
@@ -95,7 +97,9 @@ def nearby_network_anchor(stop, result, seeds, actor):
     Newly recovered stops never serve as evidence for another recovery.
     """
     if not stop.get('busOnly'):return None
-    if any(any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[])) for e in result.get('edges') or []):return None
+    # Nearby rail geometry must not disqualify a real street-level footpath.
+    # Remove rail candidates before endpoint/junction selection instead.
+    result={**result,'edges':[e for e in result.get('edges') or [] if not any(str(n).startswith('sliso:platform:') for n in e.get('edge_info',{}).get('names',[]))]}
     neighbors=sorted((s for s in seeds if s.get('busOnly') and distance((s['lat'],s['lon']),(stop['lat'],stop['lon']))<=250),
         key=lambda s:distance((s['lat'],s['lon']),(stop['lat'],stop['lon'])))
     if not neighbors:return None
@@ -232,7 +236,7 @@ def build(config_file,feed,graph_report,output,max_minutes=30,stop_features=None
                 if pair: pairs.append(pair)
         if (index+1)%100==0:print(f'Walking routes {index+1}/{len(anchors)}; pairs {len(pairs)}',flush=True)
     all_stops=load_stops(feed)
-    data={'version':geo['version']+'-valhalla-same-name-platform-v9','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
+    data={'version':geo['version']+'-valhalla-station-access-v10','maxMinutes':max_minutes,'speedKmh':4.8,'profile':source,'stops':[{k:s[k] for k in ('id','lat','lon')} | {k:s[k] for k in ('osmNode','binding','coordinateShiftMetres','platformWay','accessSeconds','verifiedSibling','verifiedNearby') if k in s} for s in anchors],'edges':pairs,'reviewed':False,'attribution':['© OpenStreetMap contributors · ODbL','Geofabrik OSM extract; local Valhalla pedestrian routing'],'warnings':['Ofullständigt gångunderlag: automatiskt matchade yttrafiklägen, namngivna OSM-busshållplatser och topologiskt verifierade korta gångkorsningar. Små koordinatavvikelser räknas in i gångtid och avstånd. Övriga stationsplattformar och lägen kräver granskning. Vissa gångvägar följer vägar utan trottoar.','Kända stängda passager och tillträdeshinder är uteslutna. Okända öppettider är en databegränsning.']}
     from walking_audit import audit
     reference_file=Path('data/walking-reference-pairs.json')
     references=json.loads(reference_file.read_text()) if reference_file.exists() else []

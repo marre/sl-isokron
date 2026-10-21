@@ -1,4 +1,4 @@
-import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource } from './types';
+import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
 interface Label {
@@ -27,7 +27,7 @@ function lowerBound(a: Connection[], time: number): number {
  * Each boarding follows the whole trip; staying seated never requires a legal alight/reboard.
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
-export function search(network: Network, settings: Settings, options: { prune?: boolean; maxLabels?: number } = {}): SearchResult {
+export function search(network: Network, settings: Settings, options: { prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
   validateSettings(settings);
   const started = performance.now(), t0 = stockholmInstant(settings.date, settings.time);
   const start = network.stops.findIndex(s => s.id === settings.stop);
@@ -70,7 +70,15 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   const values: (Reach | null)[] = network.stops.map(() => null);
   const witnesses: (Label | null)[] = network.stops.map(() => null);
   const finalWalking: WalkSource[][] = network.stops.map(() => []);
-  const queue: Label[] = [], frontiers = new Map<string, Label[]>();
+  const queues: Label[][] = Array.from({length: settings.maxTransfers+2},()=>[]);
+  let labels=0, processed=0, lastProgress=performance.now();
+  const changes=new Map<number,Reach>();
+  function report(completedRounds: number) {
+    if (!options.onProgress) return;
+    options.onProgress({completedRounds,totalRounds:queues.length,processedLabels:processed,queuedLabels:labels,changes:[...changes].map(([stop,value])=>({stop,value:{...value}}))});
+    changes.clear(); lastProgress=performance.now();
+  }
+  const frontiers = new Map<string, Label[]>();
   function cost(l: Label): number { return l.time - (l.anchor ?? t0); }
   function push(l: Label): void {
     if (cost(l) > max || l.walk > maxWalk || l.time > latest) return;
@@ -84,17 +92,25 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     if (!old || seconds < old.seconds || (seconds === old.seconds && l.time < old.arrival)) {
       values[l.stop] = { seconds, arrival: l.time, kind: l.boardings ? 'transit' : 'walk', boardings: l.boardings, requestStop: l.requestStop, journey: null };
       witnesses[l.stop] = l;
+      if(options.onProgress)changes.set(l.stop,values[l.stop]!);
     }
     // Context must match: transfer constraints refer to the actual previous trip/alighting event.
     const key = contextKey(l);
     const list = frontiers.get(key) ?? [];
     const dominates = (a: Label, b: Label) => a.time <= b.time && (settled(a) && settled(b) || a.alightTime <= b.alightTime) && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
     if (options.prune !== false && list.some(a => dominates(a, l))) return;
-    frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queue.push(l);
-    if (queue.length > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
+    frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queues[l.boardings].push(l); labels++;
+    if (labels > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
   push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
+  report(0);
+  // Finish each boarding round, including its walking closure, before advancing.
+  // The number of rounds is bounded by the user's transfer limit.
+  for(let round=0;round<queues.length;round++) {
+  const queue=queues[round];
   for (let head = 0; head < queue.length; head++) {
+    processed++;
+    if(options.onProgress && (processed&127)===0 && performance.now()-lastProgress>=100)report(round);
     const l = queue[head];
     if (options.prune !== false && !frontiers.get(contextKey(l))?.includes(l)) continue;
     for (const w of walking[l.stop]) push({ ...l, stop: w.to, time: l.time + w.seconds, walk: l.walk + w.seconds, previous: l, via: w, alight: null });
@@ -113,6 +129,8 @@ export function search(network: Network, settings: Settings, options: { prune?: 
         push({ stop: leg.to, time: leg.arrival, anchor, walk: 0, boardings: l.boardings + 1, requestStop: l.requestStop || !!c.pickupRequest || !!leg.dropoffRequest, lastTrip: c.trip, lastRoute: network.routes[c.route].id, alightStop: leg.to, alightTime: leg.arrival, previous: l, via: c, alight: leg });
       }
     }
+  }
+  report(round+1);
   }
   // Serialize only the predecessor chains that actually explain a displayed value.
   // Shared nodes avoid copying a complete itinerary for every reachable destination.
@@ -134,5 +152,5 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     }
     values[stop]!.journey = ids.get(witness)!;
   });
-  return { values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels: queue.length, elapsed: performance.now() - started, complete: true };
+  return { values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
 }

@@ -199,3 +199,33 @@ test('compact walking payload is verified and used by the worker',async({page})=
  await expect(page.locator('#journey-panel')).toContainText('320 m');
  await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');expect(seen).toBe(true);
 });
+
+test('map progress shows provisional stations before completion and cancel rejects late batches',async({page})=>{
+ await page.addInitScript(()=>{
+  class StreamWorker {
+   onmessage:any;onerror:any;id=0;
+   constructor(){(window as any).streamWorker=this;}
+   postMessage(message:any){this.id=message.id;}
+   terminate(){}
+   emit(message:any){this.onmessage?.({data:{id:this.id,...message}});}
+  }
+  (window as any).Worker=StreamWorker;
+ });
+ await init(page);await select(page);await page.locator('#calculate').click();
+ const bar=page.locator('#map-progress [role=progressbar]');
+ await expect(bar).toBeVisible();
+ await page.evaluate(()=>(window as any).streamWorker.emit({type:'progress',phase:'data',completed:1,total:2,bytesCompleted:50,bytesTotal:100}));
+ await expect(bar).toHaveAttribute('aria-valuenow','50');
+ await page.evaluate(()=>(window as any).streamWorker.emit({type:'stations',completedRounds:1,totalRounds:6,processedLabels:10,queuedLabels:20,changes:[{stop:5,value:{seconds:600,arrival:1200,kind:'transit',boardings:1,journey:null}}]}));
+ const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
+ await expect(marker).toBeVisible();
+ await expect(page.locator('#status')).toContainText('preliminära');
+ await expect(page.locator('#legend')).toBeHidden();
+ await marker.press('Enter');await expect(page.locator('.stop-popup')).toContainText('Preliminärt 10 min');
+ await expect(page.locator('#map-label')).toContainText('T-CENTRALEN');
+ await page.locator('#cancel').click();
+ await expect(page.locator('#map-progress')).toBeHidden();
+ await page.evaluate(()=>(window as any).streamWorker.emit({type:'stations',completedRounds:2,totalRounds:6,changes:[{stop:5,value:{seconds:300,journey:null}}]}));
+ await expect(page.locator('#map-progress')).toBeHidden();
+ await expect(page.locator('#status')).toContainText('Avbruten');
+});
