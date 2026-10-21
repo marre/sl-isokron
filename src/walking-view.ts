@@ -61,6 +61,7 @@ export class WalkingView {
       }
     }
     const completed=new Set<number>(), failed=new Set<number>(), inFlight=new Set<number>();
+    const requests=new Map<number,AbortController>();
     let wanted=new Set<number>(), queue:number[]=[];
     const positions=new Map<number,number[]>();
     for(const index of available.keys()){
@@ -84,22 +85,29 @@ export class WalkingView {
         const file=queue.shift()!;
         if(completed.has(file)||inFlight.has(file)||!wanted.has(file))continue;
         inFlight.add(file);
+        const request=new AbortController();requests.set(file,request);
+        const abort=()=>request.abort();controller.signal.addEventListener('abort',abort,{once:true});
         void (async()=>{
           try {
-            const profiles=await loadJSON<Profiles>(areas.files[file],controller.signal);
-            if(controller.signal.aborted)return;
+            const profiles=await loadJSON<Profiles>(areas.files[file],request.signal);
+            if(request.signal.aborted)return;
             for(const [id,contours] of Object.entries(profiles)){
               for(const {minutes,band,renderer} of needed.get(id)??[]){
                 const contour=contours.find(c=>c.minutes===minutes);
                 if(contour)L.geoJSON(contour.geometry,{interactive:false,style:{renderer,stroke:false,fillOpacity:1,fillColor:colorFor(band*60,settings.maxMinutes)}}).addTo(this.layer);
               }
             }
-          }catch{if(controller.signal.aborted)return;failed.add(file);}
-          if(controller.signal.aborted)return;
-          completed.add(file);inFlight.delete(file);progress();
-          // Paint a batch before requesting the next one. New map views take priority.
-          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          if(!controller.signal.aborted)pump();
+          }catch{if(!request.signal.aborted)failed.add(file);}
+          finally {
+            controller.signal.removeEventListener('abort',abort);requests.delete(file);inFlight.delete(file);
+            if(controller.signal.aborted)return;
+            if(!request.signal.aborted)completed.add(file);
+            else if(wanted.has(file)&&!queue.includes(file))queue.push(file);
+            progress();
+            // Paint a batch before requesting the next one. New map views take priority.
+            await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+            if(!controller.signal.aborted)pump();
+          }
         })();
       }
     };
@@ -110,6 +118,7 @@ export class WalkingView {
       const lon=d/Math.max(.1,Math.cos(this.map.getCenter().lat*Math.PI/180));
       const expanded=L.latLngBounds([bounds.getSouth()-d,bounds.getWest()-lon],[bounds.getNorth()+d,bounds.getEast()+lon]);
       wanted=new Set(files.filter(file=>positions.get(file)?.some(i=>expanded.contains([stops[i].lat,stops[i].lon]))));
+      for(const [file,request] of requests)if(!wanted.has(file))request.abort();
       queue=[...wanted].filter(f=>!completed.has(f)&&!inFlight.has(f)).sort((a,b)=>{
         const score=(file:number)=>Math.min(...positions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));
         return score(a)-score(b);

@@ -77,8 +77,8 @@ test('walking profiles load for the visible map then follow a new viewport',asyn
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());await page.goto('/');
  const bodies=[JSON.stringify({a:[{minutes:10,geometry:{type:'Polygon',coordinates:[[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]]}}]}),JSON.stringify({b:[{minutes:10,geometry:{type:'Polygon',coordinates:[[[17.89,59.51],[17.91,59.51],[17.91,59.53],[17.89,59.53],[17.89,59.51]]]}}]})];
  const refs=bodies.map((body,i)=>({url:`/data/viewport/${i}.json`,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}));
- const requested:number[]=[];
- await page.route('**/data/viewport/*.json',async route=>{const i=Number(new URL(route.request().url()).pathname.split('/').at(-1)!.split('.')[0]);requested.push(i);await route.fulfill({contentType:'application/json',body:bodies[i]});});
+ const requested:number[]=[];let release!:()=>void;const held=new Promise<void>(resolve=>release=resolve);
+ await page.route('**/data/viewport/*.json',async route=>{const i=Number(new URL(route.request().url()).pathname.split('/').at(-1)!.split('.')[0]);requested.push(i);if(i===0)await held;await route.fulfill({contentType:'application/json',body:bodies[i]}).catch(()=>{});});
  await page.evaluate(async refs=>{
   const component='/src/walking-view.ts',leaflet='/node_modules/leaflet/dist/leaflet-src.esm.js';const {WalkingView}=await import(component),L=await import(leaflet);
   const el=document.createElement('div');el.id='viewport-map';el.style.cssText='position:fixed;left:0;top:0;width:300px;height:300px;z-index:10000';document.body.append(el);
@@ -87,8 +87,13 @@ test('walking profiles load for the visible map then follow a new viewport',asyn
   const view=new WalkingView(map,(text:string)=>status.textContent=text,()=>{});
   view.setData({walkSources:[{stop:0,seconds:0,walked:0},{stop:1,seconds:0,walked:0}]},{maxMinutes:20,walkMinutes:10},{walkingAreas:{index:{a:0,b:1},files:refs}},[{id:'a',lat:59.33,lon:18},{id:'b',lat:59.52,lon:17.9}]);
  },refs);
- await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');expect(requested).toEqual([0]);
+ await expect.poll(()=>requested).toEqual([0]);
+ await expect(page.locator('#viewport-status')).toContainText('0 av 1');
  await page.evaluate(()=>(window as any).viewportMap.setView([59.52,17.9],15,{animate:false}));
  await expect.poll(()=>requested).toEqual([0,1]);
+ await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');
+ release();
+ await page.evaluate(()=>(window as any).viewportMap.setView([59.33,18],15,{animate:false}));
+ await expect.poll(()=>requested).toEqual([0,1,0]);
  await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');
 });
