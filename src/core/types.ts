@@ -7,7 +7,7 @@ export interface Connection { from: number; to: number; departure: number; arriv
 export interface Walk { from: number; to: number; seconds: number; source: string; metres?: number }
 export interface TransferRule { from: number; to: number; type: 0 | 1 | 2 | 3; seconds: number; fromTrip?: string; toTrip?: string; fromRoute?: string; toRoute?: string }
 export interface Network { stops: Stop[]; routes: Route[]; connections: Connection[]; walks: Walk[]; transfers: TransferRule[] }
-export interface Settings { v: 1; stop: string; name: string; lat: number; lon: number; date: string; time: string; maxMinutes: number; walkMinutes: number; modes: Mode[]; maxTransfers: number; windowMinutes: number }
+export interface Settings { displayMinutes?: number; v: 1; stop: string; name: string; lat: number; lon: number; date: string; time: string; maxMinutes: number; walkMinutes: number; modes: Mode[]; maxTransfers: number; windowMinutes: number }
 export interface JourneyLeg { kind: 'walk' | 'transit'; from: number; to: number; departure: number; arrival: number; stops: number[]; route?: number; requestStop?: boolean; metres?: number; estimated?: boolean }
 export interface JourneyNode extends JourneyLeg { previous: number | null }
 export interface Reach { seconds: number; kind: 'walk' | 'transit'; arrival: number; boardings: number; requestStop?: boolean; journey: number | null }

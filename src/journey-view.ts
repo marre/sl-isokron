@@ -16,6 +16,7 @@ export class JourneyView {
   private stops: Stop[] = [];
   private active: number | null = null;
   private pinned: number | null = null;
+  private cutoff=Infinity;
   private timer?: ReturnType<typeof setTimeout>;
   private panel = document.querySelector<HTMLElement>('#journey-panel')!;
 
@@ -32,7 +33,12 @@ export class JourneyView {
   }
 
   setData(result: SearchResult, settings: Settings, stops: Stop[]) {
-    this.reset(); this.result = result; this.settings = settings; this.stops = stops;
+    this.reset(); this.cutoff=settings.maxMinutes; this.result = result; this.settings = settings; this.stops = stops;
+  }
+
+  setCutoff(minutes:number) {
+    this.cutoff=minutes;
+    if(this.active!==null&&(this.result?.values[this.active]?.seconds??Infinity)>minutes*60)this.close();
   }
 
   reset() { this.close(); this.result = undefined; this.settings = undefined; }
@@ -67,7 +73,7 @@ export class JourneyView {
 
   private show(index: number) {
     const result = this.result, settings = this.settings, value = result?.values[index];
-    if (!result || !settings || !value) { this.hide(); return; }
+    if (!result || !settings || !value || value.seconds>this.cutoff*60) { this.hide(); return; }
     if (this.active === index && !this.panel.hidden) {
       const button = this.panel.querySelector<HTMLButtonElement>('#journey-pin')!;
       button.textContent = this.pinned === index ? 'Fäst ✓' : 'Fäst resan';

@@ -8,6 +8,7 @@ export function validateSettings(s: Settings, walkingMax = 30): void {
   }
   if (typeof s.stop !== 'string' || !s.stop || typeof s.name !== 'string' || !Number.isFinite(s.lat) || Math.abs(s.lat) > 90 || !Number.isFinite(s.lon) || Math.abs(s.lon) > 180) throw new Error('Delningslänken saknar giltig hållplatsidentitet.');
   if (!Array.isArray(s.modes) || s.modes.some(m => !MODES.includes(m)) || new Set(s.modes).size !== s.modes.length) throw new Error('Delningslänken innehåller okända eller dubbla trafikslag.');
+  if(s.displayMinutes!==undefined&&(!Number.isInteger(s.displayMinutes)||s.displayMinutes<1||s.displayMinutes>s.maxMinutes))throw new Error('Visningsgränsen måste vara 1 minut till sökningens maxtid.');
   stockholmInstant(s.date, s.time);
 }
 export function shareHash(s: Settings): string { validateSettings(s); return '#s=' + encodeURIComponent(JSON.stringify(s)); }

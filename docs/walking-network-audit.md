@@ -252,3 +252,41 @@ bounds, idempotent refresh, estimated journey labels and continuous walking
 limits. An origin confined to a walking-only component without any mapped
 profile now displays “Gångdata saknas” and explains that possible journeys can
 be missing, rather than presenting the island as complete transport coverage.
+
+### Exploring travel-time bands in the browser (2026-10-22)
+
+The result legend now has inclusive ten-minute band buttons and a one-minute
+“Visa inom” display slider. Both filter the completed search: search constraints,
+transport results and colours retain their original maximum. Tapping the selected
+band or “Visa alla” restores the full result. Stops beyond the display cutoff
+are hidden, and a pinned journey to an excluded stop closes. A new search resets
+the display cutoff; copied links preserve it through the optional, validated
+`displayMinutes` field without changing the search budget or old link format.
+
+Walking contours remain precomputed native data. The browser worker rasterizes
+them into a single bounded viewport image, paints the fastest feasible band at
+each pixel, and outlines boundaries between bands. Ring holes and disconnected
+islands are retained at display resolution. There is no buffer, convex hull,
+gap-filling or relaxation of walking access rules; sub-pixel detail is approximate
+and is resampled when zooming. Stop times and journey witnesses are unchanged.
+`walkingMinutes` still reserves the remaining continuous walking budget from all
+feasible arrival labels, rather than using just the earliest stop arrival.
+
+The worker caches the standard-band field and at most three partial-cutoff
+masks. Its raster is limited to roughly one million pixels, and pixel buffers
+are transferred rather than copied back as large polygon geometries. Verified
+profiles load for the viewport with six concurrent requests and paint as batches
+arrive. Stale viewport, cutoff and reset results are rejected. Raw profiles
+outside the viewport are released; their checksum-verified browser disk cache
+remains available. Changing the cutoff neither starts a transport search nor
+fetches walking or timetable files. Profile counts and immutable data schemas
+are unchanged; this feature needs no data release or routing server.
+
+A production-bundle mobile emulation using the real 2026-10-21 data release and
+an Arlanda departure on 2026-10-22 at 08:07 loaded and displayed the dense central
+Stockholm viewport in about 13 seconds, including profile loading. A partial
+91-minute cutoff updated in about 0.3 seconds with zero additional downloads.
+These are local measurements, not a device-performance guarantee. Tests cover
+fastest overlapping colours, holes, islands, partial thresholds, cache eviction,
+progressive arrival, cancellation, viewport changes, stable colours, filtered
+stop visibility, share restoration and absence of new searches/downloads.

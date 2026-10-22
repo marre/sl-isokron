@@ -31,23 +31,23 @@ async function walkingFixture(page: import('@playwright/test').Page) {
 test('walking areas paint before the final file arrives and preserve faster colors', async ({page}) => {
   const release = await walkingFixture(page);
   await expect(page.locator('#progressive-status')).toContainText('1 av 2 (50 %)');
-  const first = page.locator('#progressive-map .leaflet-walking-band-0-pane');
-  await expect(first.locator('canvas')).toBeVisible();
-  expect(await first.locator('canvas').evaluate((canvas:HTMLCanvasElement) => {
+  const first = page.locator('#progressive-map .leaflet-walking-areas-pane canvas');
+  await expect(first).toBeVisible();
+  expect(await first.evaluate((canvas:HTMLCanvasElement) => {
     const data=canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height).data;
     return data.some((value,index)=>index%4===3&&value>0);
   })).toBe(true);
+  const sample=()=>first.evaluate((canvas:HTMLCanvasElement)=>{const ctx=canvas.getContext('2d')!,data=ctx.getImageData(0,0,canvas.width,canvas.height).data;for(let i=0;i<data.length;i+=4)if(data[i+3]===255&&data[i]!==255)return [...data.slice(i,i+4)];return [];});
+  const faster=await sample();expect(faster.length).toBe(4);
   release();
   await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
-  const slower = page.locator('#progressive-map .leaflet-walking-band-1-pane');
-  await expect(slower.locator('canvas')).toBeVisible();
-  expect(Number(await first.evaluate(e=>getComputedStyle(e).zIndex))).toBeGreaterThan(Number(await slower.evaluate(e=>getComputedStyle(e).zIndex)));
+  expect(await sample()).toEqual(faster);
 });
 
 test('reset removes partial walking areas and ignores late arrivals', async ({page}) => {
   const release = await walkingFixture(page);
   await expect(page.locator('#progressive-status')).toContainText('1 av 2');
-  await page.evaluate(() => (window as any).progressiveView.reset());
+  await page.evaluate(() => { (window as any).progressiveView.setCutoff(11); (window as any).progressiveView.reset(); });
   release();
   await expect(page.locator('#progressive-map .leaflet-walking-areas-pane canvas')).toHaveCount(0);
   await page.waitForTimeout(150);
@@ -69,12 +69,16 @@ test('consecutive mapped and estimated walks form one labelled journey step', as
       {previous:null,kind:'walk',from:0,to:1,departure:60,arrival:120,stops:[0,1],metres:70},
       {previous:0,kind:'walk',from:1,to:2,departure:120,arrival:180,stops:[1,2],metres:80,estimated:true},
       {previous:1,kind:'walk',from:2,to:3,departure:180,arrival:240,stops:[2,3],metres:90}],routes:[]},{date:'2026-10-21',maxMinutes:120},stops);
-    view.pin(3);
+    view.pin(3);(window as any).cutoffJourney=view;
   });
   await expect(page.locator('#journey-panel')).toContainText('Gång · uppskattad');
   await expect(page.locator('#journey-panel')).toContainText('samma namn inom 250 meter');
   await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 3 min · 240 m');
   await expect(page.locator('#journey-panel .journey-leg')).toHaveCount(1);
+  await page.evaluate(()=>(window as any).cutoffJourney.setCutoff(2));
+  await expect(page.locator('#journey-panel')).toBeHidden();
+  await page.evaluate(()=>{(window as any).cutoffJourney.setCutoff(3);(window as any).cutoffJourney.pin(3);});
+  await expect(page.locator('#journey-panel')).toBeVisible();
 });
 
 test('walking profiles load for the visible map then follow a new viewport',async({page})=>{
