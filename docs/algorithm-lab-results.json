@@ -1,0 +1,808 @@
+{
+  "dataset": "sl-68186fa6a6b514ac3e25",
+  "measuredAt": "2026-10-22T20:01:53.747Z",
+  "h3Version": "4.3.0",
+  "notes": [
+    "Visual layout tests sample the same recorded native display raster. They are not per-stop precomputation benchmarks.",
+    "H3 centres outside the recorded image are clamped to its edge; counts are reported.",
+    "Square cells match each H3 resolution’s measured average cell area in this viewport.",
+    "Timing is Node CPU, five samples for composition, no network or physical-device timing."
+  ],
+  "cases": [
+    {
+      "id": "city",
+      "name": "Central Stockholm",
+      "screen": {
+        "width": 640,
+        "height": 586,
+        "bounds": [
+          18.015,
+          59.313,
+          18.105,
+          59.355
+        ]
+      },
+      "query": {
+        "v": 1,
+        "stop": "9022001057310001",
+        "name": "Arlanda terminal 4",
+        "lat": 59.647775,
+        "lon": 17.928574,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "variants": [
+        {
+          "id": "h3-12",
+          "name": "H3 resolution 12",
+          "cells": 103647,
+          "cellAreaM2": 230.79905679553164,
+          "clampedEdgeCells": 363,
+          "mappingMs": 4707.344435999999,
+          "apply": {
+            "medianMs": 1.7348990000000413,
+            "minMs": 1.4007999999994354,
+            "maxMs": 6.676673999999366
+          },
+          "accuracy": {
+            "changed": 5024,
+            "union": 356334,
+            "gained": 437,
+            "lost": 430,
+            "changedPct": 1.4099131713504747
+          },
+          "lookupBytes": 1914748
+        },
+        {
+          "id": "square-12",
+          "name": "Square · matched H3 12",
+          "cells": 103796,
+          "cellAreaM2": 230.79905679553164,
+          "clampedEdgeCells": 308,
+          "mappingMs": 46.39660200000071,
+          "apply": {
+            "medianMs": 1.300279000000046,
+            "minMs": 0.6186420000003636,
+            "maxMs": 2.0251969999999346
+          },
+          "accuracy": {
+            "changed": 5127,
+            "union": 356329,
+            "gained": 432,
+            "lost": 424,
+            "changedPct": 1.4388388259164986
+          },
+          "lookupBytes": 1915344
+        },
+        {
+          "id": "h3-13",
+          "name": "H3 resolution 13",
+          "cells": 375040,
+          "cellAreaM2": 32.971290926661595,
+          "clampedEdgeCells": 0,
+          "mappingMs": 20333.604159,
+          "apply": {
+            "medianMs": 2.5906680000007327,
+            "minMs": 1.5559730000022682,
+            "maxMs": 4.44781299999886
+          },
+          "accuracy": {
+            "changed": 0,
+            "union": 355897,
+            "gained": 0,
+            "lost": 0,
+            "changedPct": 0
+          },
+          "lookupBytes": 3000320
+        },
+        {
+          "id": "square-13",
+          "name": "Square · matched H3 13",
+          "cells": 375040,
+          "cellAreaM2": 32.971290926661595,
+          "clampedEdgeCells": 0,
+          "mappingMs": 126.10927599999923,
+          "apply": {
+            "medianMs": 1.8014359999979206,
+            "minMs": 1.379994999999326,
+            "maxMs": 2.4002659999969183
+          },
+          "accuracy": {
+            "changed": 0,
+            "union": 355897,
+            "gained": 0,
+            "lost": 0,
+            "changedPct": 0
+          },
+          "lookupBytes": 3000320
+        },
+        {
+          "id": "display-quad",
+          "name": "Adaptive display quadtree",
+          "nodes": 31041,
+          "rawBytes": 124164,
+          "gzipBytes": 10082,
+          "accuracy": {
+            "changed": 0,
+            "union": 355897,
+            "gained": 0,
+            "lost": 0,
+            "changedPct": 0
+          },
+          "note": "Exact compression of the recorded display pixels, not a finer geographic model."
+        }
+      ],
+      "dataCompression": {
+        "resolution": 20,
+        "rleRawBytes": 39782208,
+        "quadtreeRawBytes": 41189016,
+        "rleGzipBytes": 11457607,
+        "quadtreeGzipBytes": 4963202,
+        "rleCompose": {
+          "medianMs": 95.17216100000223,
+          "minMs": 90.50388199999725,
+          "maxMs": 99.9596509999974
+        },
+        "quadtreeCompose": {
+          "medianMs": 234.6186779999989,
+          "minMs": 229.80547600000136,
+          "maxMs": 245.37412600000243
+        },
+        "exactMembership": true,
+        "decodeToRunsMs": 832.2041240000001,
+        "cachedRleComposeMedianMs": 115.77339400000005,
+        "cachedRleBytes": 39477288,
+        "hybridExact": true
+      }
+    },
+    {
+      "id": "airport",
+      "name": "Arlanda / SkyCity",
+      "screen": {
+        "width": 640,
+        "height": 739,
+        "bounds": [
+          17.9,
+          59.63,
+          17.96,
+          59.665
+        ]
+      },
+      "query": {
+        "v": 1,
+        "stop": "9022001057310001",
+        "name": "Arlanda terminal 4",
+        "lat": 59.647775,
+        "lon": 17.928574,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "variants": [
+        {
+          "id": "h3-12",
+          "name": "H3 resolution 12",
+          "cells": 57820,
+          "cellAreaM2": 228.4421145517691,
+          "clampedEdgeCells": 386,
+          "mappingMs": 1132.304532000002,
+          "apply": {
+            "medianMs": 3.2228920000052312,
+            "minMs": 0.9527019999950426,
+            "maxMs": 6.263357000003452
+          },
+          "accuracy": {
+            "changed": 8798,
+            "union": 149789,
+            "gained": 1312,
+            "lost": 1375,
+            "changedPct": 5.873595524370948
+          },
+          "lookupBytes": 2123120
+        },
+        {
+          "id": "square-12",
+          "name": "Square · matched H3 12",
+          "cells": 58016,
+          "cellAreaM2": 228.4421145517691,
+          "clampedEdgeCells": 482,
+          "mappingMs": 23.63171500000317,
+          "apply": {
+            "medianMs": 1.5681800000020303,
+            "minMs": 1.0701679999983753,
+            "maxMs": 4.3714210000034655
+          },
+          "accuracy": {
+            "changed": 8753,
+            "union": 149850,
+            "gained": 1373,
+            "lost": 1329,
+            "changedPct": 5.841174507841174
+          },
+          "lookupBytes": 2123904
+        },
+        {
+          "id": "h3-13",
+          "name": "H3 resolution 13",
+          "cells": 377787,
+          "cellAreaM2": 32.6345854108671,
+          "clampedEdgeCells": 140,
+          "mappingMs": 7142.866092999997,
+          "apply": {
+            "medianMs": 1.315800999997009,
+            "minMs": 1.2005210000061197,
+            "maxMs": 2.169289999998
+          },
+          "accuracy": {
+            "changed": 1632,
+            "union": 148695,
+            "gained": 218,
+            "lost": 287,
+            "changedPct": 1.0975486734590942
+          },
+          "lookupBytes": 3402988
+        },
+        {
+          "id": "square-13",
+          "name": "Square · matched H3 13",
+          "cells": 402380,
+          "cellAreaM2": 32.6345854108671,
+          "clampedEdgeCells": 0,
+          "mappingMs": 105.08731499999703,
+          "apply": {
+            "medianMs": 1.3078270000041812,
+            "minMs": 1.0535149999996065,
+            "maxMs": 2.8773159999982454
+          },
+          "accuracy": {
+            "changed": 928,
+            "union": 148552,
+            "gained": 75,
+            "lost": 193,
+            "changedPct": 0.6246970757714471
+          },
+          "lookupBytes": 3501360
+        },
+        {
+          "id": "display-quad",
+          "name": "Adaptive display quadtree",
+          "nodes": 31349,
+          "rawBytes": 125396,
+          "gzipBytes": 11303,
+          "accuracy": {
+            "changed": 0,
+            "union": 148477,
+            "gained": 0,
+            "lost": 0,
+            "changedPct": 0
+          },
+          "note": "Exact compression of the recorded display pixels, not a finer geographic model."
+        }
+      ],
+      "dataCompression": {
+        "resolution": 20,
+        "rleRawBytes": 817752,
+        "quadtreeRawBytes": 785940,
+        "rleGzipBytes": 227215,
+        "quadtreeGzipBytes": 112886,
+        "rleCompose": {
+          "medianMs": 4.72960299999977,
+          "minMs": 3.54984699999477,
+          "maxMs": 16.712501999994856
+        },
+        "quadtreeCompose": {
+          "medianMs": 8.823599999996077,
+          "minMs": 6.369915000002948,
+          "maxMs": 11.779125000000931
+        },
+        "exactMembership": true,
+        "decodeToRunsMs": 23.998372000000018,
+        "cachedRleComposeMedianMs": 3.6040790000001834,
+        "cachedRleBytes": 809184,
+        "hybridExact": true
+      }
+    },
+    {
+      "id": "rural",
+      "name": "Lindholmen",
+      "screen": {
+        "width": 640,
+        "height": 860,
+        "bounds": [
+          18.085,
+          59.572,
+          18.135,
+          59.606
+        ]
+      },
+      "query": {
+        "v": 1,
+        "stop": "9022001007361002",
+        "name": "Vallentuna",
+        "lat": 59.533801,
+        "lon": 18.079881,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "variants": [
+        {
+          "id": "h3-12",
+          "name": "H3 resolution 12",
+          "cells": 46846,
+          "cellAreaM2": 228.96753549601448,
+          "clampedEdgeCells": 376,
+          "mappingMs": 1274.1477069999964,
+          "apply": {
+            "medianMs": 1.28787800000282,
+            "minMs": 1.2034140000032494,
+            "maxMs": 1.3956290000060108
+          },
+          "accuracy": {
+            "changed": 21496,
+            "union": 340102,
+            "gained": 3031,
+            "lost": 3156,
+            "changedPct": 6.32045680413523
+          },
+          "lookupBytes": 2388984
+        },
+        {
+          "id": "square-12",
+          "name": "Square · matched H3 12",
+          "cells": 46686,
+          "cellAreaM2": 228.96753549601448,
+          "clampedEdgeCells": 186,
+          "mappingMs": 21.105532000001404,
+          "apply": {
+            "medianMs": 0.9891770000031102,
+            "minMs": 0.915368000001763,
+            "maxMs": 1.0831380000017816
+          },
+          "accuracy": {
+            "changed": 22053,
+            "union": 340216,
+            "gained": 3145,
+            "lost": 3190,
+            "changedPct": 6.482058456980272
+          },
+          "lookupBytes": 2388344
+        },
+        {
+          "id": "h3-13",
+          "name": "H3 resolution 13",
+          "cells": 325608,
+          "cellAreaM2": 32.70964998972638,
+          "clampedEdgeCells": 313,
+          "mappingMs": 7862.279694999997,
+          "apply": {
+            "medianMs": 5.141206000000238,
+            "minMs": 1.7195389999978943,
+            "maxMs": 5.949828999997408
+          },
+          "accuracy": {
+            "changed": 6410,
+            "union": 337880,
+            "gained": 809,
+            "lost": 953,
+            "changedPct": 1.89712323901977
+          },
+          "lookupBytes": 3504032
+        },
+        {
+          "id": "square-13",
+          "name": "Square · matched H3 13",
+          "cells": 326366,
+          "cellAreaM2": 32.70964998972638,
+          "clampedEdgeCells": 0,
+          "mappingMs": 201.10766200000216,
+          "apply": {
+            "medianMs": 2.59302100000059,
+            "minMs": 1.6633729999957723,
+            "maxMs": 5.775565999996616
+          },
+          "accuracy": {
+            "changed": 6850,
+            "union": 338174,
+            "gained": 1103,
+            "lost": 812,
+            "changedPct": 2.0255844624364974
+          },
+          "lookupBytes": 3507064
+        },
+        {
+          "id": "display-quad",
+          "name": "Adaptive display quadtree",
+          "nodes": 63297,
+          "rawBytes": 253188,
+          "gzipBytes": 22803,
+          "accuracy": {
+            "changed": 0,
+            "union": 337071,
+            "gained": 0,
+            "lost": 0,
+            "changedPct": 0
+          },
+          "note": "Exact compression of the recorded display pixels, not a finer geographic model."
+        }
+      ],
+      "dataCompression": {
+        "resolution": 20,
+        "rleRawBytes": 1249696,
+        "quadtreeRawBytes": 1151084,
+        "rleGzipBytes": 356865,
+        "quadtreeGzipBytes": 171285,
+        "rleCompose": {
+          "medianMs": 5.051797000000079,
+          "minMs": 4.2551949999979115,
+          "maxMs": 5.26504799999384
+        },
+        "quadtreeCompose": {
+          "medianMs": 9.99953000000096,
+          "minMs": 8.047299999998359,
+          "maxMs": 12.887478999997256
+        },
+        "exactMembership": true,
+        "decodeToRunsMs": 32.87778400000025,
+        "cachedRleComposeMedianMs": 4.296308999999837,
+        "cachedRleBytes": 1239600,
+        "hybridExact": true
+      }
+    }
+  ],
+  "routing": {
+    "dataset": "sl-68186fa6a6b514ac3e25",
+    "measuredAt": "2026-10-22T19:57:00.885Z",
+    "runtime": "v24.19.0",
+    "notes": [
+      "One unthrottled Node run per engine and query; includes query-side indexing.",
+      "Experimental route-pattern scan retains every trip instance, including overtaking trips.",
+      "Production router is unchanged. Timings are not physical mobile measurements."
+    ],
+    "cases": [
+      {
+        "settings": {
+          "v": 1,
+          "stop": "9022001057310001",
+          "name": "Arlanda terminal 4",
+          "lat": 59.647775,
+          "lon": 17.928574,
+          "date": "2026-10-22",
+          "time": "08:07",
+          "maxMinutes": 120,
+          "walkMinutes": 30,
+          "maxTransfers": 4,
+          "windowMinutes": 30,
+          "modes": [
+            "bus",
+            "metro",
+            "rail",
+            "tram",
+            "boat"
+          ]
+        },
+        "referenceMs": 5857.527557000001,
+        "experimentalMs": 4487.673895,
+        "heapMs": 6023.351357000001,
+        "heapLabels": 153212,
+        "improvedTransferTies": 0,
+        "speedup": 1.305248040310202,
+        "referenceLabels": 176993,
+        "experimentalLabels": 176087,
+        "reachable": 7026,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      },
+      {
+        "settings": {
+          "v": 1,
+          "stop": "9022001007361002",
+          "name": "Vallentuna",
+          "lat": 59.533801,
+          "lon": 18.079881,
+          "date": "2026-10-22",
+          "time": "08:07",
+          "maxMinutes": 120,
+          "walkMinutes": 30,
+          "maxTransfers": 4,
+          "windowMinutes": 30,
+          "modes": [
+            "bus",
+            "metro",
+            "rail",
+            "tram",
+            "boat"
+          ]
+        },
+        "referenceMs": 49767.25829,
+        "experimentalMs": 28604.974002,
+        "heapMs": 38253.665909999996,
+        "heapLabels": 629741,
+        "improvedTransferTies": 0,
+        "speedup": 1.7398113449262487,
+        "referenceLabels": 816830,
+        "experimentalLabels": 769098,
+        "reachable": 9884,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      },
+      {
+        "settings": {
+          "v": 1,
+          "stop": "9022001015503003",
+          "name": "Skärvik",
+          "lat": 59.270466,
+          "lon": 17.813036,
+          "date": "2026-10-22",
+          "time": "08:07",
+          "maxMinutes": 120,
+          "walkMinutes": 30,
+          "maxTransfers": 4,
+          "windowMinutes": 30,
+          "modes": [
+            "bus",
+            "metro",
+            "rail",
+            "tram",
+            "boat"
+          ]
+        },
+        "referenceMs": 44449.017869,
+        "experimentalMs": 21301.42274800001,
+        "heapMs": 23984.763023000007,
+        "heapLabels": 417911,
+        "improvedTransferTies": 1,
+        "speedup": 2.0866689701829104,
+        "referenceLabels": 519400,
+        "experimentalLabels": 502371,
+        "reachable": 8294,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      }
+    ]
+  },
+  "routingBrowser": {
+    "note": "Dedicated browser workers; desktop Chromium mobile viewport; actual verified dataset, local HTTP mirror. One timed route search each, loading excluded.",
+    "settings": {
+      "v": 1,
+      "stop": "9022001057310001",
+      "name": "Arlanda terminal 4",
+      "lat": 59.647775,
+      "lon": 17.928574,
+      "date": "2026-10-22",
+      "time": "08:07",
+      "maxMinutes": 120,
+      "walkMinutes": 30,
+      "maxTransfers": 4,
+      "windowMinutes": 30,
+      "modes": [
+        "bus",
+        "metro",
+        "rail",
+        "tram",
+        "boat"
+      ]
+    },
+    "results": [
+      {
+        "engine": "reference",
+        "elapsed": 4003.5,
+        "labels": 176993,
+        "reachable": 7026,
+        "digest": "5de5e2bddd7e94dba2689e448b8497f0a26ab0a5083163d0f571f7d2708d17ed"
+      },
+      {
+        "engine": "route",
+        "elapsed": 2361.5999999940395,
+        "labels": 176087,
+        "reachable": 7026,
+        "digest": "5de5e2bddd7e94dba2689e448b8497f0a26ab0a5083163d0f571f7d2708d17ed"
+      },
+      {
+        "engine": "heap",
+        "elapsed": 4230.899999991059,
+        "labels": 153212,
+        "reachable": 7026,
+        "digest": "5de5e2bddd7e94dba2689e448b8497f0a26ab0a5083163d0f571f7d2708d17ed"
+      }
+    ]
+  },
+  "delivery": {
+    "note": "Transport microbenchmark. Native 20m data chunks are keyed by the XYZ tile containing each chunk centre. This does not test geographic tile selection.",
+    "conditions": "Local HTTP, artificial per-request response latency, no bandwidth throttling. Same gzip tile payloads; official PMTiles 4.3.0 browser reader. Equal application payload caches in both cases.",
+    "archiveBytes": 10717409,
+    "cases": [
+      {
+        "delayMs": 0,
+        "kind": "files",
+        "phase": "cold",
+        "ms": 220.59999999403954,
+        "verified": 6,
+        "requests": 6,
+        "wireBytes": 3826753,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 0,
+        "kind": "files",
+        "phase": "overlapping-pan",
+        "ms": 70.90000000596046,
+        "verified": 6,
+        "requests": 3,
+        "wireBytes": 1284101,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 0,
+        "kind": "files",
+        "phase": "return",
+        "ms": 21.200000002980232,
+        "verified": 6,
+        "requests": 0,
+        "wireBytes": 0,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 0,
+        "kind": "files",
+        "phase": "remaining",
+        "ms": 223.40000000596046,
+        "verified": 25,
+        "requests": 16,
+        "wireBytes": 5606137,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 0,
+        "kind": "pmtiles",
+        "phase": "cold",
+        "ms": 169,
+        "verified": 6,
+        "requests": 7,
+        "wireBytes": 3843137,
+        "rangeResponses": 7
+      },
+      {
+        "delayMs": 0,
+        "kind": "pmtiles",
+        "phase": "overlapping-pan",
+        "ms": 77,
+        "verified": 6,
+        "requests": 3,
+        "wireBytes": 1284101,
+        "rangeResponses": 3
+      },
+      {
+        "delayMs": 0,
+        "kind": "pmtiles",
+        "phase": "return",
+        "ms": 22.200000002980232,
+        "verified": 6,
+        "requests": 0,
+        "wireBytes": 0,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 0,
+        "kind": "pmtiles",
+        "phase": "remaining",
+        "ms": 340.3999999910593,
+        "verified": 25,
+        "requests": 17,
+        "wireBytes": 5622103,
+        "rangeResponses": 17
+      },
+      {
+        "delayMs": 80,
+        "kind": "files",
+        "phase": "cold",
+        "ms": 290.29999999701977,
+        "verified": 6,
+        "requests": 6,
+        "wireBytes": 3826753,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 80,
+        "kind": "files",
+        "phase": "overlapping-pan",
+        "ms": 144.69999998807907,
+        "verified": 6,
+        "requests": 3,
+        "wireBytes": 1284101,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 80,
+        "kind": "files",
+        "phase": "return",
+        "ms": 19.899999991059303,
+        "verified": 6,
+        "requests": 0,
+        "wireBytes": 0,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 80,
+        "kind": "files",
+        "phase": "remaining",
+        "ms": 370.79999999701977,
+        "verified": 25,
+        "requests": 16,
+        "wireBytes": 5606137,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 80,
+        "kind": "pmtiles",
+        "phase": "cold",
+        "ms": 622.2000000029802,
+        "verified": 6,
+        "requests": 7,
+        "wireBytes": 3843137,
+        "rangeResponses": 7
+      },
+      {
+        "delayMs": 80,
+        "kind": "pmtiles",
+        "phase": "overlapping-pan",
+        "ms": 282.79999999701977,
+        "verified": 6,
+        "requests": 3,
+        "wireBytes": 1284101,
+        "rangeResponses": 3
+      },
+      {
+        "delayMs": 80,
+        "kind": "pmtiles",
+        "phase": "return",
+        "ms": 19.5,
+        "verified": 6,
+        "requests": 0,
+        "wireBytes": 0,
+        "rangeResponses": 0
+      },
+      {
+        "delayMs": 80,
+        "kind": "pmtiles",
+        "phase": "remaining",
+        "ms": 1362.9000000059605,
+        "verified": 25,
+        "requests": 17,
+        "wireBytes": 5622103,
+        "rangeResponses": 17
+      }
+    ]
+  }
+}

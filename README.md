@@ -69,3 +69,5 @@ Bakgrundskartan använder OSM standardtiles som utbytbar pilotinställning. Gran
 Mätning på verklig feed med det partiella gångindexet finns i [benchmark-real-partial-walk.json](docs/benchmark-real-partial-walk.json). Mätning och reproduktion av den inkrementella gångrenderingen finns i [walking-render-performance.md](docs/walking-render-performance.md). Det är containerdata, inte fysisk mobilprestanda. [Datakällor och byggmetod](data/README.md) beskriver gångluckor, licenser och reproduktion. Bakgrundstiles är avsiktligt blockerade i automatiska webbläsartester.
 
 Jämförelse av binära gångprofiler, förberäknade raster och filstorlekar: [experiment och resultat](docs/walking-lab.md), med en [interaktiv prototyp](https://sliso.xr.se/lab/walking/).
+
+Algoritmjämförelse med RAPTOR-liknande sökning, H3, quadtrees och PMTiles: [rapport](docs/algorithm-lab.md) och [interaktiv prototyp](https://sliso.xr.se/lab/algorithms/).

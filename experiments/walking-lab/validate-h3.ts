@@ -1,0 +1,4 @@
+import {createRequire} from 'node:module';import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';import {h3Mapping} from './spatial-layouts';import {world,geographic} from './algorithms';
+const h3=createRequire(import.meta.url)('../../.data-build/research-deps/node_modules/h3-js'),r=JSON.parse(readFileSync('.data-build/algorithm-lab/layouts.json','utf8')),grid=r.cases[0].screen,mapping=h3Mapping(h3,grid,12,true),nw=world(grid.bounds[0],grid.bounds[3]),se=world(grid.bounds[2],grid.bounds[1]);
+let seed=314159;for(let i=0;i<5000;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const p=seed%mapping.owner.length,x=p%grid.width,y=Math.floor(p/grid.width),[lon,lat]=geographic(nw[0]+(x+.5)*(se[0]-nw[0])/grid.width,nw[1]+(y+.5)*(se[1]-nw[1])/grid.height);assert.equal(mapping.cellIds[mapping.owner[p]-1],h3.latLngToCell(lat,lon,12))}
+console.log('5000 H3 ownership samples match the official point-index function');
