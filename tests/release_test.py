@@ -7,7 +7,9 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from release_data import fetch, install, pack
+from release_data import fetch, install, pack, validate
+from convert_contours import convert
+from contour_format import decode_profiles, equivalent
 
 
 class ReleaseTests(unittest.TestCase):
@@ -22,6 +24,26 @@ class ReleaseTests(unittest.TestCase):
                         days={'2026-10-19': [ref]}, **{key: ref for key in ('stops', 'walks', 'routes', 'transfers', 'trips')})
         (root / 'manifest.json').write_text(json.dumps(manifest))
         return manifest
+
+    def test_contour_migration_preserves_transit_and_previous_clients(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)/'data';m=self.fixture(root);previous=m['version']
+            native={'a':[dict(minutes=1,geometry=dict(type='Polygon',coordinates=[]))]}
+            raw=json.dumps(native).encode();name='areas-0000.json'
+            (root/previous/name).write_bytes(raw)
+            (root/previous/'report.json').write_text(json.dumps(dict(generator='sliso-data-v2',version=previous)))
+            m['walkingAreas']=dict(stepMinutes=1,index={'a':0},files=[dict(url='/data/'+previous+'/'+name,bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())],reviewed=False)
+            (root/'manifest.json').write_text(json.dumps(m))
+            migrated=convert(root)
+            self.assertNotEqual(previous,migrated['version'])
+            self.assertEqual(m['stops']['sha256'],migrated['stops']['sha256'])
+            self.assertEqual((root/previous/name).read_bytes(),raw)
+            binary=root/migrated['walkingAreas']['files'][0]['url'].removeprefix('/data/')
+            self.assertTrue(equivalent(native,decode_profiles(binary.read_bytes())))
+            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sl-isokron')
+            installed=Path(temp)/'installed';install(Path(temp)/'data.zip',release,installed)
+            self.assertEqual(validate(installed),migrated)
+            self.assertTrue((installed/previous/name).exists())
 
     def test_pinned_bundle_is_repeatable_and_installs_without_source_or_secrets(self):
         with tempfile.TemporaryDirectory() as temp:

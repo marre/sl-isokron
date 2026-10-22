@@ -79,3 +79,43 @@ Manifestets **schema 2** har `days[UTC-datum]` som en lista av tidsblock med SHA
 Byggaren skriver alla filer innan manifestet atomiskt ersätts. Ett misslyckat bygge lämnar föregående manifest orört. Den ersätter inga källfiler. CI behåller aktuell och senast föregående identifierade, genererade versioner med `scripts/prune_data.py`; okända kataloger och symlänkar rörs inte. CI:s cache bevarar tidigare paket inför nästa Pages-deploy, så att pågående klienter kan hämta sin version. Driftansvarig måste rensa gamla versioner och hålla koll på totalkvoten; inga filer över 25 MiB publiceras. Vid för stora filer stoppas bygget för partitioneringsarbete, inte förlust av giltiga förbindelser. En verklig feed har kompilerats och mätts, men den partiella gångtäckningen begränsar vad mätningen visar. Fysisk mobilprestanda och full gång-/stationsmodell återstår.
 
 Den första verkliga feedens inventering finns i [SL-feed 2026-10-19](sl-feed-2026-10-19.md). Den innehåller flera trafikaktörer. Beställaren har därefter valt att alla linjer i feeden ska ingå.
+
+### Lossless delivery contours (`sliso-contours-v1`)
+
+The compiler keeps the native JSON walking-generation cache, but publishes binary
+`.bin` shards and sets `walkingAreas.format` to `sliso-contours-v1`. An absent
+format still means legacy JSON. Unknown formats fail explicitly. The map worker
+fetches, verifies, decodes and retains only the current viewport's profiles; the
+UI thread sends stop IDs and walking allowances, rather than coordinate objects.
+
+Delivery files are explicitly gzip-compressed (deterministic mtime zero). Hashes
+and byte counts describe the compressed file; the worker verifies those bytes
+before streaming decompression. This avoids relying on the host compressing
+application/octet-stream. Uncompressed archives remain readable.
+
+All integers and doubles in the decompressed archive are little endian. It begins
+with uint32 magic `0x534c4131` and a uint32 UTF-8 JSON-directory byte count. Its
+body starts at the next eight-byte boundary. The directory maps stop IDs to
+`{minutes,offset,length}` entries, with byte offsets relative to the body. Chunks
+are contiguous in directory order. Each geometry chunk contains four uint32s:
+magic, vertex count, ring count and polygon count. Magic `0x534c5131` means signed
+Int32 coordinates divided by 1,000,000; `0x534c5031` means Float64 coordinates.
+Then come `ringCount+1` vertex offsets and `polygonCount+1` ring offsets (uint32),
+eight-byte alignment padding, and interleaved longitude/latitude coordinates.
+Empty source contours are valid. Polygon versus one-part MultiPolygon is not
+retained as a tag: their ordered rings and raster semantics are identical.
+
+Fixed point is selected per geometry only when **every coordinate round-trips
+exactly**; finer source precision uses Float64. No contours, islands, holes or
+minute budgets are removed or simplified. The renderer divides integer coordinates
+by the scale before projection, preserving the existing pixel-centre scanline rules.
+This changes storage and decoding, not walking accessibility assumptions.
+
+For an existing compiled release, run
+`python scripts/convert_contours.py --root PATH_TO_VERIFIED_DATA`. The migration
+verifies all input checksums and compares every decoded coordinate against the
+source. Transit packages keep their original bytes and the physical walking
+version stays unchanged. It writes a new immutable version and retains the old
+version for open clients. Package and publish it with `release_data.py` as usual;
+there is no Trafiklab request or OSM rebuild. Before packing, retain only the
+immediately preceding release directory to stay within the static asset budget.

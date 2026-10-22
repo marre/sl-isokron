@@ -12,8 +12,10 @@ this prototype. Quadtrees worked well as a **download encoding**, while ordinary
 runs were faster to compose. PMTiles worked correctly but did not provide a
 consistent delivery speedup with the default reader.
 
-These are research implementations and recorded-data mockups. Production still
-uses its existing router and walking renderer. No routing server was introduced.
+These measurements cover research implementations and recorded-data mockups. The
+route-pattern scanner and lossless fixed-point contours have since been integrated
+into production; see [integration details](production-optimization.md). The other
+representations remain experiments. No routing server was introduced.
 
 ![Routing results](images/algorithm-routing.png)
 

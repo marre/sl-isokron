@@ -1,7 +1,9 @@
 import type {Polygon,MultiPolygon} from 'geojson';
+import {packedRuns,type PackedGeometry} from './contours';
 import {colorFor} from './settings';
 export type AreaGeometry=Polygon|MultiPolygon;
-export interface AreaBand {minutes:number;geometries:AreaGeometry[]}
+export type RasterGeometry=AreaGeometry|PackedGeometry;
+export interface AreaBand {minutes:number;geometries:RasterGeometry[]}
 export type ClipBounds=[number,number,number,number];
 export interface RasterGrid {width:number;height:number;bounds:ClipBounds}
 
@@ -13,7 +15,8 @@ const mercator=(latitude:number)=>Math.log(Math.tan(Math.PI/4+latitude*Math.PI/3
 /** Rasterize the existing contour, without buffering, hulls or invented links.
  * Scanline pairs include all rings, so holes stay empty and overlapping stops
  * union naturally. Sampling is at display-pixel centres, not a new travel model. */
-export function contourRuns(geometry:AreaGeometry,grid:RasterGrid):Uint32Array{
+export function contourRuns(geometry:RasterGeometry,grid:RasterGrid):Uint32Array{
+ if(geometry.type==='Packed')return packedRuns(geometry,grid);
  const {width,height,bounds:[west,south,east,north]}=grid;
  const top=mercator(north),sx=width/(east-west),sy=height/(top-mercator(south));
  const project=(p:number[])=>[(p[0]-west)*sx,(top-mercator(p[1]))*sy];
@@ -47,10 +50,10 @@ export function contourRuns(geometry:AreaGeometry,grid:RasterGrid):Uint32Array{
 /** Add contours once per viewport. New files can only improve arrival times. */
 export class BandRaster {
  readonly field:Uint8Array;
- private earliest=new Map<AreaGeometry,number>();
+ private earliest=new Map<RasterGeometry,number>();
  constructor(readonly grid:RasterGrid){this.field=new Uint8Array(grid.width*grid.height);}
  add(bands:AreaBand[]):Uint8Array{
-  const additions=new Map<AreaGeometry,number>();
+  const additions=new Map<RasterGeometry,number>();
   for(const band of bands)for(const geometry of band.geometries){
    const previous=additions.get(geometry)??this.earliest.get(geometry)??Infinity;
    if(band.minutes<previous)additions.set(geometry,band.minutes);
@@ -66,7 +69,7 @@ export class BandRaster {
  }
 }
 export function rasterBands(bands:AreaBand[],grid:RasterGrid):Uint8Array{
- const field=new Uint8Array(grid.width*grid.height),earliest=new Map<AreaGeometry,number>();
+ const field=new Uint8Array(grid.width*grid.height),earliest=new Map<RasterGeometry,number>();
  for(const band of bands)for(const geometry of band.geometries)earliest.set(geometry,Math.min(band.minutes,earliest.get(geometry)??Infinity));
  for(const [geometry,minutes] of [...earliest].sort((a,b)=>b[1]-a[1])){
   const runs=contourRuns(geometry,grid);

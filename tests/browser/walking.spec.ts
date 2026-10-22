@@ -1,11 +1,14 @@
 import { test, expect } from '@playwright/test';
+import {gzipSync} from 'node:zlib';
+import {archive,packFixed} from '../../src/core/contours';
+import type {AreaGeometry} from '../../src/core/bands';
 import { createHash } from 'node:crypto';
 
-async function walkingFixture(page: import('@playwright/test').Page) {
+async function walkingFixture(page: import('@playwright/test').Page,binary=false) {
   await page.route('https://tile.openstreetmap.org/**', r => r.abort());
   await page.goto('/');
   const geometry = { type: 'Polygon', coordinates: [[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]] };
-  const bodies = ['a','b'].map(id => JSON.stringify({ [id]: [{ minutes: 10, geometry }] }));
+  const bodies = ['a','b'].map(id => {if(!binary)return Buffer.from(JSON.stringify({ [id]: [{ minutes: 10, geometry }] }));const chunk=packFixed(geometry as AreaGeometry);return gzipSync(Buffer.from(archive({[id]:[{minutes:10,offset:0,length:chunk.byteLength}]},[chunk])));});
   const refs = bodies.map((body,i) => ({ url: `/data/progressive/${i}.json`, bytes: Buffer.byteLength(body), sha256: createHash('sha256').update(body).digest('hex') }));
   let release!: () => void;
   const pending = new Promise<void>(resolve => { release = resolve; });
@@ -14,7 +17,7 @@ async function walkingFixture(page: import('@playwright/test').Page) {
     if (i === 1) await pending;
     await route.fulfill({ contentType: 'application/json', body: bodies[i] }).catch(() => {});
   });
-  await page.evaluate(async refs => {
+  await page.evaluate(async ({refs,binary}) => {
     const component = '/src/walking-view.ts', leaflet = '/node_modules/leaflet/dist/leaflet-src.esm.js';
     const { WalkingView } = await import(component), L = await import(leaflet);
     const el = document.createElement('div'); el.id = 'progressive-map';
@@ -23,8 +26,8 @@ async function walkingFixture(page: import('@playwright/test').Page) {
     const view = new WalkingView(L.map(el).setView([59.33,18],14), (text:string) => { status.textContent = text; }, () => {});
     (window as any).progressiveView = view;
     view.setData({ walkSources: [{ stop:0,seconds:0,walked:0 },{ stop:1,seconds:600,walked:0 }] },
-      { maxMinutes:20,walkMinutes:10 }, { walkingAreas: { index:{ a:0,b:1 },files:refs } }, [{ id:'a',lat:59.33,lon:18 },{ id:'b',lat:59.33,lon:18 }]);
-  }, refs);
+      { maxMinutes:20,walkMinutes:10 }, { walkingAreas: { index:{ a:0,b:1 },files:refs,...(binary?{format:'sliso-contours-v1'}:{}) } }, [{ id:'a',lat:59.33,lon:18 },{ id:'b',lat:59.33,lon:18 }]);
+  }, {refs,binary});
   return release;
 }
 
@@ -105,3 +108,13 @@ test('walking profiles load for the visible map then follow a new viewport',asyn
  await expect.poll(()=>requested).toEqual([0,1,0]);
  await expect(page.locator('#viewport-status')).toContainText('Ungefärliga');
 });
+
+ test('fixed-point delivery streams contours from the worker and reloads after toggling',async({page})=>{
+  const release=await walkingFixture(page,true);
+  await expect(page.locator('#progressive-status')).toContainText('1 av 2');
+  await expect(page.locator('#progressive-map canvas')).toBeVisible();release();
+  await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
+  await page.evaluate(()=>{(window as any).progressiveView.toggle(false);(window as any).progressiveView.toggle(true)});
+  await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
+  await expect(page.locator('#progressive-map canvas')).toBeVisible();
+ });

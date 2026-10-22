@@ -1,10 +1,8 @@
 import L from 'leaflet';
-import { loadJSON } from './core/data';
 import { walkingMinutes } from './core/walking';
-import { bandLimits, type AreaBand, type AreaGeometry, type RasterGrid } from './core/bands';
+import { bandLimits, type RasterGrid } from './core/bands';
 import type { Manifest, SearchResult, Settings, Stop } from './core/types';
 
-type Profiles = Record<string, {minutes:number;geometry:AreaGeometry}[]>;
 class BandCanvas extends L.Layer {
   readonly canvas=document.createElement('canvas');
   coverage?:L.LatLngBounds;
@@ -33,7 +31,7 @@ export class WalkingView {
   private image?:BandCanvas;
   private workerVersion='';
   private workerCutoffs=new Set<number>();
-  private profiles = new Map<number,Profiles>();
+  private profiles = new Set<number>();
   private cutoff = 0;
   private schedule?:()=>void;
   private timer?:ReturnType<typeof setTimeout>;
@@ -44,7 +42,7 @@ export class WalkingView {
   private removeLayers(){this.image?.remove();this.image=undefined;}
   private clear() {
     this.controller?.abort();this.merger?.terminate();this.merger=undefined;clearTimeout(this.timer);this.timer=undefined;
-    this.removeLayers();this.workerVersion='';this.workerCutoffs.clear();this.schedule=undefined;
+    this.profiles.clear();this.removeLayers();this.workerVersion='';this.workerCutoffs.clear();this.schedule=undefined;
   }
   reset(){this.clear();this.profiles.clear();this.data=undefined;}
   bounds(){return this.image?.coverage;}
@@ -73,7 +71,15 @@ export class WalkingView {
     const merger=this.merger=new Worker(new URL('./bands-worker.ts',import.meta.url),{type:'module'});
     const requests=new Map<number,AbortController>(),failed=new Set<number>();
     let wanted=new Set<number>(),queue:number[]=[],profileVersion=0,view=0,busy=false,pending=false,mergeError=false;
-    let generation=0,geometryIds=new WeakMap<AreaGeometry,number>(),nextGeometry=0;
+    let generation=0,nextToken=0;
+    const loading=new Map<number,{resolve:()=>void;reject:()=>void}>();
+    const load=(file:number,signal:AbortSignal)=>new Promise<void>((resolve,reject)=>{
+      const token=nextToken++;
+      const abort=()=>{loading.delete(token);merger.postMessage({type:'abort',token});reject(new Error('Aborted'));};
+      loading.set(token,{resolve:()=>{signal.removeEventListener('abort',abort);resolve()},reject:()=>{signal.removeEventListener('abort',abort);reject(new Error('Contour load failed'))}});
+      signal.addEventListener('abort',abort,{once:true});
+      merger.postMessage({type:'load',token,file,ref:areas.files[file],format:areas.format});
+    });
     let clip=this.map.getBounds().pad(.25),clipZoom=this.map.getZoom();
     const budgets=new Map<number,Map<number,number>>();
     const standard=bandLimits(settings.maxMinutes);
@@ -103,46 +109,29 @@ export class WalkingView {
       const version=`${view}:${profileVersion}`,known=this.workerVersion===version;
       const partial=this.cutoff%10!==0&&this.cutoff!==settings.maxMinutes;
       const limits=known?(partial&&!this.workerCutoffs.has(this.cutoff)?[this.cutoff]:[]):[...new Set([...standard,this.cutoff])].sort((a,b)=>a-b);
-      const bands:AreaBand[]=limits.map(minutes=>{
-        const geometries:AreaGeometry[]=[];
-        const needed=budget(minutes);
-        for(const file of wanted)for(const [id,contours] of Object.entries(this.profiles.get(file)??{})){
-          const index=indices.get(id),allowance=index===undefined?undefined:needed.get(index);
-          const contour=allowance===undefined?undefined:contours.find(c=>c.minutes===allowance);
-          if(contour)geometries.push(contour.geometry);
-        }
-        return {minutes,geometries};
-      });
+      const bands=limits.map(minutes=>({minutes,allowances:[...budget(minutes)].flatMap(([index,allowance])=>{
+        const id=stops[index].id,file=areas.index[id];return wanted.has(file)&&this.profiles.has(file)?[[id,allowance] as [string,number]]:[];
+      })}));
       const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast()),w=se.x-nw.x,h=se.y-nw.y;
       const scale=Math.min(1,Math.sqrt(1_000_000/(w*h)),2048/Math.max(w,h));
       const grid:RasterGrid={width:Math.max(1,Math.ceil(w*scale)),height:Math.max(1,Math.ceil(h*scale)),bounds:[clip.getWest(),clip.getSouth(),clip.getEast(),clip.getNorth()]};
-      // Retain geometry in the worker: subsequent batches send only small IDs.
-      const additions:{id:number;geometry:AreaGeometry}[]=[];
-      const retained=new Set(bands.filter(b=>standard.includes(b.minutes)).flatMap(b=>b.geometries));
-      const temporary=new WeakMap<AreaGeometry,number>();
-      const references=bands.map(band=>({minutes:band.minutes,geometries:band.geometries.map(geometry=>{
-        let id=geometryIds.get(geometry)??temporary.get(geometry);
-        if(id===undefined){id=nextGeometry++;temporary.set(geometry,id);additions.push({id,geometry});}
-        if(retained.has(geometry))geometryIds.set(geometry,id);
-        return id;
-      })}));
-      merger.postMessage({version,view,generation,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands:references,additions,grid});progress();
+      merger.postMessage({type:'render',version,view,generation,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands,grid});progress();
     };
     this.schedule=()=>{
       pending=true;
       if(!this.timer&&!busy)this.timer=setTimeout(send,60);
     };
-    const indices=new Map(stops.map((stop,index)=>[stop.id,index]));
-    merger.onmessage=({data}:{data:{version:string;view:number;cutoff:number;width:number;height:number;pixels?:Uint8ClampedArray;extent?:number[];cachedCutoffs?:number[];error?:boolean}})=>{
+    merger.onmessage=({data}:{data:{type?:string;token?:number;version:string;view:number;cutoff:number;width:number;height:number;pixels?:Uint8ClampedArray;extent?:number[];cachedCutoffs?:number[];error?:boolean}})=>{
       if(controller.signal.aborted)return;
+      if(data.type==='loaded'){const task=loading.get(data.token!);loading.delete(data.token!);if(task)(data.error?task.reject:task.resolve)();return;}
       busy=false;
       if(data.view===view){
-        if(data.error){mergeError=true;this.workerVersion='';this.workerCutoffs.clear();generation++;geometryIds=new WeakMap();nextGeometry=0;}
+        if(data.error){mergeError=true;this.workerVersion='';this.workerCutoffs.clear();generation++;}
         else if(data.pixels){
           mergeError=false;
           if(this.workerVersion!==data.version)this.workerCutoffs.clear();
           this.workerVersion=data.version;this.workerCutoffs=new Set(data.cachedCutoffs??[]);
-          if(data.cutoff===this.cutoff){
+          if(data.cutoff===this.cutoff&&(data.extent||this.image)){
             if(!this.image)this.image=new BandCanvas(this.pane,clip).addTo(this.map);
             this.image.image(data.width,data.height,data.pixels,data.cutoff);
             if(data.extent){
@@ -155,8 +144,9 @@ export class WalkingView {
       }
       if(pending)send();progress();
     };
-    merger.onerror=()=>{if(controller.signal.aborted)return;busy=false;pending=false;mergeError=true;progress();};
+    merger.onerror=()=>{for(const task of loading.values())task.reject();loading.clear();if(controller.signal.aborted)return;busy=false;pending=false;mergeError=true;for(const file of wanted)failed.add(file);queue=[];for(const request of requests.values())request.abort();progress();};
     const pump=()=>{
+      if(mergeError)return;
       while(requests.size<6&&queue.length){
         const file=queue.shift()!;
         if(this.profiles.has(file)||requests.has(file)||!wanted.has(file))continue;
@@ -164,9 +154,9 @@ export class WalkingView {
         const abort=()=>request.abort();controller.signal.addEventListener('abort',abort,{once:true});
         void(async()=>{
           try{
-            const profiles=await loadJSON<Profiles>(areas.files[file],request.signal);
+            await load(file,request.signal);
             if(request.signal.aborted)return;
-            this.profiles.set(file,profiles);profileVersion++;failed.delete(file);this.schedule?.();
+            this.profiles.add(file);profileVersion++;failed.delete(file);this.schedule?.();
           }catch{if(!request.signal.aborted)failed.add(file);}
           finally{
             controller.signal.removeEventListener('abort',abort);requests.delete(file);
@@ -186,12 +176,13 @@ export class WalkingView {
       const previous=wanted;
       wanted=new Set([...positions.keys()].filter(file=>positions.get(file)!.some(i=>expanded.contains([stops[i].lat,stops[i].lon]))));
       for(const [file,request] of requests)if(!wanted.has(file))request.abort();
-      // Raw profiles outside this view stay in the verified browser disk cache.
+      merger.postMessage({type:'retain',files:[...wanted]});
+      // Decoded profiles live only in the worker; verified files remain on disk.
       for(const file of this.profiles.keys())if(!wanted.has(file))this.profiles.delete(file);
       for(const file of failed)if(!wanted.has(file))failed.delete(file);
       const moved=!clip.contains(bounds)||clipZoom!==this.map.getZoom(),changed=previous.size!==wanted.size||[...wanted].some(file=>!previous.has(file));
       if(moved){clip=bounds.pad(.25);clipZoom=this.map.getZoom();view++;this.removeLayers();}
-      if(moved||changed){generation++;geometryIds=new WeakMap();nextGeometry=0;}
+      if(moved||changed){generation++;}
       if(changed)profileVersion++;
       queue=[...wanted].filter(file=>!this.profiles.has(file)&&!requests.has(file)).sort((a,b)=>{
         const score=(file:number)=>Math.min(...positions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));

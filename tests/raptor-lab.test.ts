@@ -1,5 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {search as reference} from '../src/core/router';import {search as candidate,searchHeap} from '../experiments/routing-lab/raptor';
+import {search as production} from '../src/core/router';
+import {search as reference} from '../experiments/routing-lab/reference';import {search as candidate,searchHeap} from '../experiments/routing-lab/raptor';
 import {defaults} from '../src/core/settings';import {stockholmInstant} from '../src/core/time';import type {Network,SearchResult} from '../src/core/types';
 const objectives=(r:SearchResult)=>r.values.map(v=>v?{seconds:v.seconds,arrival:v.arrival}:null);
 const sources=(r:SearchResult)=>[...r.walkSources].sort((a,b)=>a.stop-b.stop||a.seconds-b.seconds||a.walked-b.walked);
@@ -14,7 +15,7 @@ test('route-pattern scanner matches exact labels on 150 seeded overtaking and co
   for(let from=0;from<9;from++)if(rand()<.8)n.walks.push({from,to:from+1,seconds:(1+Math.floor(rand()*5))*60,metres:100,source:'mapped test'});
   for(let rule=0;rule<5;rule++){const from=Math.floor(rand()*9),to=from+Math.floor(rand()*Math.min(3,10-from));n.transfers.push({from,to,type:rand()<.3?3:2,seconds:Math.floor(rand()*8)*60,...(rand()<.5?{fromTrip:Math.floor(rand()*3)+'-'+Math.floor(rand()*5)}:{})})}
   const s={...defaults(n.stops[0]),date:'2026-10-22',time:'08:00',maxMinutes:60,walkMinutes:[5,15,30][sample%3],maxTransfers:sample%5};
-  const old=reference(n,s),next=candidate(n,s),heap=searchHeap(n,s);assert.deepEqual(objectives(heap),objectives(old),'heap objectives '+sample);for(let i=0;i<old.values.length;i++)if(old.values[i])assert.ok(heap.values[i]!.boardings<=old.values[i]!.boardings,'heap transfer tie '+sample);assert.deepEqual(sources(heap),sources(old),'heap walking frontiers '+sample);assert.deepEqual(objectives(next),objectives(old),'objectives '+sample);assert.deepEqual(sources(next),sources(old),'walking frontiers '+sample);
+  const old=reference(n,s),next=production(n,s),heap=searchHeap(n,s);assert.deepEqual(objectives(heap),objectives(old),'heap objectives '+sample);for(let i=0;i<old.values.length;i++)if(old.values[i])assert.ok(heap.values[i]!.boardings<=old.values[i]!.boardings,'heap transfer tie '+sample);assert.deepEqual(sources(heap),sources(old),'heap walking frontiers '+sample);assert.deepEqual(objectives(next),objectives(old),'objectives '+sample);assert.deepEqual(sources(next),sources(old),'walking frontiers '+sample);
   for(const node of next.journeys){if(node.kind==='walk'){assert.ok(n.walks.some(w=>w.from===node.from&&w.to===node.to&&w.seconds===node.arrival-node.departure))}else{assert.ok(n.connections.some(c=>c.from===node.from&&c.departure===node.departure&&c.pickup));assert.ok(n.connections.some(c=>c.to===node.to&&c.arrival===node.arrival&&c.dropoff))}}
  }
 });

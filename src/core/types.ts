@@ -20,7 +20,7 @@ export interface Manifest {
   schema: 2; version: string; demo: boolean; updated: string; validFrom: string; validTo: string;
   walkingMaxMinutes: number; walkingVersion: string; walkingSpeedKmh: number;
   walkingCoverage?: { totalStops: number; boundStops: number; pairs: number; reviewed: boolean };
-  walkingAreas?: { stepMinutes: 1; index: Record<string, number>; files: FileRef[]; reviewed: boolean };
+  walkingAreas?: { format?: 'sliso-contours-v1'; stepMinutes: 1; index: Record<string, number>; files: FileRef[]; reviewed: boolean };
   stops: FileRef; walks: FileRef; routes: FileRef; transfers: FileRef;
   trips: FileRef; days: Record<string, (FileRef & { from: number; until: number })[]>; warnings: string[]; attribution: string[];
 }

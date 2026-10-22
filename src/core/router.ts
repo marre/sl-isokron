@@ -18,12 +18,7 @@ export function canTransfer(l: Label, c: Connection, network: Network, candidate
   const best = Math.max(-1, ...rules.map(rank));
   return rules.filter(r => rank(r) === best).every(r => r.type !== 3 && c.departure >= l.alightTime + r.seconds);
 }
-function lowerBound(a: Connection[], time: number): number {
-  let lo = 0, hi = a.length;
-  while (lo < hi) { const mid = (lo + hi) >>> 1; if (a[mid].departure < time) lo = mid + 1; else hi = mid; }
-  return lo;
-}
-/** Exact label search. Retains time AND displayed-cost alternatives. No heuristic truncation.
+/** Round-based route-pattern scanner. Retains time AND displayed-cost alternatives. No heuristic truncation.
  * Each boarding follows the whole trip; staying seated never requires a legal alight/reboard.
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
@@ -34,15 +29,12 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   if (start < 0) throw new Error('Starthållplatsen saknas i datan. Välj en ersättare.');
   const max = settings.maxMinutes * 60, maxWalk = settings.walkMinutes * 60;
   const windowEnd = t0 + settings.windowMinutes * 60, latest = windowEnd + max;
-  const departures: Connection[][] = network.stops.map(() => []);
   const walking = network.stops.map(() => [] as Network['walks']);
   const trips = new Map<string, Connection[]>();
   for (const c of network.connections) {
     if (c.departure < t0 || c.departure > latest) continue;
-    departures[c.from].push(c);
     const trip = trips.get(c.trip) ?? []; trip.push(c); trips.set(c.trip, trip);
   }
-  for (const a of departures) a.sort((a,b) => a.departure - b.departure);
   for (const a of trips.values()) a.sort((a,b) => a.sequence - b.sequence);
   for (const w of network.walks) walking[w.from].push(w);
   const ruleIndex = new Map<string, TransferRule[]>();
@@ -89,7 +81,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
         finalWalking[l.stop] = [...list.filter(a => !(seconds <= a.seconds && l.walk <= a.walked)), { stop: l.stop, seconds, walked: l.walk }];
       }
     }
-    if (!old || seconds < old.seconds || (seconds === old.seconds && l.time < old.arrival)) {
+    if (!old || seconds < old.seconds || (seconds === old.seconds && (l.time < old.arrival || (l.time === old.arrival && l.boardings < old.boardings)))) {
       values[l.stop] = { seconds, arrival: l.time, kind: l.boardings ? 'transit' : 'walk', boardings: l.boardings, requestStop: l.requestStop, journey: null };
       witnesses[l.stop] = l;
       if(options.onProgress)changes.set(l.stop,values[l.stop]!);
@@ -99,38 +91,58 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     const list = frontiers.get(key) ?? [];
     const dominates = (a: Label, b: Label) => a.time <= b.time && (settled(a) && settled(b) || a.alightTime <= b.alightTime) && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
     if (options.prune !== false && list.some(a => dominates(a, l))) return;
-    frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queues[l.boardings].push(l); labels++;
+    frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queues[l.boardings].push(l);labels++;
     if (labels > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
   push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
   report(0);
-  // Finish each boarding round, including its walking closure, before advancing.
-  // The number of rounds is bounded by the user's transfer limit.
-  for(let round=0;round<queues.length;round++) {
-  const queue=queues[round];
-  for (let head = 0; head < queue.length; head++) {
-    processed++;
-    if(options.onProgress && (processed&127)===0 && performance.now()-lastProgress>=100)report(round);
-    const l = queue[head];
-    if (options.prune !== false && !frontiers.get(contextKey(l))?.includes(l)) continue;
-    for (const w of walking[l.stop]) push({ ...l, stop: w.to, time: l.time + w.seconds, walk: l.walk + w.seconds, previous: l, via: w, alight: null });
-    if (l.boardings >= settings.maxTransfers + 1) continue;
-    const ds = departures[l.stop];
-    for (let k = lowerBound(ds, l.time); k < ds.length; k++) {
-      const c = ds[k];
-      if (!l.boardings && c.departure > windowEnd) break;
-      if (!c.pickup || !settings.modes.includes(network.routes[c.route].mode) || !canTransfer(l, c, network, ruleIndex.get(`${l.alightStop}|${c.from}`) ?? [])) continue;
-      const anchor = l.anchor ?? c.departure - l.walk;
-      if (c.departure - anchor > max) continue;
-      // Do not reboard the same trip after alighting: remaining seated was already explored.
-      if (l.lastTrip === c.trip) continue;
-      for (const leg of trips.get(c.trip)!) {
-        if (leg.sequence < c.sequence || leg.arrival - anchor > max || !leg.dropoff) continue;
-        push({ stop: leg.to, time: leg.arrival, anchor, walk: 0, boardings: l.boardings + 1, requestStop: l.requestStop || !!c.pickupRequest || !!leg.dropoffRequest, lastTrip: c.trip, lastRoute: network.routes[c.route].id, alightStop: leg.to, alightTime: leg.arrival, previous: l, via: c, alight: leg });
+  // A route pattern has the same route and ordered connection endpoints/sequences.
+  // Trips can overtake: retain a separate onboard state for every trip instance.
+  // Never choose just the earliest departure and discard later, shorter-cost anchors.
+  interface Pattern { trips: Connection[][] }
+  const patterns=new Map<string,Pattern>(),atStop: Set<Pattern>[]=network.stops.map(()=>new Set());
+  for(const trip of trips.values()){
+    const key=JSON.stringify([trip[0].route,trip.map(c=>[c.from,c.to,c.sequence])]);
+    let pattern=patterns.get(key);
+    if(!pattern){pattern={trips:[]};patterns.set(key,pattern);for(const c of trip)atStop[c.from].add(pattern);}
+    pattern.trips.push(trip);
+  }
+  for(let round=0;round<queues.length;round++){
+    const queue=queues[round];
+    // Complete the continuous-walking closure before scanning vehicle routes.
+    for(let head=0;head<queue.length;head++){
+      const l=queue[head];processed++;
+      if(options.onProgress&&(processed&127)===0&&performance.now()-lastProgress>=100)report(round);
+      if(options.prune!==false&&!frontiers.get(contextKey(l))?.includes(l))continue;
+      for(const w of walking[l.stop])push({...l,stop:w.to,time:l.time+w.seconds,walk:l.walk+w.seconds,previous:l,via:w,alight:null});
+    }
+    if(round<queues.length-1){
+      const active:Label[][]=network.stops.map(()=>[]),marked=new Set<Pattern>();
+      for(const l of queue){
+        if(options.prune!==false&&!frontiers.get(contextKey(l))?.includes(l))continue;
+        active[l.stop].push(l);for(const p of atStop[l.stop])marked.add(p);
+      }
+      for(const pattern of marked){
+        if(!settings.modes.includes(network.routes[pattern.trips[0][0].route].mode))continue;
+        const onboard:({label:Label;boarding:Connection;anchor:number}|undefined)[]=Array(pattern.trips.length);
+        for(let position=0;position<pattern.trips[0].length;position++){
+          for(let t=0;t<pattern.trips.length;t++){
+            const c=pattern.trips[t][position];processed++;
+            if(options.onProgress&&(processed&127)===0&&performance.now()-lastProgress>=100)report(round);
+            if(c.pickup)for(const l of active[c.from]){
+              if(c.departure<l.time||(!round&&c.departure>windowEnd)||l.lastTrip===c.trip)continue;
+              const anchor=l.anchor??c.departure-l.walk;
+              if(c.departure-anchor>max||(onboard[t]&&onboard[t]!.anchor>=anchor))continue;
+              if(!canTransfer(l,c,network,ruleIndex.get(`${l.alightStop}|${c.from}`)??[]))continue;
+              onboard[t]={label:l,boarding:c,anchor};
+            }
+            const state=onboard[t];if(!state||!c.dropoff||c.arrival-state.anchor>max)continue;
+            push({stop:c.to,time:c.arrival,anchor:state.anchor,walk:0,boardings:round+1,requestStop:state.label.requestStop||!!state.boarding.pickupRequest||!!c.dropoffRequest,lastTrip:c.trip,lastRoute:network.routes[c.route].id,alightStop:c.to,alightTime:c.arrival,previous:state.label,via:state.boarding,alight:c});
+          }
+        }
       }
     }
-  }
-  report(round+1);
+    report(round+1);
   }
   // Serialize only the predecessor chains that actually explain a displayed value.
   // Shared nodes avoid copying a complete itinerary for every reachable destination.

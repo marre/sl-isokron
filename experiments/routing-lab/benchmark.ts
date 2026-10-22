@@ -1,5 +1,5 @@
 import {readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';import {createHash} from 'node:crypto';import assert from 'node:assert/strict';
-import {search as reference} from '../../src/core/router';import {search as raptor,searchHeap} from './raptor';import {decodeConnections,decodeWalks} from '../../src/core/data';import {stockholmInstant} from '../../src/core/time';import {walkingMinutes} from '../../src/core/walking';
+import {search as reference} from './reference';import {search as raptor,searchHeap} from './raptor';import {decodeConnections,decodeWalks} from '../../src/core/data';import {stockholmInstant} from '../../src/core/time';import {walkingMinutes} from '../../src/core/walking';
 import type {FileRef,Manifest,Network,Settings,SearchResult} from '../../src/core/types';
 const root=process.argv[2]??'.data-build/diagnosis/data',dir='.data-build/routing-lab';mkdirSync(dir,{recursive:true});
 const m:Manifest=JSON.parse(readFileSync(root+'/manifest.json','utf8'));

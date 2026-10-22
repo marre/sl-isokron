@@ -1,16 +1,42 @@
-import {BandRaster,rasterBands,paintBands,type AreaBand,type AreaGeometry,type RasterGrid} from './core/bands';
+import {BandRaster,rasterBands,paintBands,type AreaBand,type RasterGrid} from './core/bands';
+import {deliveryProfiles,legacyProfiles,type Profiles} from './core/contours';
+import {verified} from './core/data';
+import type {FileRef} from './core/types';
 let version='',generation=-1,raster:BandRaster|undefined;
-const geometries=new Map<number,AreaGeometry>(),partials=new Map<number,Uint8Array>(),retained=new Set<number>();
-interface Job {version:string;view:number;generation:number;cutoff:number;maxMinutes:number;bands:{minutes:number;geometries:number[]}[];additions:{id:number;geometry:AreaGeometry}[];grid:RasterGrid}
-self.onmessage=({data}:MessageEvent<Job>)=>{
+const partials=new Map<number,Uint8Array>(),files=new Map<number,Profiles>(),byStop=new Map<string,Profiles[string]>(),loads=new Map<number,{file:number;controller:AbortController}>();
+let wanted=new Set<number>();
+interface Job {type:'render';version:string;view:number;generation:number;cutoff:number;maxMinutes:number;bands:{minutes:number;allowances:[string,number][]}[];grid:RasterGrid}
+type Command=Job|{type:'retain';files:number[]}|{type:'abort';token:number}|{type:'load';token:number;file:number;ref:FileRef;format?:string};
+self.onmessage=({data}:MessageEvent<Command>)=>{
+ if(data.type==='render'){render(data);return}
+ if(data.type==='abort'){loads.get(data.token)?.controller.abort();return}
+ if(data.type==='retain'){
+  wanted=new Set(data.files);
+  for(const load of loads.values())if(!wanted.has(load.file))load.controller.abort();
+  for(const file of files.keys())if(!wanted.has(file))files.delete(file);
+  byStop.clear();for(const profiles of files.values())for(const [id,entries] of Object.entries(profiles))byStop.set(id,entries);
+  return;
+ }
+ const controller=new AbortController();loads.set(data.token,{file:data.file,controller});
+ void(async()=>{
+  try{
+   const bytes=await verified(data.ref,controller.signal);
+   if(controller.signal.aborted||!wanted.has(data.file))throw new Error('Aborted');
+   const profiles=data.format==='sliso-contours-v1'?await deliveryProfiles(bytes):data.format===undefined?legacyProfiles(bytes):(()=>{throw new Error('Unsupported contours')})();
+   if(controller.signal.aborted||!wanted.has(data.file))throw new Error('Aborted');
+   files.set(data.file,profiles);for(const [id,entries] of Object.entries(profiles))byStop.set(id,entries);
+   self.postMessage({type:'loaded',token:data.token});
+  }catch{self.postMessage({type:'loaded',token:data.token,error:true})}
+  finally{loads.delete(data.token)}
+ })();
+};
+function render(data:Job){
  try{
   if(generation!==data.generation){
-   geometries.clear();partials.clear();retained.clear();raster=new BandRaster(data.grid);generation=data.generation;version='';
+   partials.clear();raster=new BandRaster(data.grid);generation=data.generation;version='';
   }
-  for(const band of data.bands)if(band.minutes%10===0||band.minutes===data.maxMinutes)for(const id of band.geometries)retained.add(id);
-  for(const addition of data.additions)geometries.set(addition.id,addition.geometry);
-  const bands:AreaBand[]=data.bands.map(b=>({minutes:b.minutes,geometries:b.geometries.map(id=>{
-   const geometry=geometries.get(id);if(!geometry)throw new Error('Missing contour');return geometry;
+  const bands:AreaBand[]=data.bands.map(b=>({minutes:b.minutes,geometries:b.allowances.flatMap(([id,minutes])=>{
+   const geometry=byStop.get(id)?.find(c=>c.minutes===minutes)?.geometry;return geometry?[geometry]:[];
   })}));
   if(version!==data.version){
    raster!.add(bands.filter(b=>b.minutes%10===0||b.minutes===data.maxMinutes));
@@ -21,12 +47,10 @@ self.onmessage=({data}:MessageEvent<Job>)=>{
    partials.set(data.cutoff,rasterBands(bands.filter(b=>b.minutes===data.cutoff),data.grid));
    while(partials.size>3)partials.delete(partials.keys().next().value!);
   }
-  // Partial-cutoff masks are bounded; their source geometry need not stay in memory.
-  for(const id of geometries.keys())if(!retained.has(id))geometries.delete(id);
   const pixels=paintBands(raster!.field,data.grid,data.maxMinutes,data.cutoff,partial?partials.get(data.cutoff):undefined);
   let x0=data.grid.width,y0=data.grid.height,x1=0,y1=0;
   for(let i=0;i<raster!.field.length;i++)if(pixels[i*4+3]){const x=i%data.grid.width,y=Math.floor(i/data.grid.width);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+1);y1=Math.max(y1,y+1);}
   const extent=x1>x0?[x0,y0,x1,y1]:undefined;
   (self as unknown as {postMessage(value:unknown,transfer:Transferable[]):void}).postMessage({version,view:data.view,cutoff:data.cutoff,width:data.grid.width,height:data.grid.height,pixels,extent,cachedCutoffs:[...partials.keys()]},[pixels.buffer]);
- }catch{version='';generation=-1;raster=undefined;geometries.clear();partials.clear();retained.clear();self.postMessage({version:data.version,view:data.view,error:true});}
+ }catch{version='';generation=-1;raster=undefined;partials.clear();self.postMessage({version:data.version,view:data.view,error:true});}
 };

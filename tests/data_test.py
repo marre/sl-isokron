@@ -103,6 +103,8 @@ class DataTests(unittest.TestCase):
             (area/'index.json').write_text(json.dumps(index))
             compile_feed(feed,w,out,date(2026,10,19),walking_areas=area)
             m=json.loads((out/'manifest.json').read_text());self.assertEqual(m['walkingAreas']['index'],{'a':0})
+            self.assertEqual(m['walkingAreas']['format'],'sliso-contours-v1')
+            self.assertTrue(m['walkingAreas']['files'][0]['url'].endswith('.bin'))
             self.assertTrue((out/m['walkingAreas']['files'][0]['url'].removeprefix('/data/')).exists())
             edges=json.loads((out/m['walks']['url'].removeprefix('/data/')).read_text());self.assertEqual(edges[0]['metres'],300)
             previous=(out/'manifest.json').read_bytes();index['stops'][0]['lat']+=.001;(area/'index.json').write_text(json.dumps(index))

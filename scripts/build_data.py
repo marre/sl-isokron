@@ -1,6 +1,7 @@
 """Compile a GTFS ZIP + audited walking index into immutable sliso packages.
 Mapped walking edges and explicitly labelled same-name access assumptions. Standard library only. See docs/data.md.
 """
+from contour_format import delivery_profiles, FORMAT
 import argparse
 import csv
 import hashlib
@@ -152,7 +153,7 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
         if not dest.exists():
             staging.rename(dest)
         manifest = dict(schema=2, version=version, **meta, trips=refs['trips.json'], days={d:[{**refs[n],'from':a,'until':b} for n,a,b in parts] for d,parts in day_files.items()}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
-        if areas: manifest['walkingAreas'] = dict(stepMinutes=1, index=areas['index'], files=[refs[n] for n in areas['files']], reviewed=False)
+        if areas: manifest['walkingAreas'] = dict(**({'format':areas['format']} if 'format' in areas else {}), stepMinutes=1, index=areas['index'], files=[refs[n] for n in areas['files']], reviewed=False)
         pending = output / '.manifest.tmp'
         pending.write_bytes(compact(manifest))
         os.replace(pending, output / 'manifest.json')
@@ -272,7 +273,7 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
         names = area_index['files']
         if any(Path(n).name != n or not n.startswith('areas-') or not n.endswith('.json') for n in names):
             raise ValueError('Invalid walking-area file name')
-        areas = dict(files={n:(area_root/n).read_bytes() for n in names}, index={s['id']:names.index(s['file']) for s in area_index['stops'] if s['id'] in stop_ids})
+        areas = dict(format=FORMAT, files={n.removesuffix('.json')+'.bin':delivery_profiles(json.loads((area_root/n).read_bytes())) for n in names}, index={s['id']:names.index(s['file']) for s in area_index['stops'] if s['id'] in stop_ids})
         for stop in stops: stop['walkingArea'] = stop['id'] in areas['index']
     expanded = []
     child_index = defaultdict(list)
