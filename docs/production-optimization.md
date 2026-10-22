@@ -46,3 +46,11 @@ previous production smoke retained about 233 MB). Worker heaps are excluded.
 The city and airport walking overlays painted successfully, a 91-minute cutoff
 reused loaded profiles without downloads, and the console had no application
 errors. These are desktop-browser measurements, not physical-phone benchmarks.
+
+The explicitly compressed shards total 215,187,587 bytes, compared with
+248,401,490 bytes for the native shards under comparable level-6 deflate
+compression (13.4% smaller; gzip headers add a small per-file overhead).
+The final compressed-delivery smoke measured 30.0 seconds to finish the first
+city viewport and 227 ms for a partial cutoff. Loading and composition therefore
+remain material costs; progressive paint and progress reporting are preserved.
+See [recorded integration measurements](production-optimization-results.json).

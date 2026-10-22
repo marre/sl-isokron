@@ -1,0 +1,51 @@
+{
+  "routing": {
+    "dataset": "sl-68186fa6a6b514ac3e25",
+    "measuredAt": "2026-10-22T21:25:59.988Z",
+    "cases": [
+      {
+        "origin": "Arlanda terminal 4",
+        "ms": 4579.23999,
+        "reachable": 7026,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      },
+      {
+        "origin": "Vallentuna",
+        "ms": 36626.022045000005,
+        "reachable": 9884,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      },
+      {
+        "origin": "Sk\u00e4rvik",
+        "ms": 22291.260295,
+        "reachable": 8294,
+        "allStopObjectivesEqual": true,
+        "allWalkingFrontiersEqual": true
+      }
+    ]
+  },
+  "browser": {
+    "dataset": "sl-40c8446978cb4fc009a6",
+    "note": "Desktop Chromium with mobile viewport, local verified real data, one unthrottled run. UI heap excludes worker heaps.",
+    "routing": "F\u00e4rdigt. 7025 h\u00e5llplatsl\u00e4gen n\u00e5s p\u00e5 h\u00f6gst 120 minuter. Ber\u00e4kning: 3406 ms.",
+    "cityReadyMs": 29962,
+    "mainHeapBytes": 41217776,
+    "partialCutoffMs": 227,
+    "extraCutoffDownloads": 0,
+    "downloads": 836,
+    "bytes": 53924408,
+    "cityPainted": true,
+    "airportPainted": true,
+    "errors": []
+  },
+  "contours": {
+    "shards": 7153,
+    "nativeBytes": 1002108719,
+    "fixedBytes": 389005152,
+    "fixedGzipBytes": 215187587,
+    "nativeDeflateBytes": 248401490,
+    "allCoordinatesRoundTrip": true
+  }
+}

@@ -1,0 +1,43 @@
+name: Migrate lossless contours
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the checksum-pinned existing release
+        run: python scripts/release_data.py fetch --output .data-build/migration/data
+      - name: Convert and verify every source contour without fetching GTFS or OSM
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from convert_contours import convert
+          from prune_data import prune
+          root = Path('.data-build/migration/data')
+          previous = json.loads((root/'manifest.json').read_text())['version']
+          convert(root)
+          os.utime(root/previous, None)
+          print('Retained:', prune(root, keep=2))
+          PY
+      - name: Package and checksum the static release
+        run: python scripts/release_data.py pack --root .data-build/migration/data --output .data-build/migration/sliso-data.zip --descriptor .data-build/migration/release.json --repository "$GITHUB_REPOSITORY"
+      - name: Publish the converted data and small descriptor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python -c "import json; print(json.load(open('.data-build/migration/release.json'))['version'])")
+          gh release create "data-$version" .data-build/migration/sliso-data.zip .data-build/migration/release.json --target "$GITHUB_SHA" --latest=false --title "sliso lossless contours $version" --notes 'Lossless fixed-point contour migration of the existing checksum-pinned release. Every coordinate verified. No GTFS request or OSM rebuild. Previous immutable version retained. CC0 / ODbL; provenance and limitations in data/README.md. Pin release.json separately after verifying the release.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: contour-release-descriptor
+          path: .data-build/migration/release.json
+          retention-days: 7
