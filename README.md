@@ -67,3 +67,5 @@ Cloudflare Workers Git-integration: bygg `npm run build`, deploy `npx wrangler d
 Bakgrundskartan använder OSM standardtiles som utbytbar pilotinställning. Granska aktuell användningspolicy innan pilot. `.env.example` visar konfigurationen; `VITE_TILE_URL=none` stänger av externa tiles utan att påverka sökningen. Typsnitt levereras med appen. Inga hemligheter får ligga i `VITE_`-variabler, delningslänkar eller apppaketet.
 
 Mätning på verklig feed med det partiella gångindexet finns i [benchmark-real-partial-walk.json](docs/benchmark-real-partial-walk.json). Mätning och reproduktion av den inkrementella gångrenderingen finns i [walking-render-performance.md](docs/walking-render-performance.md). Det är containerdata, inte fysisk mobilprestanda. [Datakällor och byggmetod](data/README.md) beskriver gångluckor, licenser och reproduktion. Bakgrundstiles är avsiktligt blockerade i automatiska webbläsartester.
+
+Jämförelse av binära gångprofiler, förberäknade raster och filstorlekar: [experiment och resultat](docs/walking-lab.md), med en [interaktiv prototyp](https://sliso.xr.se/lab/walking/).

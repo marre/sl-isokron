@@ -1,0 +1,1641 @@
+{
+  "dataset": "sl-68186fa6a6b514ac3e25",
+  "measuredAt": "2026-10-22T18:46:58.588Z",
+  "system": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "runtime": "v24.19.0",
+  "notes": [
+    "Offline build and Node CPU measurements; browser results recorded separately.",
+    "Existing native contours are the reference, not ground-truth pedestrian access.",
+    "Only selected viewports were built; no regional storage extrapolation.",
+    "Gzip sizes measured offline, not observed HTTP transfers.",
+    "Grid resolution is ground metres at latitude 59.335; airport/rural cells differ slightly."
+  ],
+  "cases": [
+    {
+      "id": "city",
+      "name": "Central Stockholm",
+      "query": {
+        "v": 1,
+        "stop": "9022001057310001",
+        "name": "Arlanda terminal 4",
+        "lat": 59.647775,
+        "lon": 17.928574,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "routingMs": 8125.3880070000005,
+      "profileFiles": 701,
+      "profiles": 1001,
+      "referencePixels": 375040,
+      "screen": {
+        "width": 640,
+        "height": 586,
+        "bounds": [
+          18.015,
+          59.313,
+          18.105,
+          59.355
+        ]
+      },
+      "currentShards": {
+        "rawBytes": 79456566,
+        "gzipBytes": 19361463
+      },
+      "variants": [
+        {
+          "id": "native",
+          "name": "Current contours",
+          "rawBytes": 79455840,
+          "gzipBytes": 19198118,
+          "decode": {
+            "medianMs": 1508.34,
+            "minMs": 1094.59,
+            "maxMs": 2483.57,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 335.58,
+            "minMs": 312.7,
+            "maxMs": 382.62,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 355897,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "packed",
+          "name": "Packed Float64 contours",
+          "rawBytes": 59703816,
+          "gzipBytes": 33666546,
+          "decode": {
+            "medianMs": 22.66,
+            "minMs": 17.08,
+            "maxMs": 160.4,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 295.42,
+            "minMs": 284.4,
+            "maxMs": 322.86,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 355897,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "grid-10",
+          "name": "10 m membership tiles",
+          "resolution": 10,
+          "rawBytes": 73848028,
+          "gzipBytes": 21812095,
+          "offlineMs": 8436,
+          "decodedRunBytes": 73158636,
+          "nonNested": {
+            "cells": 48229,
+            "coveredCells": 38105550,
+            "profiles": 750
+          },
+          "decode": {
+            "medianMs": 5.92,
+            "minMs": 5.03,
+            "maxMs": 7.9,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 225.28,
+            "minMs": 221.66,
+            "maxMs": 225.42,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 3248,
+            "gained": 302,
+            "lost": 255,
+            "bandChanged": 2691,
+            "union": 356199,
+            "changedPctOfCoveredUnion": 0.912,
+            "coverageIoU": 0.99844
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 576,
+            "height": 512,
+            "bounds": [
+              18.013595286346284,
+              59.312259594437656,
+              18.115048576444607,
+              59.35825298174698
+            ]
+          }
+        },
+        {
+          "id": "grid-20",
+          "name": "20 m membership tiles",
+          "resolution": 20,
+          "rawBytes": 39782208,
+          "gzipBytes": 11457607,
+          "offlineMs": 4842,
+          "decodedRunBytes": 39477288,
+          "nonNested": {
+            "cells": 16204,
+            "coveredCells": 11388608,
+            "profiles": 806
+          },
+          "decode": {
+            "medianMs": 3.09,
+            "minMs": 2.76,
+            "maxMs": 4.64,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 103.78,
+            "minMs": 98.91,
+            "maxMs": 112.66,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 6291,
+            "gained": 539,
+            "lost": 578,
+            "bandChanged": 5174,
+            "union": 356436,
+            "changedPctOfCoveredUnion": 1.765,
+            "coverageIoU": 0.99687
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 320,
+            "height": 320,
+            "bounds": [
+              18.013595286346284,
+              59.30650604196569,
+              18.126321164233307,
+              59.36399777770389
+            ]
+          }
+        },
+        {
+          "id": "earliest-20",
+          "name": "20 m earliest-minute tiles",
+          "rawBytes": 39740760,
+          "gzipBytes": 11429234,
+          "decode": {
+            "medianMs": 3.28,
+            "minMs": 2.87,
+            "maxMs": 132.07,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 118.76,
+            "minMs": 111.97,
+            "maxMs": 130.63,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 6293,
+            "gained": 557,
+            "lost": 561,
+            "bandChanged": 5175,
+            "union": 356454,
+            "changedPctOfCoveredUnion": 1.765,
+            "coverageIoU": 0.99686
+          },
+          "membershipLoss": {
+            "changed": 12,
+            "gained": 6,
+            "lost": 0,
+            "bandChanged": 6,
+            "union": 91439,
+            "changedPctOfCoveredUnion": 0.013,
+            "coverageIoU": 0.99993
+          },
+          "grid": {
+            "width": 320,
+            "height": 320,
+            "bounds": [
+              18.013595286346284,
+              59.30650604196569,
+              18.126321164233307,
+              59.36399777770389
+            ]
+          }
+        },
+        {
+          "id": "grid-40",
+          "name": "40 m membership tiles",
+          "resolution": 40,
+          "rawBytes": 21640760,
+          "gzipBytes": 5737309,
+          "offlineMs": 2418,
+          "decodedRunBytes": 21474240,
+          "nonNested": {
+            "cells": 5429,
+            "coveredCells": 3569477,
+            "profiles": 821
+          },
+          "decode": {
+            "medianMs": 3.18,
+            "minMs": 1.9,
+            "maxMs": 10.16,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 76.67,
+            "minMs": 59.1,
+            "maxMs": 92.9,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 11997,
+            "gained": 1132,
+            "lost": 994,
+            "bandChanged": 9871,
+            "union": 357029,
+            "changedPctOfCoveredUnion": 3.36,
+            "coverageIoU": 0.99405
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 192,
+            "height": 192,
+            "bounds": [
+              17.991050110768878,
+              59.30650604196569,
+              18.126321164233307,
+              59.37548445248833
+            ]
+          }
+        },
+        {
+          "id": "fixed",
+          "name": "Lossless fixed-point contours",
+          "rawBytes": 31288296,
+          "gzipBytes": 18180148,
+          "decode": {
+            "medianMs": 22.5,
+            "minMs": 20.68,
+            "maxMs": 207.56,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 368.16,
+            "minMs": 352.52,
+            "maxMs": 423.5,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 355897,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          },
+          "float64FallbackContours": 0
+        }
+      ],
+      "cutoffs": {
+        "60": {
+          "grid-10": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 0,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          },
+          "grid-20": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 0,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          },
+          "grid-40": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 0,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        "91": {
+          "grid-10": {
+            "changed": 1359,
+            "gained": 410,
+            "lost": 389,
+            "bandChanged": 560,
+            "union": 41201,
+            "changedPctOfCoveredUnion": 3.298,
+            "coverageIoU": 0.98061
+          },
+          "grid-20": {
+            "changed": 2592,
+            "gained": 751,
+            "lost": 728,
+            "bandChanged": 1113,
+            "union": 41542,
+            "changedPctOfCoveredUnion": 6.239,
+            "coverageIoU": 0.9644
+          },
+          "grid-40": {
+            "changed": 5014,
+            "gained": 1595,
+            "lost": 1361,
+            "bandChanged": 2058,
+            "union": 42386,
+            "changedPctOfCoveredUnion": 11.829,
+            "coverageIoU": 0.93026
+          }
+        },
+        "120": {
+          "grid-10": {
+            "changed": 3248,
+            "gained": 302,
+            "lost": 255,
+            "bandChanged": 2691,
+            "union": 356199,
+            "changedPctOfCoveredUnion": 0.912,
+            "coverageIoU": 0.99844
+          },
+          "grid-20": {
+            "changed": 6291,
+            "gained": 539,
+            "lost": 578,
+            "bandChanged": 5174,
+            "union": 356436,
+            "changedPctOfCoveredUnion": 1.765,
+            "coverageIoU": 0.99687
+          },
+          "grid-40": {
+            "changed": 11997,
+            "gained": 1132,
+            "lost": 994,
+            "bandChanged": 9871,
+            "union": 357029,
+            "changedPctOfCoveredUnion": 3.36,
+            "coverageIoU": 0.99405
+          }
+        }
+      },
+      "bundles": [
+        {
+          "targetKiB": 64,
+          "files": 218,
+          "gzipBytes": 10851381,
+          "largestGzipBytes": 57423,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 128,
+          "files": 114,
+          "gzipBytes": 10775983,
+          "largestGzipBytes": 114125,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 256,
+          "files": 63,
+          "gzipBytes": 10741839,
+          "largestGzipBytes": 223483,
+          "oversizedFiles": 0
+        }
+      ],
+      "spatialTiles": 25
+    },
+    {
+      "id": "airport",
+      "name": "Arlanda / SkyCity",
+      "query": {
+        "v": 1,
+        "stop": "9022001057310001",
+        "name": "Arlanda terminal 4",
+        "lat": 59.647775,
+        "lon": 17.928574,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "routingMs": 8125.3880070000005,
+      "profileFiles": 55,
+      "profiles": 71,
+      "referencePixels": 472960,
+      "screen": {
+        "width": 640,
+        "height": 739,
+        "bounds": [
+          17.9,
+          59.63,
+          17.96,
+          59.665
+        ]
+      },
+      "currentShards": {
+        "rawBytes": 7630784,
+        "gzipBytes": 1854932
+      },
+      "variants": [
+        {
+          "id": "native",
+          "name": "Current contours",
+          "rawBytes": 7630728,
+          "gzipBytes": 1842723,
+          "decode": {
+            "medianMs": 63.21,
+            "minMs": 50.86,
+            "maxMs": 73.39,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 70.06,
+            "minMs": 66.31,
+            "maxMs": 76.68,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 148477,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "packed",
+          "name": "Packed Float64 contours",
+          "rawBytes": 5703896,
+          "gzipBytes": 3265192,
+          "decode": {
+            "medianMs": 1.38,
+            "minMs": 0.98,
+            "maxMs": 1.76,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 64.3,
+            "minMs": 60.86,
+            "maxMs": 74.49,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 148477,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "grid-10",
+          "name": "10 m membership tiles",
+          "resolution": 10,
+          "rawBytes": 1608116,
+          "gzipBytes": 465399,
+          "offlineMs": 572,
+          "decodedRunBytes": 1592148,
+          "nonNested": {
+            "cells": 3957,
+            "coveredCells": 457181,
+            "profiles": 39
+          },
+          "decode": {
+            "medianMs": 0.14,
+            "minMs": 0.11,
+            "maxMs": 0.3,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 11.09,
+            "minMs": 9.84,
+            "maxMs": 17.63,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 6240,
+            "gained": 858,
+            "lost": 974,
+            "bandChanged": 4408,
+            "union": 149335,
+            "changedPctOfCoveredUnion": 4.179,
+            "coverageIoU": 0.98773
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 448,
+            "height": 448,
+            "bounds": [
+              17.889596820670562,
+              59.62720895109405,
+              17.968504935191476,
+              59.667083099448305
+            ]
+          }
+        },
+        {
+          "id": "grid-20",
+          "name": "20 m membership tiles",
+          "resolution": 20,
+          "rawBytes": 817752,
+          "gzipBytes": 227215,
+          "offlineMs": 304,
+          "decodedRunBytes": 809184,
+          "nonNested": {
+            "cells": 1128,
+            "coveredCells": 156619,
+            "profiles": 44
+          },
+          "decode": {
+            "medianMs": 0.06,
+            "minMs": 0.06,
+            "maxMs": 0.31,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 6.84,
+            "minMs": 6.3,
+            "maxMs": 9.44,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 11141,
+            "gained": 1366,
+            "lost": 1996,
+            "bandChanged": 7779,
+            "union": 149843,
+            "changedPctOfCoveredUnion": 7.435,
+            "coverageIoU": 0.97756
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 256,
+            "height": 256,
+            "bounds": [
+              17.878324232881855,
+              59.62720895109405,
+              17.968504935191476,
+              59.67277553861738
+            ]
+          }
+        },
+        {
+          "id": "earliest-20",
+          "name": "20 m earliest-minute tiles",
+          "rawBytes": 814956,
+          "gzipBytes": 224912,
+          "decode": {
+            "medianMs": 0.07,
+            "minMs": 0.05,
+            "maxMs": 0.37,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 7.12,
+            "minMs": 6.41,
+            "maxMs": 8.32,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 11167,
+            "gained": 1418,
+            "lost": 1956,
+            "bandChanged": 7793,
+            "union": 149895,
+            "changedPctOfCoveredUnion": 7.45,
+            "coverageIoU": 0.97749
+          },
+          "membershipLoss": {
+            "changed": 41,
+            "gained": 6,
+            "lost": 0,
+            "bandChanged": 35,
+            "union": 15600,
+            "changedPctOfCoveredUnion": 0.263,
+            "coverageIoU": 0.99962
+          },
+          "grid": {
+            "width": 256,
+            "height": 256,
+            "bounds": [
+              17.878324232881855,
+              59.62720895109405,
+              17.968504935191476,
+              59.67277553861738
+            ]
+          }
+        },
+        {
+          "id": "grid-40",
+          "name": "40 m membership tiles",
+          "resolution": 40,
+          "rawBytes": 515316,
+          "gzipBytes": 133560,
+          "offlineMs": 239,
+          "decodedRunBytes": 508452,
+          "nonNested": {
+            "cells": 492,
+            "coveredCells": 67319,
+            "profiles": 54
+          },
+          "decode": {
+            "medianMs": 0.06,
+            "minMs": 0.05,
+            "maxMs": 0.14,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 4.77,
+            "minMs": 4.66,
+            "maxMs": 5.12,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 19927,
+            "gained": 3635,
+            "lost": 3166,
+            "bandChanged": 13126,
+            "union": 152112,
+            "changedPctOfCoveredUnion": 13.1,
+            "coverageIoU": 0.95529
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 192,
+            "height": 128,
+            "bounds": [
+              17.855779057304453,
+              59.62720895109405,
+              17.991050110768878,
+              59.67277553861738
+            ]
+          }
+        },
+        {
+          "id": "fixed",
+          "name": "Lossless fixed-point contours",
+          "rawBytes": 2959984,
+          "gzipBytes": 1751544,
+          "decode": {
+            "medianMs": 1.22,
+            "minMs": 0.91,
+            "maxMs": 2.39,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 77,
+            "minMs": 73.92,
+            "maxMs": 83.03,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 148477,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          },
+          "float64FallbackContours": 0
+        }
+      ],
+      "cutoffs": {
+        "60": {
+          "grid-10": {
+            "changed": 5814,
+            "gained": 835,
+            "lost": 955,
+            "bandChanged": 4024,
+            "union": 147870,
+            "changedPctOfCoveredUnion": 3.932,
+            "coverageIoU": 0.98789
+          },
+          "grid-20": {
+            "changed": 10500,
+            "gained": 1395,
+            "lost": 1964,
+            "bandChanged": 7141,
+            "union": 148430,
+            "changedPctOfCoveredUnion": 7.074,
+            "coverageIoU": 0.97737
+          },
+          "grid-40": {
+            "changed": 19228,
+            "gained": 3896,
+            "lost": 2884,
+            "bandChanged": 12448,
+            "union": 150931,
+            "changedPctOfCoveredUnion": 12.74,
+            "coverageIoU": 0.95508
+          }
+        },
+        "91": {
+          "grid-10": {
+            "changed": 6240,
+            "gained": 858,
+            "lost": 974,
+            "bandChanged": 4408,
+            "union": 149335,
+            "changedPctOfCoveredUnion": 4.179,
+            "coverageIoU": 0.98773
+          },
+          "grid-20": {
+            "changed": 11141,
+            "gained": 1366,
+            "lost": 1996,
+            "bandChanged": 7779,
+            "union": 149843,
+            "changedPctOfCoveredUnion": 7.435,
+            "coverageIoU": 0.97756
+          },
+          "grid-40": {
+            "changed": 19927,
+            "gained": 3635,
+            "lost": 3166,
+            "bandChanged": 13126,
+            "union": 152112,
+            "changedPctOfCoveredUnion": 13.1,
+            "coverageIoU": 0.95529
+          }
+        },
+        "120": {
+          "grid-10": {
+            "changed": 6240,
+            "gained": 858,
+            "lost": 974,
+            "bandChanged": 4408,
+            "union": 149335,
+            "changedPctOfCoveredUnion": 4.179,
+            "coverageIoU": 0.98773
+          },
+          "grid-20": {
+            "changed": 11141,
+            "gained": 1366,
+            "lost": 1996,
+            "bandChanged": 7779,
+            "union": 149843,
+            "changedPctOfCoveredUnion": 7.435,
+            "coverageIoU": 0.97756
+          },
+          "grid-40": {
+            "changed": 19927,
+            "gained": 3635,
+            "lost": 3166,
+            "bandChanged": 13126,
+            "union": 152112,
+            "changedPctOfCoveredUnion": 13.1,
+            "coverageIoU": 0.95529
+          }
+        }
+      },
+      "bundles": [
+        {
+          "targetKiB": 64,
+          "files": 11,
+          "gzipBytes": 226684,
+          "largestGzipBytes": 52683,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 128,
+          "files": 10,
+          "gzipBytes": 226359,
+          "largestGzipBytes": 78095,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 256,
+          "files": 10,
+          "gzipBytes": 226359,
+          "largestGzipBytes": 78095,
+          "oversizedFiles": 0
+        }
+      ],
+      "spatialTiles": 10
+    },
+    {
+      "id": "rural",
+      "name": "Lindholmen",
+      "query": {
+        "v": 1,
+        "stop": "9022001007361002",
+        "name": "Vallentuna",
+        "lat": 59.533801,
+        "lon": 18.079881,
+        "date": "2026-10-22",
+        "time": "08:07",
+        "maxMinutes": 120,
+        "walkMinutes": 30,
+        "maxTransfers": 4,
+        "windowMinutes": 30,
+        "modes": [
+          "bus",
+          "metro",
+          "rail",
+          "tram",
+          "boat"
+        ]
+      },
+      "routingMs": 60004.443923000006,
+      "profileFiles": 24,
+      "profiles": 33,
+      "referencePixels": 550400,
+      "screen": {
+        "width": 640,
+        "height": 860,
+        "bounds": [
+          18.085,
+          59.572,
+          18.135,
+          59.606
+        ]
+      },
+      "currentShards": {
+        "rawBytes": 4157762,
+        "gzipBytes": 1024347
+      },
+      "variants": [
+        {
+          "id": "native",
+          "name": "Current contours",
+          "rawBytes": 4157739,
+          "gzipBytes": 1019349,
+          "decode": {
+            "medianMs": 28.71,
+            "minMs": 27.21,
+            "maxMs": 46.1,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 54.97,
+            "minMs": 49.83,
+            "maxMs": 61.66,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 337071,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "packed",
+          "name": "Packed Float64 contours",
+          "rawBytes": 3094584,
+          "gzipBytes": 1810751,
+          "decode": {
+            "medianMs": 0.6,
+            "minMs": 0.41,
+            "maxMs": 1.21,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 49.8,
+            "minMs": 46.06,
+            "maxMs": 70.21,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 337071,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          }
+        },
+        {
+          "id": "grid-10",
+          "name": "10 m membership tiles",
+          "resolution": 10,
+          "rawBytes": 2989396,
+          "gzipBytes": 868562,
+          "offlineMs": 327,
+          "decodedRunBytes": 2967084,
+          "nonNested": {
+            "cells": 7850,
+            "coveredCells": 827214,
+            "profiles": 29
+          },
+          "decode": {
+            "medianMs": 0.25,
+            "minMs": 0.14,
+            "maxMs": 0.37,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 18.13,
+            "minMs": 15.03,
+            "maxMs": 19.45,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 15323,
+            "gained": 2119,
+            "lost": 2213,
+            "bandChanged": 10991,
+            "union": 339190,
+            "changedPctOfCoveredUnion": 4.518,
+            "coverageIoU": 0.98723
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 320,
+            "height": 448,
+            "bounds": [
+              18.0812308130785,
+              59.5701636375706,
+              18.137593752022006,
+              59.61010552041756
+            ]
+          }
+        },
+        {
+          "id": "grid-20",
+          "name": "20 m membership tiles",
+          "resolution": 20,
+          "rawBytes": 1249696,
+          "gzipBytes": 356865,
+          "offlineMs": 206,
+          "decodedRunBytes": 1239600,
+          "nonNested": {
+            "cells": 2072,
+            "coveredCells": 226690,
+            "profiles": 28
+          },
+          "decode": {
+            "medianMs": 0.17,
+            "minMs": 0.08,
+            "maxMs": 0.28,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 8.51,
+            "minMs": 7.98,
+            "maxMs": 11.14,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 27546,
+            "gained": 4367,
+            "lost": 3997,
+            "bandChanged": 19182,
+            "union": 341438,
+            "changedPctOfCoveredUnion": 8.068,
+            "coverageIoU": 0.9755
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 192,
+            "height": 256,
+            "bounds": [
+              18.0812308130785,
+              59.5701636375706,
+              18.148866339810713,
+              59.615807631630084
+            ]
+          }
+        },
+        {
+          "id": "earliest-20",
+          "name": "20 m earliest-minute tiles",
+          "rawBytes": 1244116,
+          "gzipBytes": 352748,
+          "decode": {
+            "medianMs": 0.07,
+            "minMs": 0.06,
+            "maxMs": 0.18,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 9.24,
+            "minMs": 8.89,
+            "maxMs": 13.27,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 27668,
+            "gained": 4520,
+            "lost": 3894,
+            "bandChanged": 19254,
+            "union": 341591,
+            "changedPctOfCoveredUnion": 8.1,
+            "coverageIoU": 0.97537
+          },
+          "membershipLoss": {
+            "changed": 47,
+            "gained": 13,
+            "lost": 0,
+            "bandChanged": 34,
+            "union": 22122,
+            "changedPctOfCoveredUnion": 0.212,
+            "coverageIoU": 0.99941
+          },
+          "grid": {
+            "width": 192,
+            "height": 256,
+            "bounds": [
+              18.0812308130785,
+              59.5701636375706,
+              18.148866339810713,
+              59.615807631630084
+            ]
+          }
+        },
+        {
+          "id": "grid-40",
+          "name": "40 m membership tiles",
+          "resolution": 40,
+          "rawBytes": 594268,
+          "gzipBytes": 146079,
+          "offlineMs": 121,
+          "decodedRunBytes": 588612,
+          "nonNested": {
+            "cells": 683,
+            "coveredCells": 74052,
+            "profiles": 33
+          },
+          "decode": {
+            "medianMs": 0.05,
+            "minMs": 0.04,
+            "maxMs": 0.32,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 6.04,
+            "minMs": 5.78,
+            "maxMs": 6.52,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 47678,
+            "gained": 7877,
+            "lost": 7838,
+            "bandChanged": 31963,
+            "union": 344948,
+            "changedPctOfCoveredUnion": 13.822,
+            "coverageIoU": 0.95444
+          },
+          "sameGridExact": true,
+          "grid": {
+            "width": 128,
+            "height": 192,
+            "bounds": [
+              18.0812308130785,
+              59.558742955696964,
+              18.17141151538812,
+              59.62720895109405
+            ]
+          }
+        },
+        {
+          "id": "fixed",
+          "name": "Lossless fixed-point contours",
+          "rawBytes": 1594208,
+          "gzipBytes": 964295,
+          "decode": {
+            "medianMs": 0.81,
+            "minMs": 0.52,
+            "maxMs": 1.49,
+            "runs": 5
+          },
+          "compose": {
+            "medianMs": 60.59,
+            "minMs": 58.45,
+            "maxMs": 68.5,
+            "runs": 5
+          },
+          "accuracy": {
+            "changed": 0,
+            "gained": 0,
+            "lost": 0,
+            "bandChanged": 0,
+            "union": 337071,
+            "changedPctOfCoveredUnion": 0,
+            "coverageIoU": 1
+          },
+          "float64FallbackContours": 0
+        }
+      ],
+      "cutoffs": {
+        "60": {
+          "grid-10": {
+            "changed": 8230,
+            "gained": 1669,
+            "lost": 1698,
+            "bandChanged": 4863,
+            "union": 260614,
+            "changedPctOfCoveredUnion": 3.158,
+            "coverageIoU": 0.98708
+          },
+          "grid-20": {
+            "changed": 15501,
+            "gained": 3428,
+            "lost": 3406,
+            "bandChanged": 8667,
+            "union": 262373,
+            "changedPctOfCoveredUnion": 5.908,
+            "coverageIoU": 0.97395
+          },
+          "grid-40": {
+            "changed": 28516,
+            "gained": 6040,
+            "lost": 7407,
+            "bandChanged": 15069,
+            "union": 264985,
+            "changedPctOfCoveredUnion": 10.761,
+            "coverageIoU": 0.94925
+          }
+        },
+        "91": {
+          "grid-10": {
+            "changed": 15323,
+            "gained": 2119,
+            "lost": 2213,
+            "bandChanged": 10991,
+            "union": 339190,
+            "changedPctOfCoveredUnion": 4.518,
+            "coverageIoU": 0.98723
+          },
+          "grid-20": {
+            "changed": 27546,
+            "gained": 4367,
+            "lost": 3997,
+            "bandChanged": 19182,
+            "union": 341438,
+            "changedPctOfCoveredUnion": 8.068,
+            "coverageIoU": 0.9755
+          },
+          "grid-40": {
+            "changed": 47678,
+            "gained": 7877,
+            "lost": 7838,
+            "bandChanged": 31963,
+            "union": 344948,
+            "changedPctOfCoveredUnion": 13.822,
+            "coverageIoU": 0.95444
+          }
+        },
+        "120": {
+          "grid-10": {
+            "changed": 15323,
+            "gained": 2119,
+            "lost": 2213,
+            "bandChanged": 10991,
+            "union": 339190,
+            "changedPctOfCoveredUnion": 4.518,
+            "coverageIoU": 0.98723
+          },
+          "grid-20": {
+            "changed": 27546,
+            "gained": 4367,
+            "lost": 3997,
+            "bandChanged": 19182,
+            "union": 341438,
+            "changedPctOfCoveredUnion": 8.068,
+            "coverageIoU": 0.9755
+          },
+          "grid-40": {
+            "changed": 47678,
+            "gained": 7877,
+            "lost": 7838,
+            "bandChanged": 31963,
+            "union": 344948,
+            "changedPctOfCoveredUnion": 13.822,
+            "coverageIoU": 0.95444
+          }
+        }
+      },
+      "bundles": [
+        {
+          "targetKiB": 64,
+          "files": 13,
+          "gzipBytes": 324524,
+          "largestGzipBytes": 54242,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 128,
+          "files": 12,
+          "gzipBytes": 324231,
+          "largestGzipBytes": 64122,
+          "oversizedFiles": 0
+        },
+        {
+          "targetKiB": 256,
+          "files": 12,
+          "gzipBytes": 324231,
+          "largestGzipBytes": 64122,
+          "oversizedFiles": 0
+        }
+      ],
+      "spatialTiles": 12
+    }
+  ],
+  "browser": {
+    "engine": "Chromium desktop CPU, mobile viewport 390×844; no CPU/network throttling",
+    "memory": "Isolated decoded representation after GC: JS heap plus ArrayBuffer backing storage, excluding browser/native/GPU memory. This is not production tab peak memory.",
+    "cases": [
+      {
+        "id": "city",
+        "variants": [
+          {
+            "id": "native",
+            "decodeMs": 1120.0999999940395,
+            "composeMs": 248.20000000298023,
+            "composeSamplesMs": [
+              229.70000000298023,
+              242.5,
+              248.20000000298023,
+              267.59999999403954,
+              466.40000000596046
+            ],
+            "cutoff91Ms": 12.400000005960464,
+            "fieldHash": "3cfa9a75d9a0ca1c96dfbce113cf3c69d69e10de553d3fb464a324df69723bb8",
+            "retainedHeapBytes": 162694608,
+            "retainedArrayBufferBytes": 7
+          },
+          {
+            "id": "packed",
+            "decodeMs": 49.099999994039536,
+            "composeMs": 217.79999999701977,
+            "composeSamplesMs": [
+              209.90000000596046,
+              212.3999999910593,
+              217.79999999701977,
+              233.70000000298023,
+              266.79999999701977
+            ],
+            "cutoff91Ms": 14.799999997019768,
+            "fieldHash": "3cfa9a75d9a0ca1c96dfbce113cf3c69d69e10de553d3fb464a324df69723bb8",
+            "retainedHeapBytes": 7162412,
+            "retainedArrayBufferBytes": 59703823
+          },
+          {
+            "id": "fixed",
+            "decodeMs": 47.79999999701977,
+            "composeMs": 209.3999999910593,
+            "composeSamplesMs": [
+              198.8999999910593,
+              208.79999999701977,
+              209.3999999910593,
+              213.30000001192093,
+              292.90000000596046
+            ],
+            "cutoff91Ms": 11.900000005960464,
+            "fieldHash": "3cfa9a75d9a0ca1c96dfbce113cf3c69d69e10de553d3fb464a324df69723bb8",
+            "retainedHeapBytes": 7162404,
+            "retainedArrayBufferBytes": 31288303
+          },
+          {
+            "id": "grid-10",
+            "decodeMs": 23,
+            "composeMs": 274.3999999910593,
+            "composeSamplesMs": [
+              255.5,
+              273.6000000089407,
+              274.3999999910593,
+              282.59999999403954,
+              302.3999999910593
+            ],
+            "cutoff91Ms": 78.8999999910593,
+            "fieldHash": "ea26b0ece926af10d178a591fc496b0c870a22a629fed150d2ba5aaa2283b1f9",
+            "retainedHeapBytes": 1483712,
+            "retainedArrayBufferBytes": 73848035
+          },
+          {
+            "id": "grid-20",
+            "decodeMs": 13.799999997019768,
+            "composeMs": 125.69999998807907,
+            "composeSamplesMs": [
+              120,
+              125.29999999701977,
+              125.69999998807907,
+              135.5,
+              177.40000000596046
+            ],
+            "cutoff91Ms": 40.099999994039536,
+            "fieldHash": "c0e46aa37a44c3edbe99c22aca0854b247ceec7cdeb506ce9adb86ed25a94a74",
+            "retainedHeapBytes": 741840,
+            "retainedArrayBufferBytes": 39782215
+          },
+          {
+            "id": "grid-40",
+            "decodeMs": 6.5,
+            "composeMs": 68.90000000596046,
+            "composeSamplesMs": [
+              66.29999999701977,
+              68.20000000298023,
+              68.90000000596046,
+              80.20000000298023,
+              126.6000000089407
+            ],
+            "cutoff91Ms": 34.099999994039536,
+            "fieldHash": "bffe01146ff2304a5d17c6d913b43ff8abb27641f7fa23427bc3aaa866ca642b",
+            "retainedHeapBytes": 466980,
+            "retainedArrayBufferBytes": 21640767
+          },
+          {
+            "id": "earliest-20",
+            "decodeMs": 12.700000002980232,
+            "composeMs": 208.90000000596046,
+            "composeSamplesMs": [
+              173.40000000596046,
+              192.19999998807907,
+              208.90000000596046,
+              210.8999999910593,
+              212.5
+            ],
+            "cutoff91Ms": 80,
+            "fieldHash": "5afc4a720023de044e264994715665e8e44bee61dd1b2b51fead7d3b7e21421c",
+            "retainedHeapBytes": 750844,
+            "retainedArrayBufferBytes": 39740767
+          }
+        ]
+      },
+      {
+        "id": "airport",
+        "variants": [
+          {
+            "id": "native",
+            "decodeMs": 225.20000000298023,
+            "composeMs": 81.5,
+            "composeSamplesMs": [
+              74.79999999701977,
+              80.90000000596046,
+              81.5,
+              179.20000000298023,
+              221.59999999403954
+            ],
+            "cutoff91Ms": 37,
+            "fieldHash": "e0eab26555b741e7343baee0f54622d8bca0c423d2a80027cb27bb3089a61a9c",
+            "retainedHeapBytes": 15759944,
+            "retainedArrayBufferBytes": 7
+          },
+          {
+            "id": "packed",
+            "decodeMs": 4.5,
+            "composeMs": 115.5,
+            "composeSamplesMs": [
+              101.1000000089407,
+              105,
+              115.5,
+              189.79999999701977,
+              220.59999999403954
+            ],
+            "cutoff91Ms": 43,
+            "fieldHash": "e0eab26555b741e7343baee0f54622d8bca0c423d2a80027cb27bb3089a61a9c",
+            "retainedHeapBytes": 623056,
+            "retainedArrayBufferBytes": 5703903
+          },
+          {
+            "id": "fixed",
+            "decodeMs": 13,
+            "composeMs": 85.29999999701977,
+            "composeSamplesMs": [
+              63.29999999701977,
+              68.70000000298023,
+              85.29999999701977,
+              127.80000001192093,
+              143.70000000298023
+            ],
+            "cutoff91Ms": 37,
+            "fieldHash": "e0eab26555b741e7343baee0f54622d8bca0c423d2a80027cb27bb3089a61a9c",
+            "retainedHeapBytes": 624832,
+            "retainedArrayBufferBytes": 2959991
+          },
+          {
+            "id": "grid-10",
+            "decodeMs": 0.9000000059604645,
+            "composeMs": 18.099999994039536,
+            "composeSamplesMs": [
+              14.799999997019768,
+              15.700000002980232,
+              18.099999994039536,
+              26.600000008940697,
+              76.59999999403954
+            ],
+            "cutoff91Ms": 22.200000002980232,
+            "fieldHash": "2dbea87f5b0eb3b288f483698b9c432eab3bc20e5feb19b6e7cb45345ee08e7c",
+            "retainedHeapBytes": 135120,
+            "retainedArrayBufferBytes": 1608123
+          },
+          {
+            "id": "grid-20",
+            "decodeMs": 0.7999999970197678,
+            "composeMs": 15.700000002980232,
+            "composeSamplesMs": [
+              8.299999997019768,
+              9.299999997019768,
+              15.700000002980232,
+              18.100000008940697,
+              70.70000000298023
+            ],
+            "cutoff91Ms": 15.5,
+            "fieldHash": "83bdb48a1c3a546d84bcbfeb24d806fe8ffb014c080240de18c283a5d67ca5f9",
+            "retainedHeapBytes": 134324,
+            "retainedArrayBufferBytes": 817759
+          },
+          {
+            "id": "grid-40",
+            "decodeMs": 2.2999999970197678,
+            "composeMs": 13,
+            "composeSamplesMs": [
+              9.100000008940697,
+              12.799999997019768,
+              13,
+              16.200000002980232,
+              42.20000000298023
+            ],
+            "cutoff91Ms": 22.200000002980232,
+            "fieldHash": "d5e1f0bfb54837672c3e46037873c0edb2c4d9c1e9c8aea3fb4060f5973f67c3",
+            "retainedHeapBytes": 116576,
+            "retainedArrayBufferBytes": 515323
+          },
+          {
+            "id": "earliest-20",
+            "decodeMs": 0.7999999970197678,
+            "composeMs": 14.399999991059303,
+            "composeSamplesMs": [
+              12.800000011920929,
+              13.399999991059303,
+              14.399999991059303,
+              16.100000008940697,
+              45.79999999701977
+            ],
+            "cutoff91Ms": 46.099999994039536,
+            "fieldHash": "9bb9c3e98d1ea81a5e13a00b474f8102ef783a128d979a699835c65a3bb316a6",
+            "retainedHeapBytes": 129388,
+            "retainedArrayBufferBytes": 814963
+          }
+        ]
+      },
+      {
+        "id": "rural",
+        "variants": [
+          {
+            "id": "native",
+            "decodeMs": 267.40000000596046,
+            "composeMs": 104,
+            "composeSamplesMs": [
+              93.8999999910593,
+              100.70000000298023,
+              104,
+              149.70000000298023,
+              317.29999999701977
+            ],
+            "cutoff91Ms": 59.20000000298023,
+            "fieldHash": "46e2ed9316770407bb59cf8e1e8ae8be696751786f2885f7de109e8f374cd899",
+            "retainedHeapBytes": 8582476,
+            "retainedArrayBufferBytes": 7
+          },
+          {
+            "id": "packed",
+            "decodeMs": 2.7999999970197678,
+            "composeMs": 102.6000000089407,
+            "composeSamplesMs": [
+              68.79999999701977,
+              71.29999999701977,
+              102.6000000089407,
+              112.5,
+              120.79999999701977
+            ],
+            "cutoff91Ms": 39.3999999910593,
+            "fieldHash": "46e2ed9316770407bb59cf8e1e8ae8be696751786f2885f7de109e8f374cd899",
+            "retainedHeapBytes": 355240,
+            "retainedArrayBufferBytes": 3094591
+          },
+          {
+            "id": "fixed",
+            "decodeMs": 10.700000002980232,
+            "composeMs": 97.29999999701977,
+            "composeSamplesMs": [
+              67.59999999403954,
+              80,
+              97.29999999701977,
+              112.80000001192093,
+              161.79999999701977
+            ],
+            "cutoff91Ms": 26.299999997019768,
+            "fieldHash": "46e2ed9316770407bb59cf8e1e8ae8be696751786f2885f7de109e8f374cd899",
+            "retainedHeapBytes": 355688,
+            "retainedArrayBufferBytes": 1594215
+          },
+          {
+            "id": "grid-10",
+            "decodeMs": 0.5,
+            "composeMs": 30.799999997019768,
+            "composeSamplesMs": [
+              16.899999991059303,
+              30.200000002980232,
+              30.799999997019768,
+              33.400000005960464,
+              64.70000000298023
+            ],
+            "cutoff91Ms": 54.900000005960464,
+            "fieldHash": "9ada1561200eefa07eede505d44d71dd86ff18823dee7c47abd80bf46fb61a60",
+            "retainedHeapBytes": 146604,
+            "retainedArrayBufferBytes": 2989403
+          },
+          {
+            "id": "grid-20",
+            "decodeMs": 1.2999999970197678,
+            "composeMs": 10.399999991059303,
+            "composeSamplesMs": [
+              9.800000011920929,
+              10.099999994039536,
+              10.399999991059303,
+              16.5,
+              88.5
+            ],
+            "cutoff91Ms": 26.099999994039536,
+            "fieldHash": "3b2ff76e0e0f7ce693fab65e1babaca62f5135f7bb42272555695fcaaf241b38",
+            "retainedHeapBytes": 122868,
+            "retainedArrayBufferBytes": 1249703
+          },
+          {
+            "id": "grid-40",
+            "decodeMs": 0.4000000059604645,
+            "composeMs": 12.400000005960464,
+            "composeSamplesMs": [
+              8.799999997019768,
+              9.599999994039536,
+              12.400000005960464,
+              16.599999994039536,
+              64.20000000298023
+            ],
+            "cutoff91Ms": 16.599999994039536,
+            "fieldHash": "f710170eea9251009a956ebf69e8fa5c066288e357a4da866c18d0572643e6e1",
+            "retainedHeapBytes": 113952,
+            "retainedArrayBufferBytes": 594275
+          },
+          {
+            "id": "earliest-20",
+            "decodeMs": 0.6000000089406967,
+            "composeMs": 14.599999994039536,
+            "composeSamplesMs": [
+              13,
+              14.299999997019768,
+              14.599999994039536,
+              19.600000008940697,
+              53.5
+            ],
+            "cutoff91Ms": 25.400000005960464,
+            "fieldHash": "d46243cfc727911a39d17db28cd68e9280a8a69ed9e566d8c524d33930a03ec4",
+            "retainedHeapBytes": 122124,
+            "retainedArrayBufferBytes": 1244123
+          }
+        ]
+      }
+    ]
+  }
+}
