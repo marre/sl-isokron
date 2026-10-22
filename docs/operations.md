@@ -130,3 +130,18 @@ liknamniga lägen inom 250 meter. Ett byte av den regeln kräver ett nytt gångb
 (`prepare_walking=true`) och publicering av ny datarelease, inte bara en ny
 webbbyggnad. `assumedPairs` i byggrapporten ska redovisas separat från
 `mappedPairs`; antagna passager räknas aldrig som godkända fysiska referenspar.
+
+### Format-only contour migration
+
+The manual **Migrate lossless contours** Actions workflow downloads and verifies
+`data/release.json`, converts every contour with an exact coordinate round-trip
+check, then publishes a new data release and `release.json` descriptor. It uses
+GitHub's workflow token for the large asset upload. It makes no Trafiklab or OSM
+request and preserves the previous immutable version. Normal future data builds
+already emit the compressed fixed-point format; this migration is for older JSON
+releases and refuses an already-compressed input.
+
+After the job succeeds, download its `contour-release-descriptor` artifact (or the
+release's `release.json` asset), verify the source version and release, then commit
+the descriptor to `data/release.json`. Deploy the compatible frontend first. The
+workflow does not change the pin automatically.
