@@ -73,6 +73,7 @@ export class WalkingView {
     const merger=this.merger=new Worker(new URL('./bands-worker.ts',import.meta.url),{type:'module'});
     const requests=new Map<number,AbortController>(),failed=new Set<number>();
     let wanted=new Set<number>(),queue:number[]=[],profileVersion=0,view=0,busy=false,pending=false,mergeError=false;
+    let generation=0,geometryIds=new WeakMap<AreaGeometry,number>(),nextGeometry=0;
     let clip=this.map.getBounds().pad(.25),clipZoom=this.map.getZoom();
     const budgets=new Map<number,Map<number,number>>();
     const standard=bandLimits(settings.maxMinutes);
@@ -115,7 +116,17 @@ export class WalkingView {
       const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast()),w=se.x-nw.x,h=se.y-nw.y;
       const scale=Math.min(1,Math.sqrt(1_000_000/(w*h)),2048/Math.max(w,h));
       const grid:RasterGrid={width:Math.max(1,Math.ceil(w*scale)),height:Math.max(1,Math.ceil(h*scale)),bounds:[clip.getWest(),clip.getSouth(),clip.getEast(),clip.getNorth()]};
-      merger.postMessage({version,view,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands,grid});progress();
+      // Retain geometry in the worker: subsequent batches send only small IDs.
+      const additions:{id:number;geometry:AreaGeometry}[]=[];
+      const retained=new Set(bands.filter(b=>standard.includes(b.minutes)).flatMap(b=>b.geometries));
+      const temporary=new WeakMap<AreaGeometry,number>();
+      const references=bands.map(band=>({minutes:band.minutes,geometries:band.geometries.map(geometry=>{
+        let id=geometryIds.get(geometry)??temporary.get(geometry);
+        if(id===undefined){id=nextGeometry++;temporary.set(geometry,id);additions.push({id,geometry});}
+        if(retained.has(geometry))geometryIds.set(geometry,id);
+        return id;
+      })}));
+      merger.postMessage({version,view,generation,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands:references,additions,grid});progress();
     };
     this.schedule=()=>{
       pending=true;
@@ -126,7 +137,7 @@ export class WalkingView {
       if(controller.signal.aborted)return;
       busy=false;
       if(data.view===view){
-        if(data.error){mergeError=true;this.workerVersion='';this.workerCutoffs.clear();}
+        if(data.error){mergeError=true;this.workerVersion='';this.workerCutoffs.clear();generation++;geometryIds=new WeakMap();nextGeometry=0;}
         else if(data.pixels){
           mergeError=false;
           if(this.workerVersion!==data.version)this.workerCutoffs.clear();
@@ -180,6 +191,7 @@ export class WalkingView {
       for(const file of failed)if(!wanted.has(file))failed.delete(file);
       const moved=!clip.contains(bounds)||clipZoom!==this.map.getZoom(),changed=previous.size!==wanted.size||[...wanted].some(file=>!previous.has(file));
       if(moved){clip=bounds.pad(.25);clipZoom=this.map.getZoom();view++;this.removeLayers();}
+      if(moved||changed){generation++;geometryIds=new WeakMap();nextGeometry=0;}
       if(changed)profileVersion++;
       queue=[...wanted].filter(file=>!this.profiles.has(file)&&!requests.has(file)).sort((a,b)=>{
         const score=(file:number)=>Math.min(...positions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));

@@ -44,10 +44,30 @@ export function contourRuns(geometry:AreaGeometry,grid:RasterGrid):Uint32Array{
  return new Uint32Array(result);
 }
 
+/** Add contours once per viewport. New files can only improve arrival times. */
+export class BandRaster {
+ readonly field:Uint8Array;
+ private earliest=new Map<AreaGeometry,number>();
+ constructor(readonly grid:RasterGrid){this.field=new Uint8Array(grid.width*grid.height);}
+ add(bands:AreaBand[]):Uint8Array{
+  const additions=new Map<AreaGeometry,number>();
+  for(const band of bands)for(const geometry of band.geometries){
+   const previous=additions.get(geometry)??this.earliest.get(geometry)??Infinity;
+   if(band.minutes<previous)additions.set(geometry,band.minutes);
+  }
+  for(const [geometry,minutes] of additions){
+   const runs=contourRuns(geometry,this.grid);
+   for(let i=0;i<runs.length;i+=2)for(let p=runs[i];p<runs[i+1];p++){
+    if(!this.field[p]||minutes<this.field[p])this.field[p]=minutes;
+   }
+   this.earliest.set(geometry,minutes);
+  }
+  return this.field;
+ }
+}
 export function rasterBands(bands:AreaBand[],grid:RasterGrid):Uint8Array{
  const field=new Uint8Array(grid.width*grid.height),earliest=new Map<AreaGeometry,number>();
  for(const band of bands)for(const geometry of band.geometries)earliest.set(geometry,Math.min(band.minutes,earliest.get(geometry)??Infinity));
- // Slower areas first, so overlapping stops always keep the fastest colour.
  for(const [geometry,minutes] of [...earliest].sort((a,b)=>b[1]-a[1])){
   const runs=contourRuns(geometry,grid);
   for(let i=0;i<runs.length;i+=2)field.fill(minutes,runs[i],runs[i+1]);
@@ -68,7 +88,7 @@ export function paintBands(field:Uint8Array,grid:RasterGrid,maxMinutes:number,cu
   const i=y*width+x,value=visible[i];if(!value)continue;
   const border=(x>0&&visible[i-1]!==value)||(x<width-1&&visible[i+1]!==value)||(y>0&&visible[i-width]!==value)||(y<height-1&&visible[i+width]!==value);
   const color=border?[255,255,255]:colors[value];
-  rgba.set(color,i*4);rgba[i*4+3]=border?235:255;
+  const offset=i*4;rgba[offset]=color[0];rgba[offset+1]=color[1];rgba[offset+2]=color[2];rgba[offset+3]=border?235:255;
  }
  return rgba;
 }

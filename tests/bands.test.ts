@@ -37,3 +37,14 @@ test('a shared display cutoff preserves search constraints and rejects impossibl
  assert.deepEqual(parseHash(shareHash(s)),s);
  for(const displayMinutes of [0,121,1.5])assert.throws(()=>validateSettings({...s,displayMinutes}));
 });
+
+test('incremental files produce the same field as one complete render, including improved bands and holes',async()=>{
+ const {BandRaster}=await import('../src/core/bands');
+ const donut:AreaGeometry={type:'Polygon',coordinates:[[[0,0],[5,0],[5,4],[0,4],[0,0]],[[1,1],[1,3],[3,3],[3,1],[1,1]]]};
+ const island=box(2,1,2,2),raster=new BandRaster(grid);
+ const batches=[[{minutes:40,geometries:[donut]}],[{minutes:20,geometries:[island]}],[{minutes:10,geometries:[donut]},{minutes:30,geometries:[island]}]];
+ const all=batches.flat();
+ for(let i=0;i<batches.length;i++)assert.deepEqual(raster.add(batches[i]),rasterBands(batches.slice(0,i+1).flat(),grid));
+ assert.deepEqual(raster.add(all),rasterBands(all,grid));
+ assert.equal(at(raster.field,15,20),0);assert.equal(at(raster.field,25,20),20);assert.equal(at(raster.field,5,20),10);
+});
