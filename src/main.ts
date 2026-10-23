@@ -1,5 +1,6 @@
 import {profiling,acceptProfile,profileStart,profileEnd} from './core/profile';
 import { mobileLayout } from './layout';
+import { aboutHTML } from './about';
 import L from 'leaflet';
 import { JourneyView } from './journey-view';
 import { MapProgress } from './map-progress';
@@ -40,7 +41,7 @@ $('#app').innerHTML = `
 </aside>
 <section class="map-section" aria-label="Restidskarta"><div id="map-progress" class="map-progress" hidden><div role="progressbar" aria-label="Beräkning" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="map-progress-fill"></span></div><span class="map-progress-text"></span></div><div id="map"></div><div class="map-heading"><span class="map-heading-dot"></span><span id="map-label">STOCKHOLM & OMKRING</span></div><button id="reset-search" class="reset-search" title="Välj ny startpunkt och behåll restidsinställningarna" hidden>Ny sökning</button><div id="map-demo" class="map-demo" hidden>TESTDATA · Ej för reseplanering</div><button id="mobile-toggle" class="mobile-toggle" aria-controls="search-settings" aria-expanded="true">Dölj sökpanel ↓</button><button id="map-cancel" class="map-cancel" hidden>Avbryt sökning</button><div class="map-actions"><button id="fit" title="Visa hela trafiknätet" aria-label="Visa hela trafiknätet">⌖</button></div><div id="map-empty" class="map-tip"><span aria-hidden="true">◎</span><div><strong>Allt börjar någonstans.</strong><span>Sök en hållplats eller välj en punkt på kartan.</span></div></div><aside id="journey-panel" class="journey-panel" aria-label="Resedetaljer" aria-labelledby="journey-title" hidden></aside><section id="legend" class="legend" aria-label="Restidsintervall" hidden></section><button id="share" class="share-button" aria-label="Kopiera delningslänk" title="Kopiera delningslänk" disabled><span aria-hidden="true">${arrow}</span> Kopiera delningslänk</button><div class="map-source" id="source-note">Hållplatser och ungefärliga gångområden</div></section>
 </main>
-<dialog id="info-dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
+<dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
 
 const map = L.map('map', { zoomControl: false, preferCanvas: false }).setView([59.345,18.065],11);
 L.control.zoom({ position: 'topright' }).addTo(map);
@@ -318,7 +319,7 @@ $('#journey-panel').addEventListener('journeyopen',()=>{
 mobileLayout.addEventListener('change',()=>updateMobile());
 function dialog(title:string,html:string){$('#dialog-title').textContent=title;$('#dialog-body').innerHTML=html;$<HTMLDialogElement>('#info-dialog').showModal();}
 $('#dialog-close').onclick=()=>$<HTMLDialogElement>('#info-dialog').close();
-$('#about-open').onclick=()=>dialog('En annan sorts restidskarta',`<p>sliso visar minsta restid till varje hållplatsläge, bland tillåtna avgångar i ditt avgångsfönster. Olika hållplatser kan bygga på olika avgångar.</p><p>Väntan före första påstigning räknas inte. All färd, gång och väntan vid byten ingår. Exempel: gång 5 min + färd 20 min + byte 7 min + färd 10 min = <strong>42 minuter</strong>.</p><p>Kartan visar hållplatser och, där gångunderlag finns, ungefärliga gångområden. Ytorna uppskattas från ett gångnät och kan innehålla otillgängliga delar. De garanterar inte tillträde till alla entréer. Uppgifterna är planerade; realtid saknas.</p><p>Delningslänken innehåller startplatsens ID, namn och koordinater samt datum, tid och alla filter. Alla som har länken kan läsa dem. Resultat kan förändras när data uppdateras.</p>`);
+$('#about-open').onclick=()=>dialog('Så fungerar sliso',aboutHTML);
 $('#data-open').onclick=()=>{if(manifest)dialog('Data & begränsningar',`<p><strong>${manifest.demo?'Syntetisk testdata – ej reseplanering':'Planerad SL-trafik'}</strong></p><p>Uppdaterad: ${escape(manifest.sourceUpdated||manifest.updated.slice(0,10))}<br>Giltighet: ${manifest.validFrom} – ${manifest.validTo}<br>Gång: ${manifest.walkingMaxMinutes} minuter, ${manifest.walkingSpeedKmh} km/h<br>Gångversion: ${escape(manifest.walkingVersion)}${manifest.walkingCoverage?`<br>Gångkopplade lägen: ${manifest.walkingCoverage.boundStops} / ${manifest.walkingCoverage.totalStops}<br>Förberäknade gångpar: ${manifest.walkingCoverage.pairs}`:''}</p><ul>${manifest.warnings.map(w=>`<li>${escape(w)}</li>`).join('')}</ul><p>${manifest.attribution.map(escape).join('<br>')}</p><p>Bakgrundskarta: OpenStreetMap. Ingen analys eller central sökhistorik. Gång mellan hållplatser med samma namn inom 250 meter och granskade stationspassager kan ha uppskattad tid och längd; sådana sträckor märks i resedetaljerna.</p>`);};
 async function restoreLink() {
   invalidate('Delningsinställningar laddas.');

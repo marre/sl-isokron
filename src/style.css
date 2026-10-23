@@ -99,3 +99,20 @@
 @media(max-width:760px),(max-width:1000px) and (max-height:500px) and (pointer:coarse){.legend-expanded .legend-top{position:sticky;top:-9px;z-index:1;background:#fff}}
 
 .walking-overview-note{position:absolute;z-index:450;left:12px;top:105px;max-width:calc(100% - 90px);padding:4px 7px;border-radius:4px;background:#fffffff2;color:#183e36;font-size:10px;line-height:14px;pointer-events:none}
+
+/* The longer About explanation scrolls inside a dialog with its close button in view. */
+#info-dialog{padding:0;max-height:calc(100dvh - 32px);overflow:hidden}
+#info-dialog[open]{display:flex;flex-direction:column}
+#info-dialog .dialog-head{padding:14px 22px;border-bottom:1px solid var(--line);flex-shrink:0}
+#info-dialog .dialog-head h2{margin:0;font-size:23px}
+#info-dialog .dialog-head button{width:44px;height:44px}
+#dialog-body{padding:6px 22px 20px;overflow-y:auto;overscroll-behavior:contain;min-height:0;overflow-wrap:anywhere}
+#dialog-body h3{font-family:'Manrope Variable',sans-serif;font-size:16px;margin:22px 0 8px;line-height:1.4}
+.about-flow{padding-left:23px}.about-flow li{padding-left:4px}
+#dialog-body .about-tech details{margin:0;border:0;border-top:1px solid var(--line)}
+#dialog-body .about-tech details:last-child{border-bottom:1px solid var(--line)}
+#dialog-body .about-tech summary{display:list-item;list-style:disclosure-closed inside;min-height:48px;padding:12px 0;font-size:13px;font-weight:600}
+#dialog-body .about-tech details[open]>summary{list-style-type:disclosure-open}
+#dialog-body .about-tech details p{margin:0 0 14px}
+#dialog-body a{text-underline-offset:3px}
+@media(max-width:480px){#info-dialog{width:calc(100% - 24px);max-width:none}#info-dialog .dialog-head{padding:10px 14px;gap:8px}#info-dialog .dialog-head h2{font-size:21px}#dialog-body{padding:4px 14px 16px}}
