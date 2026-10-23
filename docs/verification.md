@@ -104,3 +104,23 @@ itinerary expansion and returning to search work without overlapping sheets or
 browser errors. Basemap requests were disabled for these repeatable browser
 checks; routing and walking data were the real published files. These are browser
 emulation checks, not physical iOS/Android device certification.
+
+### Compact search interface (2026-10-23)
+
+The entire “Din restidskarta” panel, live “Visa inom” slider and walking-area
+checkbox have been removed. Walking areas always render for the complete search
+budget; older shared `displayMinutes` values no longer hide results. The main
+travel-budget slider still controls a new search.
+
+“Nollställ” sits beside “Visa restidskarta”, including in the sticky mobile action
+row. It cancels running work, clears the origin, journeys, areas and shared hash,
+and preserves date, time and search preferences. On phones, reopen the search
+form using the origin/“Ändra” control to access these buttons.
+
+Station search chooses one served, active platform automatically: mapped walking
+access is preferred, then the platform closest to the candidates' centre, then a
+stable ID. This is a representative origin rather than a destination-dependent
+best platform. Other platforms still require the existing valid walking links;
+there are no free platform jumps. Map clicks and shared stop IDs retain their
+specific origins. Missing walking exits remain explained in the search status;
+on mobile that warning reopens the search panel.

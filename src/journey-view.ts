@@ -133,8 +133,6 @@ export class JourneyView {
     const mobile = mobileLayout.matches;
     // Mobile search-panel collapse changes the map size before its delayed resize.
     this.map.invalidateSize({ pan: false });
-    const legend = document.querySelector<HTMLElement>('#legend')!;
-    const bottom = getComputedStyle(legend).visibility === 'hidden' ? 30 : legend.offsetHeight + 80;
-    this.map.fitBounds(L.latLngBounds(coords), { animate: false, maxZoom: 15, paddingTopLeft: [24, 110], paddingBottomRight: mobile ? [24, this.panel.offsetHeight + 45] : [Math.min(this.map.getSize().x * .45, this.panel.offsetWidth + 100), bottom] });
+    this.map.fitBounds(L.latLngBounds(coords), { animate: false, maxZoom: 15, paddingTopLeft: [24, 110], paddingBottomRight: mobile ? [24, this.panel.offsetHeight + 45] : [Math.min(this.map.getSize().x * .45, this.panel.offsetWidth + 100), 40] });
   }
 }

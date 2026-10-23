@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('phone map stays clear while search, legend and journey details open on demand',async({page},info)=>{
+test('phone map stays clear while search and journey details open on demand',async({page},info)=>{
  test.skip(info.project.name!=='mobile','Touch layout');
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
  await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).touchMap=map;return map;};}});});
@@ -9,16 +9,11 @@ test('phone map stays clear while search, legend and journey details open on dem
  await expect(page.locator('#calculate')).toBeInViewport();
  await page.locator('#stop-search').fill('T-Centralen');await page.locator('#stop-search').press('Enter');
  await page.locator('#time').fill('08:00');await page.locator('#calculate').tap();
- await expect(page.locator('#legend')).toBeVisible({timeout:20000});
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete',{timeout:20000});
  await expect(page.locator('.panel')).toBeHidden();
  const map=await page.locator('#map').boundingBox();
  expect(map!.height).toBeGreaterThan(page.viewportSize()!.height*.85);
- expect((await page.locator('#legend').boundingBox())!.height).toBeLessThan(100);
- await expect(page.locator('#walking-toggle')).toBeHidden();
- await page.locator('#legend-toggle').tap();
- await expect(page.locator('#walking-toggle')).toBeVisible();
- expect((await page.locator('#legend').boundingBox())!.height).toBeLessThanOrEqual(map!.height*.46);
- await page.locator('#legend-toggle').tap();
+ await expect(page.locator('#legend, #walking-toggle, #display-time')).toHaveCount(0);
  await page.locator('#fit').tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
@@ -28,7 +23,7 @@ test('phone map stays clear while search, legend and journey details open on dem
  await hold.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:station!.x+station!.width/2,y:station!.y+station!.height/2}]});
  await page.waitForTimeout(800);await hold.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await hold.detach();
  await expect(page.locator('#journey-panel')).toBeVisible();
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await expect(page.locator('#journey-content')).toBeHidden();
  expect((await page.locator('#journey-panel').boundingBox())!.height).toBeLessThan(140);
  await page.screenshot({path:'test-results/mobile-compact-journey.png'});
@@ -51,23 +46,19 @@ test('phone map stays clear while search, legend and journey details open on dem
  await page.locator('#mobile-toggle').tap();
  await expect(page.locator('.panel')).toBeVisible();
  await expect(page.locator('#journey-panel')).toBeHidden();
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await page.locator('#mobile-close-search').tap();
- await expect(page.locator('#legend')).toBeVisible();
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  for(const size of [{width:320,height:568},{width:844,height:390}]){
   await page.setViewportSize(size);
   await expect(page.locator('#mobile-toggle')).toBeVisible();
-  const bounds=await page.locator('#legend').boundingBox();
-  expect(bounds!.y+bounds!.height).toBeLessThan(size.height);
-  expect(bounds!.height).toBeLessThan(100);
-  const zoom=(await page.locator('.leaflet-control-zoom').boundingBox())!,reset=(await page.locator('#reset-search').boundingBox())!;
-  expect(reset.x+reset.width<=zoom.x||reset.y+reset.height<=zoom.y||reset.y>=zoom.y+zoom.height).toBe(true);
-  expect(reset.y).toBeGreaterThanOrEqual(bounds!.y);
-  expect(reset.x+reset.width).toBeLessThanOrEqual(bounds!.x+bounds!.width);
   const share=(await page.locator('#share').boundingBox())!;
-  expect(share.y+share.height).toBeLessThanOrEqual(bounds!.y);
+  expect(share.y+share.height).toBeLessThan(size.height);
   await page.locator('#mobile-toggle').tap();
   await expect(page.locator('#calculate')).toBeInViewport();
+  await expect(page.locator('#reset-search')).toBeInViewport();
+  const calculate=(await page.locator('#calculate').boundingBox())!,reset=(await page.locator('#reset-search').boundingBox())!;
+  expect(Math.abs(calculate.y-reset.y)).toBeLessThan(2);expect(reset.x).toBeGreaterThan(calculate.x);
   await page.locator('#mobile-close-search').tap();
   await page.screenshot({path:`test-results/mobile-${size.width}-result.png`});
  }

@@ -21,9 +21,9 @@ test('local stop search, worker result, filters, share and marker detail',async(
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await init(page);await select(page);
  await page.locator('#calculate').click();
- await expect(page.locator('#legend')).toBeVisible({timeout:20000});
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete',{timeout:20000});
  await expect(page.locator('#status')).toContainText('Färdigt.');
- await expect(page.locator('#legend')).toContainText('Utan initial väntan');
+ await expect(page.locator('.time-note')).toContainText('Initial väntan räknas inte');
  await page.screenshot({path:`test-results/${test.info().project.name}-result.png`,fullPage:true});
  // A result click is a stop value, and its explicit action changes the origin.
  const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
@@ -36,32 +36,31 @@ test('local stop search, worker result, filters, share and marker detail',async(
  if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  for(const c of await page.locator('[name=mode]').all())await c.uncheck();
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  await page.locator('#calculate').click();
- await expect(page.locator('#legend')).toBeVisible();
- await expect(page.locator('#legend')).toContainText('Endast gång');
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
+ await expect(page.locator('#map path[role=button]:not([style*="display: none"])').first()).toBeAttached();
  await share(page);
  await expect(page).toHaveURL(/#s=/);
  const shared=page.url();
- await page.goto(shared);await expect(page.locator('#legend')).toBeVisible();
+ await page.goto(shared);await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  expect(errors).toEqual([]);
 });
-test('station hierarchy requires choosing a named platform',async({page})=>{
+test('station search automatically chooses a usable platform',async({page})=>{
  await init(page);await page.locator('#stop-search').fill('Slussen');
  await page.locator('#stop-search').press('Enter');
- await expect(page.locator('#platform-field')).toBeVisible();
- await expect(page.locator('#calculate')).toBeDisabled();
- await page.locator('#platform').selectOption({label:'Testläge B'});
+ await expect(page.locator('#platform-field, #platform')).toHaveCount(0);
  await expect(page.locator('#calculate')).toBeEnabled();
+ await expect(page.locator('#status')).toContainText('Redo att beräkna');
 });
 test('A12/A14 cancellation and changed settings leave no finished result',async({page})=>{
  await init(page);await select(page);
  await page.route('**/*.bin',async r=>{await new Promise(resolve=>setTimeout(resolve,800));await r.continue();});
  await page.locator('#calculate').click();await page.locator('#cancel:visible, #map-cancel:visible').first().click();
  await expect(page.locator('#status')).toContainText('Avbruten');
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  await page.locator('#time').fill('09:00');await page.locator('#time').blur();
- await page.waitForTimeout(1200);await expect(page.locator('#legend')).toBeHidden();
+ await page.waitForTimeout(1200);await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
 });
 test('missing origin and out-of-coverage date are never silently replaced',async({page})=>{
  await init(page);await select(page);
@@ -75,7 +74,7 @@ test('missing origin and out-of-coverage date are never silently replaced',async
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(s)));
  await expect(page.locator('#form-error')).toContainText('Välj ett nytt datum');
  await expect(page.locator('#date')).toHaveValue('2020-01-01');
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
 });
 test('shared Stockholm times survive another browser timezone',async({browser})=>{
  const context=await browser.newContext({timezoneId:'America/New_York'});
@@ -91,7 +90,7 @@ test('missing timetable/quota failure leaves unknown rather than unreachable',as
  await page.locator('#calculate').click();
  await expect(page.locator('#form-error')).toContainText('Datakvoten');
  await expect(page.locator('#status')).toContainText('okänd');
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
 });
 test('changed settings terminate old data loading before it can publish',async({page})=>{
  await init(page);await select(page);
@@ -100,25 +99,22 @@ test('changed settings terminate old data loading before it can publish',async({
  if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
  await page.locator('#stop-search').fill('Universitetet');await page.locator('#stop-search').press('Enter');
  await page.waitForTimeout(1000);
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
 });
 test('driver-coordinated stops are routable and show a rider notice',async({page})=>{
  await init(page);await page.locator('#stop-search').fill('Slussen');await page.locator('#stop-search').press('Enter');
- await page.locator('#platform').selectOption({label:'Testläge B'});
+ await page.getByRole('button',{name:'Slussen · Testläge B',exact:true}).focus();await page.keyboard.press('Enter');await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  for(const c of await page.locator('[name=mode]').all())if(await c.getAttribute('value')!=='bus')await c.uncheck();
- await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
- await expect(page.locator('#legend')).toContainText('Stopp på signal');
+ await page.locator('#calculate').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await page.getByRole('button',{name:'Nacka strand · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('#journey-panel')).toContainText('meddela föraren');
 });
 
 test('destination route previews on hover, pins with keyboard, and recalculates on origin change',async({page},info)=>{
  await init(page);await select(page);await page.locator('#calculate').click();
- await expect(page.locator('#legend')).toBeVisible();
- const colors=await page.locator('#legend .legend-scale i').evaluateAll(items=>items.map(e=>(e as HTMLElement).style.backgroundColor));
- expect(colors[0]).toBe('rgb(217, 240, 163)');expect(colors.at(-1)).toBe('rgb(127, 0, 0)');
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  const marker=page.getByRole('button',{name:'Universitetet · Testläge A',exact:true});
  if(info.project.name==='desktop'){
   await marker.hover({force:true});
@@ -143,7 +139,7 @@ test('destination route previews on hover, pins with keyboard, and recalculates 
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
  await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('.journey-line')).toHaveCount(0);
- await expect(page.locator('#legend')).toBeVisible();
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
 });
 
 test('only known destinations remain after search; new search restores the map and retains filters',async({page})=>{
@@ -153,17 +149,14 @@ test('only known destinations remain after search; new search restores the map a
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  await page.locator('#walk').selectOption('5');
  for(const c of await page.locator('[name=mode]').all())await c.uncheck();
- await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await page.locator('#calculate').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  expect(await enabledMarkers()).toBeLessThan(before);
  await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
  await expect(page.locator('.leaflet-walking-areas-pane canvas').first()).toBeVisible();
- if(await page.locator('#legend-toggle').isVisible())await page.locator('#legend-toggle').click();
- await page.locator('#walking-toggle').uncheck();await expect(page.locator('#walking-status')).toContainText('dolda');
- if(await page.locator('#legend-toggle').isVisible())await page.locator('#legend-toggle').click();
  await share(page);await expect(page).toHaveURL(/#s=/);
- await page.locator('#reset-search').click();
- await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
+ if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();
  await expect(page.locator('#walk')).toHaveValue('5');await expect(page.locator('#time')).toHaveValue('08:00');
  expect(new URL(page.url()).hash).toBe('');
@@ -176,12 +169,12 @@ test('only known destinations remain after search; new search restores the map a
 test('walking legs show network distance and cancellation rejects in-flight results',async({page})=>{
  await init(page);await select(page);await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  for(const c of await page.locator('[name=mode]').all())await c.uncheck();
- await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await page.locator('#calculate').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await page.getByRole('button',{name:'Stockholm City · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('#journey-panel')).toContainText('320 m');
  await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');
  await page.getByRole('button',{name:'Stäng resedetaljer'}).click();
- await page.locator('#reset-search').click();await select(page);
+ if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();await select(page);
  // A warm Cache API response can finish before the cancel click. Hold an actual
  // uncached shard until cancellation instead of relying on an arbitrary delay.
  await page.evaluate(async()=>{await caches.delete('sliso-data-v1');});
@@ -193,7 +186,7 @@ test('walking legs show network distance and cancellation rejects in-flight resu
   await page.locator('#cancel:visible, #map-cancel:visible').first().click();
  }finally{release();}
  await page.waitForTimeout(1000);
- await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('#status')).toContainText('Avbruten');
 });
 
@@ -213,7 +206,7 @@ test('compact walking payload is verified and used by the worker',async({page})=
  await page.route('**/data/browser-compact/walks.json',r=>{seen=true;return r.fulfill({contentType:'application/json',body:packed});});
  await init(page);await select(page);await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  for(const c of await page.locator('[name=mode]').all())await c.uncheck();
- await page.locator('#calculate').click();await expect(page.locator('#legend')).toBeVisible();
+ await page.locator('#calculate').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await page.getByRole('button',{name:'Stockholm City · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('#journey-panel')).toContainText('320 m');
  await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');expect(seen).toBe(true);
@@ -241,7 +234,7 @@ test('map progress shows provisional stations before completion and cancel rejec
  await expect(page.locator('#status')).toContainText('preliminära');
  const progressBox=await page.locator('.map-progress-text').boundingBox(),headingBox=await page.locator('.map-heading:visible, #mobile-toggle:visible').first().boundingBox();
  expect(progressBox!.y+progressBox!.height).toBeLessThanOrEqual(headingBox!.y);
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  await marker.press('Enter');await expect(page.locator('.stop-popup')).toContainText('Preliminärt 10 min');
  await expect(page.locator('#map-label')).toContainText('T-CENTRALEN');
  await page.locator('#cancel:visible, #map-cancel:visible').first().click();
@@ -251,17 +244,11 @@ test('map progress shows provisional stations before completion and cancel rejec
  await expect(page.locator('#status')).toContainText('Avbruten');
 });
 
-test('disconnected walking exits remain visibly flagged on a collapsed mobile legend',async({page})=>{
+test('disconnected walking exits remain flagged in search status',async({page})=>{
  await init(page);
  const s={v:1,stop:'demo-20',name:'Mörby station',lat:59.3887,lon:18.0507,date:stockholmNow().date,time:'22:26',maxMinutes:120,walkMinutes:30,maxTransfers:4,windowMinutes:30,modes:['boat']};
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(s)));
- await expect(page.locator('#legend')).toBeVisible();
- await expect(page.locator('.complete-badge')).toBeVisible();
- await expect(page.locator('.complete-badge')).toHaveText('Gångdata saknas');
- if(await page.locator('#legend-toggle').isVisible()){
-  expect((await page.locator('#legend').boundingBox())!.height).toBeLessThan(125);
-  await page.locator('#legend-toggle').click();
- }
- await expect(page.locator('.exit-warning')).toBeVisible();
- await expect(page.locator('.exit-warning')).toContainText('missa möjliga resor');
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
+ await expect(page.locator('#status')).toBeVisible();
+ await expect(page.locator('#status')).toContainText('missa möjliga resor');
 });

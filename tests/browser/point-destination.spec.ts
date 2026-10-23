@@ -3,7 +3,7 @@ const settings={origin:'point',v:1,stop:'@point',name:'Vald kartpunkt',lat:59.31
 async function init(page:import('@playwright/test').Page){
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
  await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).slisoMap=map;return map;};}});});
- await page.goto('/#s='+encodeURIComponent(JSON.stringify(settings)));await expect(page.locator('#legend')).toBeVisible();
+ await page.goto('/#s='+encodeURIComponent(JSON.stringify(settings)));await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
 }
 async function position(page:import('@playwright/test').Page,lat=59.3319,lon=18.0592){
  await page.evaluate(({lat,lon})=>{(window as any).slisoMap.setView([lat,lon],17,{animate:false});},{lat,lon});
@@ -27,13 +27,13 @@ test('arbitrary destination shows walk–transit–walk, pins and can become the
  await expect(page.locator('#journey-pin')).toContainText('Fäst ✓');
  if(info.project.name==='mobile')await page.locator('#journey-expand').click();
  await page.screenshot({path:`test-results/${info.project.name}-point-destination.png`,fullPage:true});
- await page.locator('#journey-start').click();await expect(page.locator('#legend')).toBeVisible();await expect(page.locator('#journey-panel')).toBeHidden();await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');expect(errors).toEqual([]);
+ await page.locator('#journey-start').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');await expect(page.locator('#journey-panel')).toBeHidden();await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');expect(errors).toEqual([]);
 });
 test('unmapped targets do not invent a final walking link and reset clears pending destinations',async({page},info)=>{
  await init(page);const point=await position(page,59.34,18.0592);await inspect(page,point,info.project.name==='mobile');
  await expect(page.locator('#point-status')).toContainText('Ingen kartlagd gångväg',{timeout:15000});await expect(page.locator('#journey-panel')).toBeHidden();
- const mapped=await position(page);await page.mouse.move(mapped.x,mapped.y);await page.locator('#reset-search').click();await page.waitForTimeout(500);
- await expect(page.locator('#journey-panel')).toBeHidden();await expect(page.locator('#point-status')).toBeHidden();await expect(page.locator('#legend')).toBeHidden();
+ const mapped=await position(page);await page.mouse.move(mapped.x,mapped.y);if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();await page.waitForTimeout(500);
+ await expect(page.locator('#journey-panel')).toBeHidden();await expect(page.locator('#point-status')).toBeHidden();await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
 });
 
 test('double clicking a result map zooms without pinning a destination',async({page})=>{

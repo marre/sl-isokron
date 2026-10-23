@@ -5,13 +5,13 @@ test.beforeEach(async({page})=>{await page.route('https://tile.openstreetmap.org
 test('mapped origin restores, draws access geometry, shares and resets on desktop and mobile',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(point)));
- await expect(page.locator('#legend')).toBeVisible();await expect(page.locator('#status')).toContainText('Färdigt.');
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');await expect(page.locator('#status')).toContainText('Färdigt.');
  await expect(page.locator('#start-data-gap')).toContainText('Gångstart på kartlagd väg');
  const target=page.getByRole('button',{name:'T-Centralen · Testläge A',exact:true});await target.press('Enter');
  await expect(page.locator('#journey-panel')).toContainText('Vald kartpunkt');await expect(page.locator('.journey-walk')).toBeAttached();
  await page.getByRole('button',{name:'Stäng resedetaljer'}).click();await page.locator('#share').click();
  const shared=JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3)));expect(shared.origin).toBe('point');expect(shared.lon).toBe(point.lon);
- await page.locator('#reset-search').click();await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();expect(errors).toEqual([]);
+ if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();expect(errors).toEqual([]);
 });
 async function mapSetup(page:import('@playwright/test').Page){
  await page.addInitScript(()=>{
@@ -38,16 +38,16 @@ test('map clicks calculate immediately and replace results; double clicks and dr
  await page.waitForTimeout(550);expect(await page.evaluate(()=>(window as any).searches.length)).toBe(0);
  p=await position(page);const center=await page.evaluate(()=>(window as any).testMap.getCenter().lng);await drag(page,p,mobile);
  await expect.poll(()=>page.evaluate(()=>(window as any).testMap.getCenter().lng)).not.toBe(center);await page.waitForTimeout(550);expect(await page.evaluate(()=>(window as any).searches.length)).toBe(0);
- p=await position(page);await page.mouse.click(p.x,p.y);await expect(page.locator('#legend')).toBeVisible();
+ p=await position(page);await page.mouse.click(p.x,p.y);await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  expect(await page.evaluate(()=>(window as any).searches.length)).toBe(1);await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');
- p=await position(page,59.3319,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(2);await expect(page.locator('#legend')).toBeVisible();
+ p=await position(page,59.3319,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(2);await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  const source=await page.evaluate(()=>(window as any).searches.at(-1));expect(source.lat).toBeCloseTo(59.3319,4);expect(source.lon).toBeCloseTo(18.0592,4);
  if(mobile)await expect(page.locator('.panel')).toBeHidden();
  zoom=await page.evaluate(()=>(window as any).testMap.getZoom());await page.mouse.dblclick(p.x+45,p.y,{delay:100});await expect.poll(()=>page.evaluate(()=>(window as any).testMap.getZoom())).toBeGreaterThan(zoom);
  await page.waitForTimeout(550);expect(await page.evaluate(()=>(window as any).searches.length)).toBe(2);
  p=await position(page);await drag(page,p,mobile);await page.waitForTimeout(550);expect(await page.evaluate(()=>(window as any).searches.length)).toBe(2);
  // A station marker follows the same click/zoom contract as the map background.
- p=await position(page,59.331,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(3);await expect(page.locator('#legend')).toBeVisible();
+ p=await position(page,59.331,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(3);await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  expect(await page.evaluate(()=>(window as any).searches.at(-1).stop)).toBe('demo-2');
  await position(page,59.331,18.0592);
  const pin=page.locator('.start-pin');const box=await pin.boundingBox();
@@ -59,12 +59,12 @@ test('a new map click supersedes an in-flight calculation and ignores its late d
  let release!:()=>void;const gate=new Promise<void>(resolve=>release=resolve);await page.route('**/*.bin',async r=>{await gate;await r.continue().catch(()=>{});});
  try{
   let p=await position(page);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(1);await expect(page.locator('#map-progress')).toBeVisible();
-  p=await position(page,59.3319,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(2);await expect(page.locator('#legend')).toBeHidden();
+  p=await position(page,59.3319,18.0592);await page.mouse.click(p.x,p.y);await expect.poll(()=>page.evaluate(()=>(window as any).searches.length)).toBe(2);await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  }finally{release();}
- await expect(page.locator('#legend')).toBeVisible();await expect(page.locator('#start-data-gap')).toContainText('Gångstart på kartlagd väg');
+ await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');await expect(page.locator('#start-data-gap')).toContainText('Gångstart på kartlagd väg');
  expect(await page.evaluate(()=>(window as any).searches.at(-1).lat)).toBeCloseTo(59.3319,4);await expect(page.locator('#form-error')).toBeHidden();
 });
 test('unmapped origins show a useful error and never fall back to straight-line access',async({page})=>{
  await page.goto('/#s='+encodeURIComponent(JSON.stringify({...point,lat:59.34})));
- await expect(page.locator('#form-error')).toContainText('Ingen kartlagd gångväg');await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#form-error')).toContainText('Ingen kartlagd gångväg');await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
 });

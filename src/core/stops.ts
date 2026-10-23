@@ -15,3 +15,15 @@ export function searchStations(stops: Stop[], query: string): string[] {
   // Direction descriptions belong to platform choice; they are not origin names.
   return [...new Set(stops.filter(s=>isMapStop(s)&&[s.station,s.name].some(n=>normalize(n).includes(q))).map(s=>s.station))].slice(0,8);
 }
+
+/** Choose one actual origin; other platforms still require valid walking links. */
+export function stationOrigin(stops:Stop[],station:string):number {
+  const candidates=stops.map((stop,index)=>({stop,index})).filter(({stop})=>isMapStop(stop)&&stop.station===station);
+  if(!candidates.length)return -1;
+  const lat=candidates.reduce((sum,{stop})=>sum+stop.lat,0)/candidates.length;
+  const lon=candidates.reduce((sum,{stop})=>sum+stop.lon,0)/candidates.length;
+  const access=(s:Stop)=>s.walking==='available'?0:s.walkingArea?1:s.walking==='estimated'?2:s.walking==='missing'?4:3;
+  const distance=(s:Stop)=>(s.lat-lat)**2+((s.lon-lon)*Math.cos(lat*Math.PI/180))**2;
+  candidates.sort((a,b)=>access(a.stop)-access(b.stop)||distance(a.stop)-distance(b.stop)||a.stop.id.localeCompare(b.stop.id));
+  return candidates[0].index;
+}

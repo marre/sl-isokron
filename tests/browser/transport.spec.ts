@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';import {stockholmNow} from '../../s
 const settings={v:1,stop:'demo-2',name:'T-Centralen',lat:59.331,lon:18.0592,date:stockholmNow().date,time:'08:00',maxMinutes:60,walkMinutes:15,maxTransfers:3,windowMinutes:30,modes:['metro']};
 test('transport filters and journeys show icons with route-specific colours on the map',async({page},info)=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
- await page.goto('/#s='+encodeURIComponent(JSON.stringify(settings)));await expect(page.locator('#legend')).toBeVisible();
+ await page.goto('/#s='+encodeURIComponent(JSON.stringify(settings)));await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await expect(page.locator('.mode-chip svg[data-transport]')).toHaveCount(5);
  if(info.project.name==='mobile')await page.locator('#mobile-toggle').click();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
@@ -13,7 +13,7 @@ test('transport filters and journeys show icons with route-specific colours on t
  await page.getByRole('button',{name:'Alvik · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('.journey-transit').first()).toHaveAttribute('stroke','#008b43');
  const bus={...settings,stop:'demo-24',name:'Slussen',lat:59.3188,lon:18.073,modes:['bus']};
- await page.goto('/#s='+encodeURIComponent(JSON.stringify(bus)));await page.reload();await expect(page.locator('#legend')).toBeVisible();
+ await page.goto('/#s='+encodeURIComponent(JSON.stringify(bus)));await page.reload();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await page.getByRole('button',{name:'Nacka strand · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('.journey-step svg[data-transport=bus]').first()).toBeAttached();await expect(page.locator('.journey-transit').first()).toHaveAttribute('stroke','#007db8');
  await expect(page.locator('.journey-leg').first()).toHaveCSS('--leg-color','#007db8');await expect(page.locator('#journey-panel')).toContainText('Buss · 474');

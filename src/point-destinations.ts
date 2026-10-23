@@ -58,7 +58,7 @@ export class PointDestinations {
  }
  private cancel(){this.pinPending=false;clearTimeout(this.timer);this.id++;this.worker?.postMessage({type:'cancel'});this.status.hidden=true;}
  setData(result:SearchResult,settings:Settings,manifest:Manifest,stops:Stop[]){
-  this.reset();this.cutoff=settings.displayMinutes??settings.maxMinutes;
+  this.reset();this.cutoff=settings.maxMinutes;
   if(!manifest.footpaths||!result.destinationSources)return;
   this.worker=new Worker(new URL('./destination-worker.ts',import.meta.url),{type:'module'});
   this.worker.onerror=()=>{this.pinPending=false;this.status.textContent='Gångvägen till punkten kunde inte beräknas. Sök igen för att försöka på nytt.';this.status.hidden=false;this.worker?.terminate();this.worker=undefined;};

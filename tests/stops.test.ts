@@ -17,3 +17,13 @@ test('retirement filters platform markers, preserves real names and honours expl
  assert.deepEqual(searchStations([...hidden,...visible],'koldals'),['Koldalsvägen']);
  assert.deepEqual(searchStations([...hidden,...visible],'old'),['Koldalsvägen','Old Town','Levande OLD']);
 });
+
+test('station origin prefers mapped access then centrality, excludes unserved and retired stops',async()=>{
+ const {stationOrigin}=await import('../src/core/stops');
+ const base:Stop={id:'a',name:'Station',station:'Station',platform:'A',lat:59,lon:18,walking:'available'};
+ const stops:Stop[]=[{...base,id:'missing',walking:'missing'}, {...base,id:'west',lon:17.999}, {...base,id:'centre'}, {...base,id:'east',lon:18.001}, {...base,id:'retired',retired:true}, {...base,id:'unserved',scheduled:false}];
+ assert.equal(stationOrigin(stops,'Station'),2);
+ assert.equal(stationOrigin(stops.map(s=>({...s,walking:'missing'})),'Station'),2);
+ assert.equal(stationOrigin(stops,'Other'),-1);
+ const reversed=[...stops].reverse();assert.equal(reversed[stationOrigin(reversed,'Station')].id,'centre');
+});

@@ -2,6 +2,7 @@
 export const aboutHTML = `
 <p>sliso visar hur långt du kan resa med kollektivtrafik och gång från en vald startplats. Mycket av grundarbetet görs i förväg. När du söker räknar din egen webbläsare ut resorna och bygger kartan.</p>
 
+<p>När du söker en station väljs automatiskt ett aktivt hållplatsläge med gånganslutning, helst centralt bland stationens lägen. Ett direkt klick på ett hållplatsläge använder just det läget. Nollställ bredvid sökknappen väljer bort starten men behåller dina restidsinställningar.</p>
 <h3>Vad betyder restiden?</h3>
 <p>Vi visar minsta restid till varje hållplatsläge bland tillåtna avgångar i ditt avgångsfönster. Olika destinationer kan därför bygga på olika avgångar. Väntan före första påstigning räknas inte; gång, färd och väntan vid byten ingår.</p>
 <p>Gång 5 min + färd 20 min + byte 7 min + färd 10 min = <strong>42 minuter</strong>. Gånggränsen gäller sammanhängande gång, även när den passerar flera hållplatser. Den börjar om efter en färd med kollektivtrafik.</p>
@@ -43,7 +44,7 @@ export const aboutHTML = `
   <summary>Färre hämtningar, mindre väntan</summary>
   <p>Närliggande konturer packas i geografiska buntar med omkring 256 KiB som storleksmål. Det minskar antalet filhämtningar och arbetet med cache, uppackning och meddelanden mellan trådarna. Vilka konturer som bidrar väljs separat från filpackningen, så att buntningen inte ändrar detaljkartan.</p>
   <p>Filer hämtas med begränsad parallellitet, medan ritningen uppdateras i sin egen takt. Urvalet utgår från områden som kan bidra till kartvyn; en hämtad bunt kan också innehålla närliggande konturer. En bred översiktsvy hämtar sitt eget lager; detaljfiler laddas när vyn behöver dem.</p>
-  <p>Verifierade filer sparas i webbläsarens CacheStorage när lagring är tillgänglig. Uppackade konturer utanför den aktuella vyn släpps för att begränsa minnesbehovet. Restidsreglaget återanvänder det beräknade resultatet, så att du kan utforska tidsgränser utan en ny trafiksökning.</p>
+  <p>Verifierade filer sparas i webbläsarens CacheStorage när lagring är tillgänglig. Uppackade konturer utanför den aktuella vyn släpps för att begränsa minnesbehovet. Gångområden visas alltid och fylls på efter hand som de hämtas.</p>
   <p>Progressraden visar arbetet som återstår. Nya sökningar och lagerbyten avbryter gammalt arbete; versionsmarkeringar hindrar sena svar från att rita över den nya vyn. Prestandaförändringar jämförs med referensresultat och, för detaljkartan, pixelkontroller.</p>
 </details>
 </div>

@@ -61,6 +61,8 @@ test('reset removes partial walking areas and ignores late arrivals', async ({pa
 test('consecutive mapped and estimated walks form one labelled journey step', async ({page}) => {
   await page.route('https://tile.openstreetmap.org/**', r=>r.abort());
   await page.goto('/');
+  // Main initialization resets the shared journey panel; finish it before mounting a standalone view.
+  await expect(page.locator('#stop-search')).toBeEnabled();
   await page.evaluate(async () => {
     const component='/src/journey-view.ts';
     const {JourneyView}=await import(component),L=(window as any).L;
