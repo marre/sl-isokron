@@ -54,8 +54,8 @@ def generate(output):
     from footpath_tiles import write_tiles
     from attach_footpaths import attach
     with tempfile.TemporaryDirectory(prefix='sliso-demo-footpaths-') as temp:
-        nodes={0:(59.331,18.057),1:(59.331,18.0592),2:(59.332,18.0592)}
-        write_tiles(nodes,[(0,1,125,94,False),(1,2,111,84,False)],{1:[['demo-2',0,0,stops[2]['lat'],stops[2]['lon']]]},temp,'synthetic-fixture')
+        nodes={0:(59.331,18.057),1:(59.331,18.0592),2:(59.332,18.0592),3:(59.319,18.0725),4:(59.3194,18.0725)}
+        write_tiles(nodes,[(0,1,125,94,False),(1,2,111,84,False),(3,4,44.5,33.4,False)],{1:[['demo-2',0,0,stops[2]['lat'],stops[2]['lon']]],4:[['demo-0',0,0,stops[0]['lat'],stops[0]['lon']]]},temp,'synthetic-fixture')
         attach(output,temp)
 
 

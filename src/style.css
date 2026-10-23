@@ -126,3 +126,6 @@
 @media(max-width:760px){.point-picker{top:108px;width:calc(100% - 32px)}.point-picker span{flex-basis:100%;text-align:center}}
 .picking-point .leaflet-walking-areas-pane{visibility:hidden}
 @media(max-width:760px){.point-picker{left:16px;right:74px;width:auto;max-width:none;transform:none}}
+.point-status{position:absolute;z-index:460;top:104px;left:16px;max-width:calc(100% - 90px);padding:7px 10px;border-radius:7px;background:#fffdf6f5;color:#245e49;box-shadow:0 2px 9px #183e361a;font-size:11px;line-height:1.4;pointer-events:none}
+.point-status[hidden]{display:none}
+@media(max-width:760px){.point-status{top:108px}}

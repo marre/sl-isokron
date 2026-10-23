@@ -17,7 +17,7 @@ self.onmessage = async (event: MessageEvent<{ id: number; manifest: Manifest; se
     const access=settings.origin==='point'?await loadOriginAccess(manifest,settings,network.stops,(completed,total)=>self.postMessage({id,type:'access-progress',completed,total})):undefined;
     profileEnd('routing.originAccess',stage);stage=profileStart();
     self.postMessage({ id, type: 'status', message: 'Beräknar bästa restid utan initial väntan…' });
-    const result = search(network, settings, {access,onProgress:progress=>self.postMessage({id,type:'stations',...progress})});
+    const result = search(network, settings, {destinationJourneys:!!manifest.footpaths,access,onProgress:progress=>self.postMessage({id,type:'stations',...progress})});
     profileEnd('routing.search',stage,{labels:result.labels,connections:network.connections.length,walks:network.walks.length});
     self.postMessage({ id, type: 'result', result,profileEvents:drainProfile() });
   } catch (error) { self.postMessage({ id, type: 'error', message: error instanceof Error ? error.message : 'Beräkningen misslyckades.' }); }

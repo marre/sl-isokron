@@ -316,3 +316,29 @@ byte-preserved footpath/contour delivery. Geographic diagnostics now exclude
 retired presentation stops while retaining correctness checks on all routing nodes.
 The offline search auditor also accepts point-origin sharing settings and uses the
 same checksum-bound walking closure and mapped initial access as the application.
+
+### Arbitrary destinations with mapped final walking (2026-10-23)
+
+After a search, hovering over a point (or tapping on mobile) runs a bounded
+reverse Dijkstra search on nearby delivered footpath tiles. Directed paths retain
+their original direction. The point snaps to a mapped segment within 25 metres;
+there is no straight-line fallback. The final walk consumes the walking allowance
+remaining since the last boarding and the current travel-time display cutoff.
+A point origin can also walk directly to the destination, including a partial
+one-way edge, without detouring via a stop.
+
+The route scanner serializes nondominated terminal labels after scanning, using
+the shared predecessor DAG. A slower stop arrival remains available when its
+smaller walking usage makes the destination reachable. Queries reuse this search
+result rather than rescanning the timetable. One destination worker caches the
+current local tile graph; pointer changes cancel stale fetches and results.
+
+On the 14,195-stop dataset, the reported point-origin scenario retains 10,249
+terminal sources and 14,041 shared journey nodes (8,179 without destination
+witnesses). Serialized additional metadata is 1,999,672 bytes, with identical
+stop values and overlay walking sources. The cold/warm single-run timings were
+4.5 / 3.3 seconds; their ordering prevents attributing that difference to this
+feature. Core tests compare retained candidates against unpruned searches and
+cover one-way paths, exhausted walking budgets and direct point-to-point walks.
+Desktop/mobile browser tests exercise preview, pinning, new origins, unmapped
+targets and cancellation. No data rebuild or routing server is required.

@@ -8,13 +8,16 @@ export interface Walk { from: number; to: number; seconds: number; source: strin
 export interface TransferRule { from: number; to: number; type: 0 | 1 | 2 | 3; seconds: number; fromTrip?: string; toTrip?: string; fromRoute?: string; toRoute?: string }
 export interface WalkingClosureTable { readonly maxSeconds:number; readonly pairs:number; begin(stop:number):number; end(stop:number):number; destination(entry:number):number; seconds(entry:number):number; path(from:number,to:number):Walk[] }
 export interface Network { stops: Stop[]; routes: Route[]; connections: Connection[]; walks: Walk[]; transfers: TransferRule[]; walkingClosure?:WalkingClosureTable }
-export interface OriginAccess { lat:number; lon:number; snapMetres:number; walks:{to:number;seconds:number;metres:number;path:[number,number][]}[] }
+export interface FootpathAnchor {from:number;to:number;t:number}
+export interface OriginAccess { anchor?:FootpathAnchor;lat:number; lon:number; snapMetres:number; walks:{to:number;seconds:number;metres:number;path:[number,number][]}[] }
 export interface Settings { origin?: 'point'; displayMinutes?: number; v: 1; stop: string; name: string; lat: number; lon: number; date: string; time: string; maxMinutes: number; walkMinutes: number; modes: Mode[]; maxTransfers: number; windowMinutes: number }
 export interface JourneyLeg { path?:[number,number][]; kind: 'walk' | 'transit'; from: number; to: number; departure: number; arrival: number; stops: number[]; route?: number; requestStop?: boolean; metres?: number; estimated?: boolean }
 export interface JourneyNode extends JourneyLeg { previous: number | null }
 export interface Reach { seconds: number; kind: 'walk' | 'transit'; arrival: number; boardings: number; requestStop?: boolean; journey: number | null }
 export interface WalkSource { stop: number; seconds: number; walked: number }
-export interface SearchResult { origin?:{lat:number;lon:number;snapMetres:number}; values: (Reach | null)[]; journeys: JourneyNode[]; routes: Route[]; walkSources: WalkSource[]; labels: number; elapsed: number; complete: true }
+export interface DestinationSource extends WalkSource { arrival:number;boardings:number;journey:number|null;requestStop?:boolean }
+export interface PointJourney { destination:{lat:number;lon:number;snapMetres:number};source:DestinationSource;value:Reach;legs:JourneyLeg[] }
+export interface SearchResult { destinationSources?:DestinationSource[]; origin?:{lat:number;lon:number;snapMetres:number;anchor?:FootpathAnchor}; values: (Reach | null)[]; journeys: JourneyNode[]; routes: Route[]; walkSources: WalkSource[]; labels: number; elapsed: number; complete: true }
 export interface StationProgress { completedRounds: number; totalRounds: number; processedLabels: number; queuedLabels: number; changes: { stop: number; value: Reach }[] }
 export interface FileRef { url: string; sha256: string; bytes: number }
 export interface ContourFiles { format?: 'sliso-contours-v1'; index: Record<string, number>; files: FileRef[] }

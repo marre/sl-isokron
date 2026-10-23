@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { journeyFor, journeyTime } from './core/journey';
 import { distanceText } from './core/walking';
 import { colorFor } from './core/settings';
-import { MODE_NAMES, type JourneyLeg, type Mode, type SearchResult, type Settings, type Stop } from './core/types';
+import { MODE_NAMES, type PointJourney, type JourneyLeg, type Mode, type SearchResult, type Settings, type Stop } from './core/types';
 
 const COLORS: Record<Mode, string> = { bus: '#245e49', metro: '#15516d', rail: '#724f8a', tram: '#946013', boat: '#156b72' };
 const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -18,10 +18,12 @@ export class JourneyView {
   private active: number | null = null;
   private pinned: number | null = null;
   private cutoff=Infinity;
+  private point?:PointJourney;
+  get isPinned(){return this.pinned!==null;}
   private timer?: ReturnType<typeof setTimeout>;
   private panel = document.querySelector<HTMLElement>('#journey-panel')!;
 
-  constructor(private map: L.Map, private markers: (L.CircleMarker|undefined)[], private onStart: (index: number) => void) {
+  constructor(private map: L.Map, private markers: (L.CircleMarker|undefined)[], private onStart: (index: number) => void, private onPointStart?: (point:{lat:number;lon:number})=>void) {
     const pane = map.createPane('journey'); pane.style.zIndex = '450'; pane.style.pointerEvents = 'none';
     this.layer = L.layerGroup().addTo(map);
     this.panel.addEventListener('mouseenter', () => clearTimeout(this.timer));
@@ -39,13 +41,13 @@ export class JourneyView {
 
   setCutoff(minutes:number) {
     this.cutoff=minutes;
-    if(this.active!==null&&(this.result?.values[this.active]?.seconds??Infinity)>minutes*60)this.close();
+    if(this.active!==null&&(this.point?.value.seconds??this.result?.values[this.active]?.seconds??Infinity)>minutes*60)this.close();
   }
 
   reset() { this.close(); this.result = undefined; this.settings = undefined; }
 
   close() {
-    clearTimeout(this.timer); this.pinned = null; this.hide();
+    clearTimeout(this.timer); this.pinned = null; this.hide();this.panel.dispatchEvent(new Event('journeyclose'));
   }
 
   hover(index: number) {
@@ -58,6 +60,13 @@ export class JourneyView {
     if (focus && !this.panel.hidden) this.panel.querySelector<HTMLButtonElement>(mobileLayout.matches?'#journey-expand':'#journey-pin')!.focus({ preventScroll: true });
   }
 
+  showPoint(point:PointJourney,pin=false){
+    clearTimeout(this.timer);
+    if(this.pinned!==null&&!pin)return;
+    if(pin)this.pinned=this.stops.length;
+    this.show(this.stops.length,point);
+  }
+
   leave() {
     clearTimeout(this.timer);
     if (this.pinned === null) this.timer = setTimeout(() => this.hide(), 180);
@@ -68,32 +77,33 @@ export class JourneyView {
       const value = this.result.values[this.active];
       if (value) this.markers[this.active]?.setStyle({ color: '#fff', fillColor: colorFor(value.seconds, this.settings.maxMinutes), weight: 2, radius: 7 });
     }
-    this.active = null; this.layer.clearLayers(); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
+    this.active = null; this.point=undefined; this.layer.clearLayers(); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
     this.panel.closest('.map-section')!.classList.remove('journey-open');
   }
 
-  private show(index: number) {
-    const result = this.result, settings = this.settings, value = result?.values[index];
-    if (!result || !settings || !value || !isPublicStop(this.stops[index]) || value.seconds>this.cutoff*60) { this.hide(); return; }
-    if (this.active === index && !this.panel.hidden) {
+  private show(index: number, point:PointJourney|undefined=index===this.stops.length?this.point:undefined) {
+    const stops=point?[...this.stops,{id:'@destination',name:'Vald målpunkt',station:'Vald målpunkt',platform:`Slutgång på kartlagd väg${point.destination.snapMetres>=1?` · ${Math.round(point.destination.snapMetres)} m från vald punkt`:''}`,lat:point.destination.lat,lon:point.destination.lon}]:this.stops;
+    const result = this.result, settings = this.settings, value = point?.value??result?.values[index];
+    if (!result || !settings || !value || !isPublicStop(stops[index]) || value.seconds>this.cutoff*60) { this.hide(); return; }
+    if (!point && this.active === index && !this.panel.hidden) {
       const button = this.panel.querySelector<HTMLButtonElement>('#journey-pin')!;
       button.textContent = this.pinned === index ? 'Fäst ✓' : 'Fäst resan';
       button.setAttribute('aria-pressed', String(this.pinned === index)); return;
     }
-    this.hide(); this.active = index;
-    const legs = journeyFor(result, index,this.stops), destination = this.stops[index];
-    const point = (i: number): L.LatLngTuple => [this.stops[i].lat, this.stops[i].lon];
+    this.hide(); this.active = index;this.point=point;
+    const legs = point?.legs??journeyFor(result,index,stops), destination = stops[index];
+    const position = (i: number): L.LatLngTuple => [stops[i].lat, stops[i].lon];
     for (const leg of legs) {
-      const coords = leg.path??leg.stops.map(point), color = leg.kind === 'walk' ? '#55645f' : COLORS[result.routes[leg.route!].mode];
+      const coords = leg.path??leg.stops.map(position), color = leg.kind === 'walk' ? '#55645f' : COLORS[result.routes[leg.route!].mode];
       L.polyline(coords, { pane: 'journey', interactive: false, color: '#fff', weight: 9, opacity: .95, className: 'journey-halo' }).addTo(this.layer);
       L.polyline(coords, { pane: 'journey', interactive: false, color, weight: 4, opacity: 1, dashArray: leg.kind === 'walk' ? '5 7' : undefined, className: `journey-line journey-${leg.kind}` }).addTo(this.layer);
-      for (const stop of leg.stops.filter(i=>isPublicStop(this.stops[i]))) L.circleMarker(point(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
+      for (const stop of leg.stops.filter(i=>isPublicStop(stops[i]))) L.circleMarker(position(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
     }
     this.markers[index]?.setStyle({ radius: 10, weight: 3, color: '#183e36' });
-    L.circleMarker(point(index), { pane: 'journey', interactive: false, radius: 10, weight: 3, color: '#183e36', fillColor: colorFor(value.seconds, settings.maxMinutes), fillOpacity: 1 }).addTo(this.layer);
-    const walkingGap = value.seconds > 0 && destination.walking === 'missing' && !destination.walkingArea;
+    L.circleMarker(position(index), { pane: 'journey', interactive: false, radius: 10, weight: 3, color: '#183e36', fillColor: colorFor(value.seconds, settings.maxMinutes), fillOpacity: 1 }).addTo(this.layer);
+    const walkingGap = !point && value.seconds > 0 && destination.walking === 'missing' && !destination.walkingArea;
     const time = (epoch: number) => `<time datetime="${new Date(epoch * 1000).toISOString()}">${journeyTime(epoch, settings.date)}</time>`;
-    const stopRow = (at: number, epoch: number) => `<div class="journey-stop">${time(epoch)}<div><strong>${escape(this.stops[at].name)}</strong><small>${escape(this.stops[at].platform)}</small></div></div>`;
+    const stopRow = (at: number, epoch: number) => `<div class="journey-stop">${time(epoch)}<div><strong>${escape(stops[at].name)}</strong><small>${escape(stops[at].platform)}</small></div></div>`;
     const rows = legs.map((leg, i) => {
       const route = leg.kind === 'transit' ? result.routes[leg.route!] : undefined;
       const color = route ? COLORS[route.mode] : '#55645f';
@@ -102,7 +112,7 @@ export class JourneyView {
     }).join('');
     const walks=legs.filter(l=>l.kind==='walk'),walkingSeconds=walks.reduce((sum,l)=>sum+l.arrival-l.departure,0);
     const walkingMetres=walks.every(l=>l.metres!==undefined)?walks.reduce((sum,l)=>sum+l.metres!,0):undefined;
-    this.panel.innerHTML = `<div class="journey-header"><div><span class="eyebrow">RESAN TILL</span><h2 id="journey-title">${escape(destination.name)}</h2><p>${escape(destination.platform)}</p><button id="journey-expand" class="journey-expand" aria-expanded="false" aria-controls="journey-content"><strong>${minutes(value.seconds)}</strong> · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} ${value.boardings===2?'byte':'byten'}`} <span>Visa resan ↑</span></button></div><button id="journey-close" aria-label="Stäng resedetaljer">×</button></div><div id="journey-content" class="journey-scroll"><div class="journey-summary"><strong>${minutes(value.seconds)}</strong><span>${value.kind === 'walk' ? 'Gång' : `${Math.max(0, value.boardings - 1)} ${value.boardings === 2 ? 'byte' : 'byten'}`}</span><button id="journey-pin" aria-pressed="${this.pinned === index}">${this.pinned === index ? 'Fäst ✓' : 'Fäst resan'}</button></div>${walks.some(l=>l.estimated) ? '<p class="journey-request">Resan innehåller uppskattad gång: publicerade stationsbyten i tidtabellen, granskade stationspassager eller byten mellan hållplatser med samma namn inom 250 meter. Publicerad minsta bytestid används försiktigt som gångtid där kartkoppling saknas. Avstånd saknas för sådana stationsbyten; övriga uppskattade sträckor kan ha uppskattat avstånd. Källor och begränsningar finns under Om datan.</p>' : ''}${walkingGap ? '<p class="journey-request">Vi saknar gångvägen från detta hållplatsläge i kartunderlaget. En kortare resa kan därför finnas.</p>' : ''}${legs.length ? `<p class="journey-times">Avgång ${time(legs[0].departure)}<br>Ankomst ${time(legs.at(-1)!.arrival)}</p>${walks.length?`<p class="journey-walking">Gång totalt: ${minutes(walkingSeconds)} · ${distanceText(walkingMetres)}</p>`:''}<ol class="journey-legs">${rows}</ol>` : '<p>Du är redan vid starthållplatsen.</p>'}<p class="journey-note">Planerade tider i Stockholmstid. Initial väntan räknas inte; väntan vid byten ingår.</p><p class="journey-note">${settings.origin==='point'?'Gången från kartpunkten följer kartlagda vägar. Övrig resväg är schematisk via hållplatserna.':'Schematisk resväg via hållplatserna. Linjerna visar inte exakt spår- eller gånggeometri.'} Streckad linje betyder gång.</p><div class="journey-actions"><button id="journey-fit" ${legs.length ? '' : 'disabled'}>Visa hela resvägen</button><button id="journey-start">Res härifrån</button></div></div>`;
+    this.panel.innerHTML = `<div class="journey-header"><div><span class="eyebrow">RESAN TILL</span><h2 id="journey-title">${escape(destination.name)}</h2><p>${escape(destination.platform)}</p><button id="journey-expand" class="journey-expand" aria-expanded="false" aria-controls="journey-content"><strong>${minutes(value.seconds)}</strong> · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} ${value.boardings===2?'byte':'byten'}`} <span>Visa resan ↑</span></button></div><button id="journey-close" aria-label="Stäng resedetaljer">×</button></div><div id="journey-content" class="journey-scroll"><div class="journey-summary"><strong>${minutes(value.seconds)}</strong><span>${value.kind === 'walk' ? 'Gång' : `${Math.max(0, value.boardings - 1)} ${value.boardings === 2 ? 'byte' : 'byten'}`}</span><button id="journey-pin" aria-pressed="${this.pinned === index}">${this.pinned === index ? 'Fäst ✓' : 'Fäst resan'}</button></div>${walks.some(l=>l.estimated) ? '<p class="journey-request">Resan innehåller uppskattad gång: publicerade stationsbyten i tidtabellen, granskade stationspassager eller byten mellan hållplatser med samma namn inom 250 meter. Publicerad minsta bytestid används försiktigt som gångtid där kartkoppling saknas. Avstånd saknas för sådana stationsbyten; övriga uppskattade sträckor kan ha uppskattat avstånd. Källor och begränsningar finns under Om datan.</p>' : ''}${walkingGap ? '<p class="journey-request">Vi saknar gångvägen från detta hållplatsläge i kartunderlaget. En kortare resa kan därför finnas.</p>' : ''}${legs.length ? `<p class="journey-times">Avgång ${time(legs[0].departure)}<br>Ankomst ${time(legs.at(-1)!.arrival)}</p>${walks.length?`<p class="journey-walking">Gång totalt: ${minutes(walkingSeconds)} · ${distanceText(walkingMetres)}</p>`:''}<ol class="journey-legs">${rows}</ol>` : '<p>Du är redan vid starthållplatsen.</p>'}<p class="journey-note">Planerade tider i Stockholmstid. Initial väntan räknas inte; väntan vid byten ingår.</p><p class="journey-note">${point?'Sista gångvägen till målpunkt följer kartlagda vägar. '+(settings.origin==='point'?'Även gången från startpunkten följer kartlagda vägar. ':'')+'Övrig resväg är schematisk via hållplatserna.':settings.origin==='point'?'Gången från kartpunkten följer kartlagda vägar. Övrig resväg är schematisk via hållplatserna.':'Schematisk resväg via hållplatserna. Linjerna visar inte exakt spår- eller gånggeometri.'} Streckad linje betyder gång.</p><div class="journey-actions"><button id="journey-fit" ${legs.length ? '' : 'disabled'}>Visa hela resvägen</button><button id="journey-start">Res härifrån</button></div></div>`;
     this.panel.hidden = false; this.panel.closest('.map-section')!.classList.add('journey-open');
     this.panel.dispatchEvent(new Event('journeyopen'));
     this.panel.querySelector<HTMLButtonElement>('#journey-expand')!.onclick=()=>{
@@ -113,7 +123,7 @@ export class JourneyView {
     };
     this.panel.querySelector<HTMLButtonElement>('#journey-close')!.onclick = () => { this.close(); this.map.getContainer().focus(); };
     this.panel.querySelector<HTMLButtonElement>('#journey-pin')!.onclick = () => { this.pinned = this.pinned === index ? null : index; this.show(index); };
-    this.panel.querySelector<HTMLButtonElement>('#journey-start')!.onclick = () => this.onStart(index);
+    this.panel.querySelector<HTMLButtonElement>('#journey-start')!.onclick = () => {if(point)this.onPointStart?.(point.destination);else this.onStart(index);};
     this.panel.querySelector<HTMLButtonElement>('#journey-fit')!.onclick = () => this.fit(legs);
   }
 

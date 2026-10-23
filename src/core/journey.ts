@@ -3,8 +3,12 @@ import { stockholmNow } from './time';
 
 /** Recover the witness for this destination, never another stop's best label. */
 export function journeyFor(result: SearchResult, destination: number, stops?:Stop[]): JourneyLeg[] {
-  const legs: JourneyLeg[] = [];
-  let at = result.values[destination]?.journey ?? null;
+  return journeyFromNode(result,result.values[destination]?.journey??null,undefined,stops);
+}
+
+/** Recover an alternate witness and optionally append a final mapped walk. */
+export function journeyFromNode(result:SearchResult,at:number|null,tail?:JourneyLeg,stops?:Stop[]):JourneyLeg[]{
+  const legs:JourneyLeg[]=tail?[{...tail,stops:[...tail.stops]}]:[];
   while (at !== null) {
     const { previous, ...leg } = result.journeys[at];
     legs.push({ ...leg, ...(stops&&leg.kind==='walk'?{path:leg.path??leg.stops.map(i=>[stops[i].lat,stops[i].lon] as [number,number])}:{}), stops: [...leg.stops] }); at = previous;

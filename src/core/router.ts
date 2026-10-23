@@ -1,5 +1,6 @@
+import {isPublicStop} from './stops';
 import {profileStart,profileEnd} from './profile';
-import type { OriginAccess, Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
+import type { DestinationSource, OriginAccess, Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
 interface TransferContext {
@@ -27,7 +28,7 @@ export function canTransfer(l: Label, c: Connection, network: Network, candidate
  * Each boarding follows the whole trip; staying seated never requires a legal alight/reboard.
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
-export function search(network: Network, settings: Settings, options: { access?:OriginAccess; prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
+export function search(network: Network, settings: Settings, options: { destinationJourneys?:boolean; access?:OriginAccess; prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
   const indexing=profileStart();
   validateSettings(settings);
   const started = performance.now(), t0 = stockholmInstant(settings.date, settings.time);
@@ -202,8 +203,8 @@ export function search(network: Network, settings: Settings, options: { access?:
   // Shared nodes avoid copying a complete itinerary for every reachable destination.
   const serialization=profileStart();
   const journeys: JourneyNode[] = [], ids = new Map<Label, number>();
-  witnesses.forEach((witness, stop) => {
-    if (!witness?.previous) return;
+  function serialize(witness:Label|null):number|null {
+    if (!witness?.previous) return null;
     const pending: Label[] = [];
     for (let l: Label | null = witness; l?.previous && !ids.has(l); l = l.previous) pending.push(l);
     while (pending.length) {
@@ -225,8 +226,22 @@ export function search(network: Network, settings: Settings, options: { access?:
       }
       ids.set(l, journeys.length); journeys.push(node);
     }
-    values[stop]!.journey = ids.get(witness)!;
-  });
+    return ids.get(witness)!;
+  }
+  witnesses.forEach((witness,stop)=>{if(values[stop])values[stop]!.journey=serialize(witness);});
+  let destinationSources:DestinationSource[]|undefined;
+  if(options.destinationJourneys){
+    // Existing routing dominance is stronger than terminal-walk dominance.
+    // Reuse the surviving labels once, without bookkeeping on every relaxation.
+    const eligible=network.stops.map(isPublicStop),terminal:Label[][]=network.stops.map(()=>[]);
+    const dominates=(a:Label,b:Label)=>a.walk<=b.walk&&(cost(a)<cost(b)||(cost(a)===cost(b)&&(a.time<b.time||(a.time===b.time&&a.boardings<=b.boardings))));
+    for(const list of frontiers.values())for(const l of list){
+      if(!l.active||!eligible[l.stop])continue;
+      const row=terminal[l.stop];if(row.some(a=>dominates(a,l)))continue;
+      terminal[l.stop]=[...row.filter(a=>!dominates(l,a)),l];
+    }
+    destinationSources=terminal.flatMap(row=>row.map(l=>({stop:l.stop,seconds:cost(l),walked:l.walk,arrival:l.time,boardings:l.boardings,journey:serialize(l),requestStop:l.requestStop||undefined})));
+  }
   profileEnd('routing.journeys',serialization,{nodes:journeys.length,labels});
-  return { ...(options.access?{origin:{lat:options.access.lat,lon:options.access.lon,snapMetres:options.access.snapMetres}}:{}), values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
+  return { ...(destinationSources?{destinationSources}:{}), ...(options.access?{origin:{lat:options.access.lat,lon:options.access.lon,snapMetres:options.access.snapMetres,...(options.access.anchor?{anchor:options.access.anchor}:{})}}:{}), values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
 }
