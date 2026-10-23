@@ -182,8 +182,16 @@ test('walking legs show network distance and cancellation rejects in-flight resu
  await expect(page.locator('#journey-panel')).toContainText('Gång totalt: 4 min');
  await page.getByRole('button',{name:'Stäng resedetaljer'}).click();
  await page.locator('#reset-search').click();await select(page);
- await page.route('**/*.bin',async r=>{await new Promise(resolve=>setTimeout(resolve,800));await r.continue();});
- await page.locator('#calculate').click();await page.locator('#cancel:visible, #map-cancel:visible').first().click();
+ // A warm Cache API response can finish before the cancel click. Hold an actual
+ // uncached shard until cancellation instead of relying on an arbitrary delay.
+ await page.evaluate(async()=>{await caches.delete('sliso-data-v1');});
+ let release!:()=>void,requested!:()=>void;
+ const gate=new Promise<void>(resolve=>release=resolve),loading=new Promise<void>(resolve=>requested=resolve);
+ await page.route('**/*.bin',async r=>{requested();await gate;await r.continue().catch(()=>{});});
+ try{
+  await page.locator('#calculate').click();await loading;
+  await page.locator('#cancel:visible, #map-cancel:visible').first().click();
+ }finally{release();}
  await page.waitForTimeout(1000);
  await expect(page.locator('#legend')).toBeHidden();await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('#status')).toContainText('Avbruten');

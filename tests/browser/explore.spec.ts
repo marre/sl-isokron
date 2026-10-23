@@ -11,8 +11,11 @@ test('legend and cutoff explore cached results without new transport searches or
  await expect(page.locator('#legend')).toBeVisible();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga',{timeout:20000});
  if(await page.locator('#legend-toggle').isVisible())await page.locator('#legend-toggle').click();
- const markers=page.locator('#map path[role=button]:visible');
- const count=await markers.count(),loaded=downloads.length,origin=page.getByRole('button',{name:'T-Centralen · Testläge A',exact:true});
+ const markers=page.locator('#map path[role=button]');
+ // Leaflet clips offscreen SVG paths to zero area; count the presentation state,
+ // independent of viewport panning or mobile panel layout.
+ const shown=()=>markers.evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
+ const count=await shown(),loaded=downloads.length,origin=page.getByRole('button',{name:'T-Centralen · Testläge A',exact:true});
  const color=await origin.getAttribute('fill');
  expect(searches).toBe(1);expect(count).toBeGreaterThan(5);
  await expect(page.locator('.bands button, #fit-result, #choose-point')).toHaveCount(0);
@@ -21,10 +24,10 @@ test('legend and cutoff explore cached results without new transport searches or
  await expect(page.locator('#display-time')).toHaveValue('30');
  await expect(page.locator('#result-count')).toContainText('≤30 min');
  await page.locator('#show-all-results').click();
- await expect(markers).toHaveCount(count);
+ await expect.poll(shown).toBe(count);
  await page.locator('#display-time').fill('30');
  await page.locator('#display-time').fill('1');
- await expect(markers).toHaveCount(1);
+ await expect.poll(shown).toBe(1);
  await expect(page.locator('#display-output')).toHaveText('1 min');
  await expect(page.locator('.leaflet-walking-areas-pane canvas[data-cutoff="1"]')).toBeVisible();
  expect(await origin.getAttribute('fill')).toBe(color);
@@ -39,7 +42,7 @@ test('legend and cutoff explore cached results without new transport searches or
  const painted=await page.locator('.leaflet-walking-areas-pane canvas').evaluate((canvas:HTMLCanvasElement)=>canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height).data.some((value,i)=>i%4===3&&value>0));
  expect(painted).toBe(true);
  await page.locator('#show-all-results').click();
- await expect(markers).toHaveCount(count);
+ await expect.poll(shown).toBe(count);
  await expect(page.locator('#display-time')).toHaveValue('120');
  await expect(page.locator('#show-all-results')).toBeHidden();
  expect(searches).toBe(1);expect(downloads.length).toBe(loaded);
