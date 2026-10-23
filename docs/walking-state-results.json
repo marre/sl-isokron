@@ -1,0 +1,694 @@
+{
+  "routerSHA256": "e91120b18906d99f0cf07a50e4b871540951de2a8eda1037c2f46ba4ea3c4137",
+  "summary": [
+    {
+      "batch": "bookkeeping",
+      "origin": "Arlanda terminal 4",
+      "variant": "baseline",
+      "medianMs": 2597.900000002235,
+      "minMs": 2400.60000000149,
+      "maxMs": 2795.2000000029802,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Arlanda terminal 4",
+      "variant": "cached",
+      "medianMs": 1783.3999999985099,
+      "minMs": 1755.8999999985099,
+      "maxMs": 1810.8999999985099,
+      "speedup": 1.4567118986230827,
+      "reductionPercent": 31.35224604499882
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Arlanda terminal 4",
+      "variant": "compact",
+      "medianMs": 1871.8499999977648,
+      "minMs": 1826.5999999940395,
+      "maxMs": 1917.1000000014901,
+      "speedup": 1.3878783022172383,
+      "reductionPercent": 27.94757303991091
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Arlanda terminal 4",
+      "variant": "lazy",
+      "medianMs": 1880.5499999970198,
+      "minMs": 1722.1999999955297,
+      "maxMs": 2038.8999999985099,
+      "speedup": 1.3814575523152015,
+      "reductionPercent": 27.61268717058386
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Vallentuna",
+      "variant": "baseline",
+      "medianMs": 12555.75,
+      "minMs": 12362.60000000149,
+      "maxMs": 12748.89999999851,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Vallentuna",
+      "variant": "cached",
+      "medianMs": 9489.95000000298,
+      "minMs": 9423.30000000447,
+      "maxMs": 9556.60000000149,
+      "speedup": 1.3230575503554873,
+      "reductionPercent": 24.41749795907867
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Vallentuna",
+      "variant": "compact",
+      "medianMs": 9161.25,
+      "minMs": 8545.5,
+      "maxMs": 9777,
+      "speedup": 1.3705280392959476,
+      "reductionPercent": 27.035422017800613
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Vallentuna",
+      "variant": "lazy",
+      "medianMs": 10417.900000002235,
+      "minMs": 10046.40000000596,
+      "maxMs": 10789.39999999851,
+      "speedup": 1.2052093032182403,
+      "reductionPercent": 17.026860203474627
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Sk\u00e4rvik",
+      "variant": "baseline",
+      "medianMs": 8263.199999999255,
+      "minMs": 8049.89999999851,
+      "maxMs": 8476.5,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Sk\u00e4rvik",
+      "variant": "cached",
+      "medianMs": 5762.449999999255,
+      "minMs": 5731.60000000149,
+      "maxMs": 5793.29999999702,
+      "speedup": 1.4339733967323487,
+      "reductionPercent": 30.263699293254742
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Sk\u00e4rvik",
+      "variant": "compact",
+      "medianMs": 5879.650000002235,
+      "minMs": 5801.20000000298,
+      "maxMs": 5958.10000000149,
+      "speedup": 1.4053897766016878,
+      "reductionPercent": 28.84536257136745
+    },
+    {
+      "batch": "bookkeeping",
+      "origin": "Sk\u00e4rvik",
+      "variant": "lazy",
+      "medianMs": 6465.75,
+      "minMs": 6367.89999999851,
+      "maxMs": 6563.60000000149,
+      "speedup": 1.277995592158567,
+      "reductionPercent": 21.7524687772221
+    },
+    {
+      "batch": "numeric",
+      "origin": "Arlanda terminal 4",
+      "variant": "baseline",
+      "medianMs": 2544.0499999970198,
+      "minMs": 2416.1999999955297,
+      "maxMs": 2671.89999999851,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "numeric",
+      "origin": "Arlanda terminal 4",
+      "variant": "numeric",
+      "medianMs": 1188.949999999255,
+      "minMs": 1177.1000000014901,
+      "maxMs": 1200.7999999970198,
+      "speedup": 2.1397451532853475,
+      "reductionPercent": 53.26546254984581
+    },
+    {
+      "batch": "numeric",
+      "origin": "Arlanda terminal 4",
+      "variant": "guarded",
+      "medianMs": 938.1999999992549,
+      "minMs": 911.1000000014901,
+      "maxMs": 965.2999999970198,
+      "speedup": 2.711628650606523,
+      "reductionPercent": 63.12179398988409
+    },
+    {
+      "batch": "numeric",
+      "origin": "Vallentuna",
+      "variant": "baseline",
+      "medianMs": 12502.20000000298,
+      "minMs": 12352.70000000298,
+      "maxMs": 12651.70000000298,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "numeric",
+      "origin": "Vallentuna",
+      "variant": "numeric",
+      "medianMs": 6087.39999999851,
+      "minMs": 5196.29999999702,
+      "maxMs": 6978.5,
+      "speedup": 2.0537832243660743,
+      "reductionPercent": 51.30936955098255
+    },
+    {
+      "batch": "numeric",
+      "origin": "Vallentuna",
+      "variant": "guarded",
+      "medianMs": 3081.4500000029802,
+      "minMs": 2981.3000000044703,
+      "maxMs": 3181.60000000149,
+      "speedup": 4.05724577714741,
+      "reductionPercent": 75.35273791810845
+    },
+    {
+      "batch": "numeric",
+      "origin": "Sk\u00e4rvik",
+      "variant": "baseline",
+      "medianMs": 8319.050000000745,
+      "minMs": 8016.5,
+      "maxMs": 8621.60000000149,
+      "speedup": 1.0,
+      "reductionPercent": 0.0
+    },
+    {
+      "batch": "numeric",
+      "origin": "Sk\u00e4rvik",
+      "variant": "numeric",
+      "medianMs": 3323.85000000149,
+      "minMs": 3229.2000000029802,
+      "maxMs": 3418.5,
+      "speedup": 2.502835567187754,
+      "reductionPercent": 60.04531767447975
+    },
+    {
+      "batch": "numeric",
+      "origin": "Sk\u00e4rvik",
+      "variant": "guarded",
+      "medianMs": 1859.75,
+      "minMs": 1829.6000000014901,
+      "maxMs": 1889.8999999985099,
+      "speedup": 4.473208764619301,
+      "reductionPercent": 77.6446829866411
+    }
+  ],
+  "batches": [
+    {
+      "dataset": "sl-40c8446978cb4fc009a6",
+      "measuredAt": "2026-10-23T06:41:18.459Z",
+      "runtime": "154.0.8037.57",
+      "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "notes": [
+        "Desktop Chromium worker, fresh worker per trial; no CPU sampler.",
+        "Local fixture load excluded; algorithm elapsed includes indexing, route scanning, walking propagation and journey serialization.",
+        "Alternating variant order; two trials per variant per origin. No production changes."
+      ],
+      "cases": [
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 2795.2000000029802,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "cached",
+          "trial": 0,
+          "ms": 1810.8999999985099,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "compact",
+          "trial": 0,
+          "ms": 1826.5999999940395,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "lazy",
+          "trial": 0,
+          "ms": 2038.8999999985099,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "lazy",
+          "trial": 1,
+          "ms": 1722.1999999955297,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "compact",
+          "trial": 1,
+          "ms": 1917.1000000014901,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "cached",
+          "trial": 1,
+          "ms": 1755.8999999985099,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 2400.60000000149,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 12748.89999999851,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "cached",
+          "trial": 0,
+          "ms": 9556.60000000149,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "compact",
+          "trial": 0,
+          "ms": 8545.5,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "lazy",
+          "trial": 0,
+          "ms": 10789.39999999851,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "lazy",
+          "trial": 1,
+          "ms": 10046.40000000596,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "compact",
+          "trial": 1,
+          "ms": 9777,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "cached",
+          "trial": 1,
+          "ms": 9423.30000000447,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 12362.60000000149,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 8049.89999999851,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "cached",
+          "trial": 0,
+          "ms": 5731.60000000149,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "compact",
+          "trial": 0,
+          "ms": 5958.10000000149,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "lazy",
+          "trial": 0,
+          "ms": 6367.89999999851,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "lazy",
+          "trial": 1,
+          "ms": 6563.60000000149,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "compact",
+          "trial": 1,
+          "ms": 5801.20000000298,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "cached",
+          "trial": 1,
+          "ms": 5793.29999999702,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 8476.5,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        }
+      ]
+    },
+    {
+      "dataset": "sl-40c8446978cb4fc009a6",
+      "measuredAt": "2026-10-23T06:46:28.833Z",
+      "runtime": "154.0.8037.57",
+      "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "notes": [
+        "Desktop Chromium worker, fresh worker per trial; no CPU sampler.",
+        "Local fixture load excluded; algorithm elapsed includes indexing, route scanning, walking propagation and journey serialization.",
+        "Alternating variant order; two trials per variant per origin. No production changes."
+      ],
+      "cases": [
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 2671.89999999851,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "numeric",
+          "trial": 0,
+          "ms": 1177.1000000014901,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "guarded",
+          "trial": 0,
+          "ms": 965.2999999970198,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "guarded",
+          "trial": 1,
+          "ms": 911.1000000014901,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "numeric",
+          "trial": 1,
+          "ms": 1200.7999999970198,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Arlanda terminal 4",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 2416.1999999955297,
+          "labels": 176087,
+          "reachable": 7026,
+          "walkingSources": 10268,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 12352.70000000298,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "numeric",
+          "trial": 0,
+          "ms": 6978.5,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "guarded",
+          "trial": 0,
+          "ms": 3181.60000000149,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "guarded",
+          "trial": 1,
+          "ms": 2981.3000000044703,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "numeric",
+          "trial": 1,
+          "ms": 5196.29999999702,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Vallentuna",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 12651.70000000298,
+          "labels": 769098,
+          "reachable": 9884,
+          "walkingSources": 14255,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "baseline",
+          "trial": 0,
+          "ms": 8621.60000000149,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "numeric",
+          "trial": 0,
+          "ms": 3229.2000000029802,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "guarded",
+          "trial": 0,
+          "ms": 1889.8999999985099,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "guarded",
+          "trial": 1,
+          "ms": 1829.6000000014901,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "numeric",
+          "trial": 1,
+          "ms": 3418.5,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        },
+        {
+          "origin": "Sk\u00e4rvik",
+          "variant": "baseline",
+          "trial": 1,
+          "ms": 8016.5,
+          "labels": 502371,
+          "reachable": 8294,
+          "walkingSources": 12377,
+          "allObjectivesWalkingFrontiersAndJourneysIdentical": true
+        }
+      ]
+    }
+  ],
+  "closure": {
+    "dataset": "sl-40c8446978cb4fc009a6",
+    "full": true,
+    "sampleCount": 14195,
+    "method": "All stops; directed shortest paths <=1800 seconds.",
+    "elapsedSeconds": 10.198034729997744,
+    "sampleDirect": 483245,
+    "sampleClosure": 819970,
+    "sampleNew": 336725,
+    "sampleImproved": 19910
+  },
+  "counters": {
+    "dataset": "sl-40c8446978cb4fc009a6",
+    "origin": "Vallentuna",
+    "accepted": 769098,
+    "attempts": 26007958,
+    "walkingAttempts": 25883874,
+    "budgetRejected": 9677552,
+    "dominated": 15561308,
+    "dominanceTests": 40887044,
+    "maxFrontier": 30,
+    "frontierKeys": 165401,
+    "retainedFrontierLabels": 388876
+  },
+  "regressions": {
+    "passed": 205,
+    "failed": 0,
+    "variants": 5,
+    "seededTransferNetworksPerVariant": 150,
+    "independentExhaustiveNetworksPerVariant": 60
+  }
+}
