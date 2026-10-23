@@ -16,7 +16,9 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 MAX_FILE = 25 * 1024 * 1024
-MAX_ARCHIVE = 768 * 1024 * 1024
+# Both retained versions can contain physical footpath tiles. Browser requests
+# still fetch only the nearby tiles; this limit applies to build-time archives.
+MAX_ARCHIVE = 896 * 1024 * 1024
 MAX_UNPACKED = 3 * 1024 * 1024 * 1024
 VERSION = re.compile(r'sl-[0-9a-f]{20}')
 
