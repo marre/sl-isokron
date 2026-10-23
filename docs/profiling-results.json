@@ -1,0 +1,5780 @@
+{
+  "dataset": "sl-40c8446978cb4fc009a6",
+  "publishedDataset": "sl-f86213b8fb8e39a9260c",
+  "measuredAt": "2026-10-23T05:45:02.281Z",
+  "notes": [
+    "Real production WalkingView, bands worker and codec; unminified compiled harness with stage timers.",
+    "Exact recorded walking frontiers previously checked against the promoted router. Routing excluded from these contour-only phases.",
+    "Async stage sums overlap, and include event-loop stalls; do not add them to infer wall time or CPU.",
+    "HTTP is local HTTP/1.1 keep-alive, without bandwidth throttling. A 40 ms case adds fixed response latency only.",
+    "Mobile viewport on desktop Chromium; not physical mobile hardware.",
+    "Use stage-timer-only repeats 2 and 3 for city wall-time summaries. CPU sampling run 1 was slower (12.3 s); sampling changes scheduling and is diagnostic.",
+    "The harness isolates WalkingView after preparing routing/markers; it is not the previous full-app 30-second city-transition smoke.",
+    "Browser caches are empty for cold runs; host filesystem caches are not reset. Disk-warm resets the walking worker and reuses CacheStorage. Decoded-cutoff retains the same worker.",
+    "No bandwidth throttling or physical-phone test was performed.",
+    "Reduced-repaint variants intercept worker messages in the harness only. Final-only is a counterfactual with no progressive paint, not a proposed product experience.",
+    "Raw events and CPU traces are saved locally under .data-build/profiling; stage intervals may overlap and nested durations must not be added.",
+    "Full-app diagnostics varied from 7.9 to 53.2 seconds. The cause of the variance is unresolved; do not attribute the historical 30-second result solely to automation or infer a production speedup from isolated-component timings."
+  ],
+  "summary": {
+    "cityColdMs": 6536.5,
+    "cityDiskWarmMs": 4922.10009765625,
+    "cityCutoffMs": 125.5999755859375,
+    "city40msLatencyColdMs": 11859.64990234375,
+    "city200msPaintColdMs": 6214.599853515625,
+    "city200msPaintWarmMs": 3931.300048828125,
+    "cityFinalOnlyColdMs": 5228.10009765625,
+    "cityFinalOnlyWarmMs": 3000.60009765625,
+    "cityFinalPixelsEqual": true
+  },
+  "contours": [
+    {
+      "name": "city-direct-1",
+      "zoom": 13,
+      "latency": 0,
+      "cpu": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 12291.400146484375,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.399999998509884,
+              "maxMs": 3.399999998509884
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 36.69999999552965,
+              "maxMs": 36.69999999552965
+            },
+            "main.budgets": {
+              "count": 150,
+              "sumMs": 1080.699999973178,
+              "maxMs": 203.69999999552965
+            },
+            "main.post": {
+              "count": 150,
+              "sumMs": 119.89999999850988,
+              "maxMs": 5.200000002980232
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 3942.099999807775,
+              "maxMs": 94.19999999552965
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 5199.400000050664,
+              "maxMs": 112.10000000149012
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 13572.300000093877,
+              "maxMs": 474.1000000014901
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 9786.099999904633,
+              "maxMs": 442.19999999552965
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 305.20000007003546,
+              "maxMs": 194.5
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 9617.20000001043,
+              "maxMs": 198.20000000298023
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 42436.899999946356,
+              "maxMs": 502.29999999701977
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 14020.699999831617,
+              "maxMs": 286.79999999701977
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 152.3000000566244,
+              "maxMs": 4.700000002980232
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 56972.69999986887,
+              "maxMs": 510.6000000014901
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5549.599999964237,
+              "maxMs": 41.70000000298023
+            },
+            "render.resolve": {
+              "count": 150,
+              "sumMs": 333.1999999731779,
+              "maxMs": 82.59999999403954
+            },
+            "raster.add": {
+              "count": 150,
+              "sumMs": 877.8000000342727,
+              "maxMs": 79.10000000149012,
+              "scanMs": 576.1000001206994,
+              "fillMs": 263.5999999716878,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 150,
+              "sumMs": 882.1000000163913,
+              "maxMs": 79.10000000149012
+            },
+            "render.paint": {
+              "count": 150,
+              "sumMs": 2117.89999999851,
+              "maxMs": 81.19999999552965
+            },
+            "render.extent": {
+              "count": 150,
+              "sumMs": 1169.0999999940395,
+              "maxMs": 45.5
+            },
+            "render.total": {
+              "count": 150,
+              "sumMs": 4504.299999959767,
+              "maxMs": 220
+            },
+            "main.canvas": {
+              "count": 149,
+              "sumMs": 177.69999995827675,
+              "maxMs": 10.399999998509884
+            }
+          },
+          "events": 10262,
+          "firstPaintMs": 224.89990234375,
+          "lastPaintMs": 12286.800048828125,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 13578.96,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 3993.717000000006
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 2088.212
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1760.6000000000008
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1210.5300000000009
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1001.8720000000002
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 654.7439999999996
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 440.69199999999984
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 366.6209999999998
+              },
+              {
+                "name": "fetch @ ",
+                "ms": 362.511
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 341.62000000000006
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 295.60100000000006
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 289.47299999999996
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 245.797
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 98.64100000000002
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 69.79200000000002
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 67.91199999999999
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 54.243
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 50.696000000000005
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 40.85999999999999
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 39.778
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 30.616000000000003
+              },
+              {
+                "name": "open @ ",
+                "ms": 26.052999999999997
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 21.020999999999997
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 10.443
+              },
+              {
+                "name": "now @ ",
+                "ms": 7.921
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 14132.973,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 8912.587999999992
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 2451.0660000000034
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1143.7639999999994
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 537.7870000000001
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 433.6229999999997
+              },
+              {
+                "name": "image @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 145.293
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 112.86099999999995
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 73.36800000000001
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 56.760999999999996
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 52.998
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 20.265
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 19.955000000000002
+              },
+              {
+                "name": "pump @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 16.319
+              },
+              {
+                "name": "draw @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 13.303
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 11.954
+              },
+              {
+                "name": "removeEventListener @ ",
+                "ms": 11.580000000000002
+              },
+              {
+                "name": "addEventListener @ ",
+                "ms": 10.806
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 9.369
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 8.313
+              },
+              {
+                "name": "onAdd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 6.734
+              },
+              {
+                "name": "project @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 6.6450000000000005
+              },
+              {
+                "name": "now @ ",
+                "ms": 5.474
+              },
+              {
+                "name": "updateView @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.15
+              },
+              {
+                "name": "toPoint @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 4.829
+              },
+              {
+                "name": "setTransform @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 4.571
+              }
+            ]
+          }
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 5652.599853515625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 5.199999995529652,
+              "maxMs": 5.199999995529652
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 13.5,
+              "maxMs": 13.5
+            },
+            "main.budgets": {
+              "count": 79,
+              "sumMs": 277.20000000298023,
+              "maxMs": 16.399999998509884
+            },
+            "main.post": {
+              "count": 79,
+              "sumMs": 49.19999998807907,
+              "maxMs": 4.600000001490116
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1738.8000000491738,
+              "maxMs": 65
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 9152.199999943376,
+              "maxMs": 117.39999999850988
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 74.10000011324883,
+              "maxMs": 2
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 10974.000000096858,
+              "maxMs": 134.5
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 11063.899999976158,
+              "maxMs": 112.89999999850988
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 124.49999994039536,
+              "maxMs": 7.299999997019768
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 22187.100000046194,
+              "maxMs": 178.59999999403954
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4815.600000187755,
+              "maxMs": 30.599999994039536
+            },
+            "render.resolve": {
+              "count": 79,
+              "sumMs": 89.69999998062849,
+              "maxMs": 12.300000004470348
+            },
+            "raster.add": {
+              "count": 79,
+              "sumMs": 699.5,
+              "maxMs": 48.399999998509884,
+              "scanMs": 479.30000004917383,
+              "fillMs": 194.79999997466803,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 79,
+              "sumMs": 700.2999999970198,
+              "maxMs": 48.5
+            },
+            "render.paint": {
+              "count": 79,
+              "sumMs": 1006.6000000089407,
+              "maxMs": 66.80000000447035
+            },
+            "render.extent": {
+              "count": 79,
+              "sumMs": 588.6999999880791,
+              "maxMs": 21.099999994039536
+            },
+            "render.total": {
+              "count": 79,
+              "sumMs": 2386.2999999821186,
+              "maxMs": 90.89999999850988
+            },
+            "main.canvas": {
+              "count": 78,
+              "sumMs": 69.29999999701977,
+              "maxMs": 4.899999998509884
+            }
+          },
+          "events": 7193,
+          "firstPaintMs": 198.7998046875,
+          "lastPaintMs": 5648.199951171875,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 6190.401,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 1702.8090000000038
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 963.4640000000009
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 728.4950000000003
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 611.5140000000002
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 504.76600000000013
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 311.9949999999999
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 283.3230000000001
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 228.05700000000004
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 199.00300000000004
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 154.81299999999996
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 109.33699999999995
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 69.02999999999999
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 57.368
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 51.72300000000001
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 51.09000000000001
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 41.41000000000001
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 29.501999999999995
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 26.483000000000004
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 22.619
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 14.352
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 13.996999999999998
+              },
+              {
+                "name": "get caches @ ",
+                "ms": 3.38
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.338
+              },
+              {
+                "name": "AbortController @ ",
+                "ms": 2.652
+              },
+              {
+                "name": "BandRaster @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.161
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 6338.515,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 4716.087999999999
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 696.1560000000004
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 286.11099999999993
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 171.79499999999996
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 146.774
+              },
+              {
+                "name": "putImageData @ ",
+                "ms": 53.60699999999999
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 43.415
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 38.68600000000001
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 29.854999999999997
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 26.020999999999997
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 13.183000000000002
+              },
+              {
+                "name": "requestAnimationFrame @ ",
+                "ms": 13.159
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 11.413
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 11.39
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 9.551
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 6.790000000000001
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 6.541
+              },
+              {
+                "name": "removeEventListener @ ",
+                "ms": 5.528
+              },
+              {
+                "name": "addEventListener @ ",
+                "ms": 4.902
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 4.367
+              },
+              {
+                "name": "score @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.933
+              },
+              {
+                "name": "image @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.7190000000000003
+              },
+              {
+                "name": "updateView @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.362
+              },
+              {
+                "name": "digest @ ",
+                "ms": 3.2430000000000003
+              },
+              {
+                "name": "Worker @ ",
+                "ms": 3.025
+              }
+            ]
+          }
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 121,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.3999999985098839,
+              "maxMs": 1.3999999985098839
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.3999999985098839,
+              "maxMs": 0.3999999985098839
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 26.5,
+              "maxMs": 26.5
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 13.799999997019768,
+              "maxMs": 13.799999997019768
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 10,
+              "maxMs": 10
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 50.79999999701977,
+              "maxMs": 50.79999999701977
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.7000000029802322,
+              "maxMs": 0.7000000029802322
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 115.599853515625,
+          "lastPaintMs": 115.599853515625,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 218.783,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 162.01199999999992
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 12.056000000000003
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 12.002999999999998
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 10.368999999999998
+              },
+              {
+                "name": "rasterBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 6.437
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 5.138
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.608
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 2.524
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.964
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.13
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 1.08
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 186.899,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 119.89500000000007
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 53.854
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 4.535
+              },
+              {
+                "name": "digest @ ",
+                "ms": 4.5
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.231
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 1.085
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 0.413
+              }
+            ]
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-direct-2",
+      "zoom": 13,
+      "latency": 0,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 6487,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 4.5999999940395355,
+              "maxMs": 4.5999999940395355
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 16.700000002980232,
+              "maxMs": 16.700000002980232
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0,
+              "maxMs": 0
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1377.5999999642372,
+              "maxMs": 38.79999999701977
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 1771.699999973178,
+              "maxMs": 28.200000002980232
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 6418.499999985099,
+              "maxMs": 36.5
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 4367.299999989569,
+              "maxMs": 51
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 71.5999999716878,
+              "maxMs": 0.7000000029802322
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 5905.200000077486,
+              "maxMs": 57.30000000447035
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 19921.69999998808,
+              "maxMs": 98.39999999850988
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 8305.600000023842,
+              "maxMs": 58.69999999552965
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 94.69999991357327,
+              "maxMs": 3.899999998509884
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 28606.599999830127,
+              "maxMs": 103.79999999701977
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5265.70000000298,
+              "maxMs": 20.5
+            },
+            "main.budgets": {
+              "count": 87,
+              "sumMs": 268.6999999806285,
+              "maxMs": 10
+            },
+            "main.post": {
+              "count": 87,
+              "sumMs": 48.6000000089407,
+              "maxMs": 4.700000002980232
+            },
+            "render.resolve": {
+              "count": 87,
+              "sumMs": 82.7000000178814,
+              "maxMs": 3.7999999970197678
+            },
+            "raster.add": {
+              "count": 87,
+              "sumMs": 604.099999986589,
+              "maxMs": 32.899999998509884,
+              "scanMs": 415.19999996572733,
+              "fillMs": 170.00000002980232,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 87,
+              "sumMs": 605.1999999955297,
+              "maxMs": 32.899999998509884
+            },
+            "render.paint": {
+              "count": 87,
+              "sumMs": 844.2000000029802,
+              "maxMs": 27.69999999552965
+            },
+            "render.extent": {
+              "count": 87,
+              "sumMs": 497.69999996572733,
+              "maxMs": 18.69999999552965
+            },
+            "render.total": {
+              "count": 87,
+              "sumMs": 2032.7999999895692,
+              "maxMs": 60.5
+            },
+            "main.canvas": {
+              "count": 87,
+              "sumMs": 64.10000002384186,
+              "maxMs": 4.399999998509884
+            }
+          },
+          "events": 9696,
+          "firstPaintMs": 169.89990234375,
+          "lastPaintMs": 6482.199951171875,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 5163.60009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 5.299999997019768,
+              "maxMs": 5.299999997019768
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 16.799999997019768,
+              "maxMs": 16.799999997019768
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1973.299999922514,
+              "maxMs": 43.899999998509884
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 7589.4999999552965,
+              "maxMs": 64.39999999850988
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 65.49999999254942,
+              "maxMs": 0.9000000059604645
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 9635.79999987781,
+              "maxMs": 70
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 10039.899999938905,
+              "maxMs": 61.399999998509884
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 94,
+              "maxMs": 6.4000000059604645
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 19785.399999767542,
+              "maxMs": 86.60000000149012
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4466.500000111759,
+              "maxMs": 27.399999998509884
+            },
+            "main.budgets": {
+              "count": 97,
+              "sumMs": 322.4999999701977,
+              "maxMs": 13.599999994039536
+            },
+            "main.post": {
+              "count": 97,
+              "sumMs": 57.69999998062849,
+              "maxMs": 3.7999999970197678
+            },
+            "render.resolve": {
+              "count": 97,
+              "sumMs": 85.80000001192093,
+              "maxMs": 3.600000001490116
+            },
+            "raster.add": {
+              "count": 97,
+              "sumMs": 594.8000000491738,
+              "maxMs": 33.19999999552965,
+              "scanMs": 423.9999998435378,
+              "fillMs": 152.90000023692846,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 97,
+              "sumMs": 595.4000000432134,
+              "maxMs": 33.19999999552965
+            },
+            "render.paint": {
+              "count": 97,
+              "sumMs": 990.2999999448657,
+              "maxMs": 22.899999998509884
+            },
+            "render.extent": {
+              "count": 97,
+              "sumMs": 616.1000000014901,
+              "maxMs": 15.799999997019768
+            },
+            "render.total": {
+              "count": 97,
+              "sumMs": 2292,
+              "maxMs": 45.399999998509884
+            },
+            "main.canvas": {
+              "count": 97,
+              "sumMs": 87.80000002682209,
+              "maxMs": 7.4000000059604645
+            }
+          },
+          "events": 7356,
+          "firstPaintMs": 149.10009765625,
+          "lastPaintMs": 5160.60009765625,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 126.099853515625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1,
+              "maxMs": 1
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 27.799999997019768,
+              "maxMs": 27.799999997019768
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 16,
+              "maxMs": 16
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 10.399999998509884,
+              "maxMs": 10.399999998509884
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 54.600000001490116,
+              "maxMs": 54.600000001490116
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 1.8999999985098839,
+              "maxMs": 1.8999999985098839
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 120.7998046875,
+          "lastPaintMs": 120.7998046875,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-direct-3",
+      "zoom": 13,
+      "latency": 0,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 6586,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 5,
+              "maxMs": 5
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 23.30000000447035,
+              "maxMs": 23.30000000447035
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1754.2000000700355,
+              "maxMs": 52.29999999701977
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 1977.7999999523163,
+              "maxMs": 52.399999998509884
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 6202.399999842048,
+              "maxMs": 38.5
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 4084.400000140071,
+              "maxMs": 53.80000000447035
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 72.79999997466803,
+              "maxMs": 2.3000000044703484
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 5257.400000028312,
+              "maxMs": 53.600000001490116
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 19360.20000001043,
+              "maxMs": 86.70000000298023
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 8414.80000000447,
+              "maxMs": 70.5
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 84.30000007897615,
+              "maxMs": 3.399999998509884
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 28117.200000062585,
+              "maxMs": 111.60000000149012
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5445.500000141561,
+              "maxMs": 19.5
+            },
+            "main.budgets": {
+              "count": 97,
+              "sumMs": 333.6000000163913,
+              "maxMs": 11.699999995529652
+            },
+            "main.post": {
+              "count": 97,
+              "sumMs": 57.49999997764826,
+              "maxMs": 1.5
+            },
+            "render.resolve": {
+              "count": 97,
+              "sumMs": 99.59999994933605,
+              "maxMs": 9.399999998509884
+            },
+            "raster.add": {
+              "count": 97,
+              "sumMs": 563.2000000178814,
+              "maxMs": 31,
+              "scanMs": 388.80000011622906,
+              "fillMs": 154.29999986290932,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 97,
+              "sumMs": 564.1999999955297,
+              "maxMs": 31
+            },
+            "render.paint": {
+              "count": 97,
+              "sumMs": 945.6000000312924,
+              "maxMs": 28.399999998509884
+            },
+            "render.extent": {
+              "count": 97,
+              "sumMs": 599.1999999657273,
+              "maxMs": 15.299999997019768
+            },
+            "render.total": {
+              "count": 97,
+              "sumMs": 2210.099999934435,
+              "maxMs": 48.70000000298023
+            },
+            "main.canvas": {
+              "count": 97,
+              "sumMs": 93.70000002533197,
+              "maxMs": 6.200000002980232
+            }
+          },
+          "events": 9786,
+          "firstPaintMs": 163.60009765625,
+          "lastPaintMs": 6583.199951171875,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 4680.60009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 2.7000000029802322,
+              "maxMs": 2.7000000029802322
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 11.5,
+              "maxMs": 11.5
+            },
+            "main.budgets": {
+              "count": 86,
+              "sumMs": 260.9999999925494,
+              "maxMs": 10.300000004470348
+            },
+            "main.post": {
+              "count": 86,
+              "sumMs": 40.30000002682209,
+              "maxMs": 2.7000000029802322
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.19999999552965164,
+              "maxMs": 0.19999999552965164
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1838.5999999269843,
+              "maxMs": 72.69999999552965
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 7383.4999998137355,
+              "maxMs": 73.89999999850988
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 63.500000059604645,
+              "maxMs": 1.2999999970197678
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 9292.499999821186,
+              "maxMs": 81
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 9883.90000012517,
+              "maxMs": 60.600000001490116
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 79.90000004321337,
+              "maxMs": 1.7999999970197678
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 19269.599999941885,
+              "maxMs": 88.29999999701977
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4131.199999853969,
+              "maxMs": 16.599999994039536
+            },
+            "render.resolve": {
+              "count": 86,
+              "sumMs": 67.10000003129244,
+              "maxMs": 2.899999998509884
+            },
+            "raster.add": {
+              "count": 86,
+              "sumMs": 561.0999999791384,
+              "maxMs": 31.799999997019768,
+              "scanMs": 391.70000003278255,
+              "fillMs": 154.79999995231628,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 86,
+              "sumMs": 561.7999999895692,
+              "maxMs": 31.799999997019768
+            },
+            "render.paint": {
+              "count": 86,
+              "sumMs": 842.9000000059605,
+              "maxMs": 26.100000001490116
+            },
+            "render.extent": {
+              "count": 86,
+              "sumMs": 479.59999998658895,
+              "maxMs": 15.799999997019768
+            },
+            "render.total": {
+              "count": 86,
+              "sumMs": 1952.5999999940395,
+              "maxMs": 49.100000001490116
+            },
+            "main.canvas": {
+              "count": 85,
+              "sumMs": 67.69999998807907,
+              "maxMs": 2.2999999970197678
+            }
+          },
+          "events": 7256,
+          "firstPaintMs": 143.800048828125,
+          "lastPaintMs": 4678.300048828125,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 125.10009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.1000000014901161,
+              "maxMs": 1.1000000014901161
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.3999999985098839,
+              "maxMs": 0.3999999985098839
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 28.30000000447035,
+              "maxMs": 28.30000000447035
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 13,
+              "maxMs": 13
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 6.600000001490116,
+              "maxMs": 6.600000001490116
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 48.5,
+              "maxMs": 48.5
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.7999999970197678,
+              "maxMs": 0.7999999970197678
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 117.10009765625,
+          "lastPaintMs": 117.10009765625,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-intercept",
+      "zoom": 13,
+      "latency": 0,
+      "intercept": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 7452.199951171875,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.3000000044703484,
+              "maxMs": 3.3000000044703484
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 17,
+              "maxMs": 17
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0,
+              "maxMs": 0
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1970.6999998539686,
+              "maxMs": 67.40000000596046
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 2760.6000000163913,
+              "maxMs": 67.30000000447035
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 11436.300000041723,
+              "maxMs": 56.600000001490116
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 3396.7999998927116,
+              "maxMs": 67.80000000447035
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 72.00000001490116,
+              "maxMs": 0.8999999985098839
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 5651.900000087917,
+              "maxMs": 46.100000001490116
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 25299.599999904633,
+              "maxMs": 162.60000000149012
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 7541.000000052154,
+              "maxMs": 81.19999999552965
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 101.40000006556511,
+              "maxMs": 3.2000000029802322
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 33107.39999997616,
+              "maxMs": 167.5
+            },
+            "main.budgets": {
+              "count": 136,
+              "sumMs": 500.89999997615814,
+              "maxMs": 16
+            },
+            "main.post": {
+              "count": 136,
+              "sumMs": 90.30000002682209,
+              "maxMs": 3.5
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5587.199999958277,
+              "maxMs": 25.5
+            },
+            "render.resolve": {
+              "count": 136,
+              "sumMs": 127.59999999403954,
+              "maxMs": 3.4000000059604645
+            },
+            "raster.add": {
+              "count": 136,
+              "sumMs": 619.3000000715256,
+              "maxMs": 27.799999997019768,
+              "scanMs": 422,
+              "fillMs": 175.10000006109476,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 136,
+              "sumMs": 620.3000000715256,
+              "maxMs": 27.799999997019768
+            },
+            "render.paint": {
+              "count": 136,
+              "sumMs": 1334.3999999761581,
+              "maxMs": 21.799999997019768
+            },
+            "render.extent": {
+              "count": 136,
+              "sumMs": 795.900000013411,
+              "maxMs": 17.200000002980232
+            },
+            "render.total": {
+              "count": 136,
+              "sumMs": 2881.3000000417233,
+              "maxMs": 45.899999998509884
+            },
+            "main.canvas": {
+              "count": 136,
+              "sumMs": 105.49999994039536,
+              "maxMs": 3.399999998509884
+            }
+          },
+          "events": 10137,
+          "firstPaintMs": 135.2998046875,
+          "lastPaintMs": 7444.199951171875,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 5144.199951171875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 4.699999995529652,
+              "maxMs": 4.699999995529652
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 12.5,
+              "maxMs": 12.5
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1655.6999999508262,
+              "maxMs": 36.100000001490116
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 8127.299999989569,
+              "maxMs": 82
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 63.800000086426735,
+              "maxMs": 2
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 9854.69999999553,
+              "maxMs": 83.89999999850988
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 9412.599999919534,
+              "maxMs": 78.30000000447035
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 87.29999995231628,
+              "maxMs": 1.6000000014901161
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 19368.99999987334,
+              "maxMs": 122.69999999552965
+            },
+            "main.budgets": {
+              "count": 92,
+              "sumMs": 316.1000000014901,
+              "maxMs": 12.299999997019768
+            },
+            "main.post": {
+              "count": 92,
+              "sumMs": 38.100000001490116,
+              "maxMs": 2.2999999970197678
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4466.700000092387,
+              "maxMs": 19.200000002980232
+            },
+            "render.resolve": {
+              "count": 92,
+              "sumMs": 84.69999995082617,
+              "maxMs": 6.300000004470348
+            },
+            "raster.add": {
+              "count": 92,
+              "sumMs": 588.8000000044703,
+              "maxMs": 36.30000000447035,
+              "scanMs": 421.0000002682209,
+              "fillMs": 152.99999970942736,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 92,
+              "sumMs": 589.5000000149012,
+              "maxMs": 36.30000000447035
+            },
+            "render.paint": {
+              "count": 92,
+              "sumMs": 905.5000000074506,
+              "maxMs": 21
+            },
+            "render.extent": {
+              "count": 92,
+              "sumMs": 636.900000050664,
+              "maxMs": 16.900000005960464
+            },
+            "render.total": {
+              "count": 92,
+              "sumMs": 2219.600000023842,
+              "maxMs": 58.70000000298023
+            },
+            "main.canvas": {
+              "count": 92,
+              "sumMs": 73.70000001043081,
+              "maxMs": 5
+            }
+          },
+          "events": 7311,
+          "firstPaintMs": 126.300048828125,
+          "lastPaintMs": 5140.300048828125,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 137.699951171875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.7000000029802322,
+              "maxMs": 1.7000000029802322
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.09999999403953552,
+              "maxMs": 0.09999999403953552
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.8999999985098839,
+              "maxMs": 0.8999999985098839
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 35.79999999701977,
+              "maxMs": 35.79999999701977
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 15.5,
+              "maxMs": 15.5
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 11.5,
+              "maxMs": 11.5
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 64.10000000149012,
+              "maxMs": 64.10000000149012
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 1.2000000029802322,
+              "maxMs": 1.2000000029802322
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 131.599853515625,
+          "lastPaintMs": 131.599853515625,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-40ms",
+      "zoom": 13,
+      "latency": 40,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 11921.7998046875,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 4,
+              "maxMs": 4
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 13.700000002980232,
+              "maxMs": 13.700000002980232
+            },
+            "main.budgets": {
+              "count": 160,
+              "sumMs": 524.4000000059605,
+              "maxMs": 16.69999999552965
+            },
+            "main.post": {
+              "count": 160,
+              "sumMs": 102.99999994039536,
+              "maxMs": 7.700000002980232
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1456.0999999418855,
+              "maxMs": 30.5
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 2044.8000001087785,
+              "maxMs": 62.5
+            },
+            "render.resolve": {
+              "count": 160,
+              "sumMs": 165.80000001192093,
+              "maxMs": 4.899999998509884
+            },
+            "raster.add": {
+              "count": 160,
+              "sumMs": 608,
+              "maxMs": 14.100000001490116,
+              "scanMs": 414.90000005066395,
+              "fillMs": 167.29999993741512,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 160,
+              "sumMs": 612.599999986589,
+              "maxMs": 14.100000001490116
+            },
+            "render.paint": {
+              "count": 160,
+              "sumMs": 1611.6000000163913,
+              "maxMs": 22.5
+            },
+            "render.extent": {
+              "count": 160,
+              "sumMs": 876.1999999731779,
+              "maxMs": 15.799999997019768
+            },
+            "render.total": {
+              "count": 160,
+              "sumMs": 3266.7999999970198,
+              "maxMs": 35.80000000447035
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 38854.600000053644,
+              "maxMs": 79.79999999701977
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 4834.999999918044,
+              "maxMs": 41.20000000298023
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 79.79999989271164,
+              "maxMs": 2.6999999955296516
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 6143.30000013113,
+              "maxMs": 39.79999999701977
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 53424.60000004619,
+              "maxMs": 136.80000000447035
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 7664.200000062585,
+              "maxMs": 54
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 89.29999988526106,
+              "maxMs": 1.6999999955296516
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 61408.899999931455,
+              "maxMs": 141.20000000298023
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4931.700000137091,
+              "maxMs": 22.799999997019768
+            },
+            "main.canvas": {
+              "count": 159,
+              "sumMs": 118.20000000298023,
+              "maxMs": 4.100000001490116
+            }
+          },
+          "events": 10352,
+          "firstPaintMs": 250.300048828125,
+          "lastPaintMs": 11915.800048828125,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 4980.199951171875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.600000001490116,
+              "maxMs": 3.600000001490116
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 15.299999997019768,
+              "maxMs": 15.299999997019768
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 2052.000000089407,
+              "maxMs": 39.600000001490116
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 7373.5999999418855,
+              "maxMs": 81.60000000149012
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 55.49999998509884,
+              "maxMs": 0.6000000014901161
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 9487.500000014901,
+              "maxMs": 83.10000000149012
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 9657.199999950826,
+              "maxMs": 62.70000000298023
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 69.30000002682209,
+              "maxMs": 1.5
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 19229.89999999851,
+              "maxMs": 97.69999999552965
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4718.699999943376,
+              "maxMs": 16.899999998509884
+            },
+            "main.budgets": {
+              "count": 103,
+              "sumMs": 327.3000000193715,
+              "maxMs": 10.200000002980232
+            },
+            "main.post": {
+              "count": 103,
+              "sumMs": 54.79999999701977,
+              "maxMs": 2.2000000029802322
+            },
+            "render.resolve": {
+              "count": 103,
+              "sumMs": 86.1000000089407,
+              "maxMs": 4.700000002980232
+            },
+            "raster.add": {
+              "count": 103,
+              "sumMs": 555.4000000208616,
+              "maxMs": 39.70000000298023,
+              "scanMs": 389.9999998807907,
+              "fillMs": 148.20000014454126,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 103,
+              "sumMs": 556.7000000029802,
+              "maxMs": 39.79999999701977
+            },
+            "render.paint": {
+              "count": 103,
+              "sumMs": 994.6999999657273,
+              "maxMs": 22.799999997019768
+            },
+            "render.extent": {
+              "count": 103,
+              "sumMs": 668.6000000238419,
+              "maxMs": 14.100000001490116
+            },
+            "render.total": {
+              "count": 103,
+              "sumMs": 2308.2000000178814,
+              "maxMs": 51.19999999552965
+            },
+            "main.canvas": {
+              "count": 103,
+              "sumMs": 85.30000000447035,
+              "maxMs": 7.299999997019768
+            }
+          },
+          "events": 7410,
+          "firstPaintMs": 134.699951171875,
+          "lastPaintMs": 4978.5,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 114.800048828125,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.2000000029802322,
+              "maxMs": 1.2000000029802322
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.29999999701976776,
+              "maxMs": 0.29999999701976776
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 24.5,
+              "maxMs": 24.5
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 11.799999997019768,
+              "maxMs": 11.799999997019768
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 7.600000001490116,
+              "maxMs": 7.600000001490116
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 44.29999999701977,
+              "maxMs": 44.29999999701977
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.7000000029802322,
+              "maxMs": 0.7000000029802322
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 108.699951171875,
+          "lastPaintMs": 108.699951171875,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-40ms-2",
+      "zoom": 13,
+      "latency": 40,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 11797.5,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 5.299999997019768,
+              "maxMs": 5.299999997019768
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 18.899999998509884,
+              "maxMs": 18.899999998509884
+            },
+            "main.budgets": {
+              "count": 161,
+              "sumMs": 504.6000000089407,
+              "maxMs": 9.299999997019768
+            },
+            "main.post": {
+              "count": 161,
+              "sumMs": 91.99999999254942,
+              "maxMs": 2.9000000059604645
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1538.5999999567866,
+              "maxMs": 31.100000001490116
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 1702.1999999508262,
+              "maxMs": 51.100000001490116
+            },
+            "render.resolve": {
+              "count": 161,
+              "sumMs": 166.8000000193715,
+              "maxMs": 9.700000002980232
+            },
+            "raster.add": {
+              "count": 161,
+              "sumMs": 578.9999999180436,
+              "maxMs": 18.900000005960464,
+              "scanMs": 401.09999995678663,
+              "fillMs": 153.30000000447035,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 161,
+              "sumMs": 579.799999922514,
+              "maxMs": 18.900000005960464
+            },
+            "render.paint": {
+              "count": 161,
+              "sumMs": 1551.3000001236796,
+              "maxMs": 25.69999999552965
+            },
+            "render.extent": {
+              "count": 161,
+              "sumMs": 860.1999998614192,
+              "maxMs": 16.099999994039536
+            },
+            "render.total": {
+              "count": 161,
+              "sumMs": 3159.599999934435,
+              "maxMs": 53.5
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 39356.49999999255,
+              "maxMs": 105.29999999701977
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 4407.20000000298,
+              "maxMs": 83.10000000149012
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 71.60000007599592,
+              "maxMs": 1.2000000029802322
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 5723.600000008941,
+              "maxMs": 65.40000000596046
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 52813.10000003874,
+              "maxMs": 150.20000000298023
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 7057.999999940395,
+              "maxMs": 49.899999998509884
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 93.09999997913837,
+              "maxMs": 2.4000000059604645
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 60164.599999941885,
+              "maxMs": 171.39999999850988
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5574.299999907613,
+              "maxMs": 19.100000001490116
+            },
+            "main.canvas": {
+              "count": 160,
+              "sumMs": 129.2999999821186,
+              "maxMs": 7.600000001490116
+            }
+          },
+          "events": 10361,
+          "firstPaintMs": 243,
+          "lastPaintMs": 11795.5,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 4829,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 6.899999998509884,
+              "maxMs": 6.899999998509884
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 18.799999997019768,
+              "maxMs": 18.799999997019768
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.19999999552965164,
+              "maxMs": 0.19999999552965164
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1594.5000001713634,
+              "maxMs": 41.399999998509884
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 7495.2999997884035,
+              "maxMs": 84.09999999403954
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 60.100000098347664,
+              "maxMs": 1
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 9156.700000055134,
+              "maxMs": 88.79999999701977
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 9141.999999970198,
+              "maxMs": 86.10000000149012
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 86.09999991208315,
+              "maxMs": 2.2000000029802322
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 18399.899999938905,
+              "maxMs": 168.5
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4617.499999828637,
+              "maxMs": 17.299999997019768
+            },
+            "main.budgets": {
+              "count": 75,
+              "sumMs": 211.8999999910593,
+              "maxMs": 9.700000002980232
+            },
+            "main.post": {
+              "count": 75,
+              "sumMs": 35.19999996572733,
+              "maxMs": 1.1999999955296516
+            },
+            "render.resolve": {
+              "count": 75,
+              "sumMs": 84.3999999538064,
+              "maxMs": 6.199999995529652
+            },
+            "raster.add": {
+              "count": 75,
+              "sumMs": 575.7000000178814,
+              "maxMs": 45.30000000447035,
+              "scanMs": 406.7999998703599,
+              "fillMs": 151.5000001192093,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 75,
+              "sumMs": 575.9000000208616,
+              "maxMs": 45.30000000447035
+            },
+            "render.paint": {
+              "count": 75,
+              "sumMs": 814.6000000312924,
+              "maxMs": 68.5
+            },
+            "render.extent": {
+              "count": 75,
+              "sumMs": 459.19999999552965,
+              "maxMs": 13
+            },
+            "render.total": {
+              "count": 75,
+              "sumMs": 1935.5,
+              "maxMs": 79.39999999850988
+            },
+            "main.canvas": {
+              "count": 75,
+              "sumMs": 51.90000004321337,
+              "maxMs": 2.899999998509884
+            }
+          },
+          "events": 7158,
+          "firstPaintMs": 145.599853515625,
+          "lastPaintMs": 4813.900146484375,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 121.60009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.0999999940395355,
+              "maxMs": 1.0999999940395355
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.30000000447034836,
+              "maxMs": 0.30000000447034836
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 27.19999999552965,
+              "maxMs": 27.19999999552965
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 13.800000004470348,
+              "maxMs": 13.800000004470348
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 12.299999997019768,
+              "maxMs": 12.299999997019768
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 53.70000000298023,
+              "maxMs": 53.70000000298023
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.6000000014901161,
+              "maxMs": 0.6000000014901161
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 118,
+          "lastPaintMs": 118,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "region-direct",
+      "zoom": 11,
+      "latency": 0,
+      "cpu": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "6b178b3e3d81599170b84267b6cea2cfbf80d9e592a64048804f27bf257293ef",
+          "wallMs": 17167.400146484375,
+          "requests": 2266,
+          "bytes": 63360570,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.0999999940395355,
+              "maxMs": 3.0999999940395355
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 34.400000005960464,
+              "maxMs": 34.400000005960464
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 3.6999999955296516,
+              "maxMs": 3.6999999955296516
+            },
+            "data.cache.open": {
+              "count": 2266,
+              "sumMs": 4101.800000056624,
+              "maxMs": 41.100000001490116
+            },
+            "data.cache.read": {
+              "count": 2266,
+              "sumMs": 4608.100000157952,
+              "maxMs": 33.5
+            },
+            "data.fetch.headers": {
+              "count": 2266,
+              "sumMs": 17702.09999988973,
+              "maxMs": 74.39999999850988
+            },
+            "data.fetch.body": {
+              "count": 2266,
+              "sumMs": 13388.300000168383,
+              "maxMs": 63.5
+            },
+            "data.hash": {
+              "count": 2266,
+              "sumMs": 205.89999994635582,
+              "maxMs": 6
+            },
+            "data.cache.write": {
+              "count": 2266,
+              "sumMs": 13593.799999855459,
+              "maxMs": 64.10000000149012
+            },
+            "data.verified": {
+              "count": 2266,
+              "sumMs": 53631.70000000298,
+              "maxMs": 99.79999999701977
+            },
+            "contour.inflate": {
+              "count": 2266,
+              "sumMs": 20793.600000180304,
+              "maxMs": 91.90000000596046
+            },
+            "contour.decode": {
+              "count": 2266,
+              "sumMs": 241.3999999165535,
+              "maxMs": 2.6999999955296516
+            },
+            "worker.load": {
+              "count": 2266,
+              "sumMs": 75370.60000003874,
+              "maxMs": 123.89999999850988
+            },
+            "main.nextFrame": {
+              "count": 2266,
+              "sumMs": 15489.00000000745,
+              "maxMs": 59.19999999552965
+            },
+            "main.budgets": {
+              "count": 284,
+              "sumMs": 1142.3000000491738,
+              "maxMs": 36.900000005960464
+            },
+            "main.post": {
+              "count": 284,
+              "sumMs": 452.10000009834766,
+              "maxMs": 6.200000002980232
+            },
+            "render.resolve": {
+              "count": 284,
+              "sumMs": 675.5000000372529,
+              "maxMs": 9.300000004470348
+            },
+            "raster.add": {
+              "count": 284,
+              "sumMs": 664.7999999448657,
+              "maxMs": 11.899999998509884,
+              "scanMs": 494.90000000596046,
+              "fillMs": 66.39999997615814,
+              "vertices": 1099690,
+              "runs": 677561,
+              "geometries": 8256
+            },
+            "render.standard": {
+              "count": 284,
+              "sumMs": 668.9999999478459,
+              "maxMs": 12
+            },
+            "render.paint": {
+              "count": 284,
+              "sumMs": 1704.5999999642372,
+              "maxMs": 50.30000000447035
+            },
+            "render.extent": {
+              "count": 284,
+              "sumMs": 874.800000064075,
+              "maxMs": 11.600000001490116
+            },
+            "render.total": {
+              "count": 284,
+              "sumMs": 3927.200000010431,
+              "maxMs": 63
+            },
+            "main.canvas": {
+              "count": 284,
+              "sumMs": 193.2999999821186,
+              "maxMs": 10.399999998509884
+            }
+          },
+          "events": 27485,
+          "firstPaintMs": 163.300048828125,
+          "lastPaintMs": 17158.60009765625,
+          "loadedFiles": 2266,
+          "loadedBytes": 63360570,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 19043.133,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 7145.769000000024
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 2407.436000000002
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1627.8409999999994
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1481.6710000000012
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 1403.7209999999989
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 915.2140000000003
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 832.9140000000007
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 633.675
+              },
+              {
+                "name": "fetch @ ",
+                "ms": 633.5830000000002
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 387.31400000000036
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 313.452
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 307.40800000000024
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 178.62199999999999
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 169.01499999999982
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 116.82099999999998
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 99.675
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 86.86599999999997
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 77.847
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 61.21400000000001
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 45.648
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 41.787
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 37.509
+              },
+              {
+                "name": "now @ ",
+                "ms": 18.567999999999998
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 10.051000000000002
+              },
+              {
+                "name": "get caches @ ",
+                "ms": 2.344
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 19558.812,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 12805.02799999988
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 2748.461000000008
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1263.4570000000012
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 870.6339999999999
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 554.2289999999999
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 470.77000000000027
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 306.144
+              },
+              {
+                "name": "image @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 130.25299999999993
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 88.23199999999996
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 68.83300000000003
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 39.94599999999999
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 29.862999999999996
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 23.984999999999996
+              },
+              {
+                "name": "pump @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 20.483999999999998
+              },
+              {
+                "name": "querySelector @ ",
+                "ms": 18.205000000000002
+              },
+              {
+                "name": "addEventListener @ ",
+                "ms": 10.696
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 9.719999999999999
+              },
+              {
+                "name": "removeEventListener @ ",
+                "ms": 8.344000000000001
+              },
+              {
+                "name": "requestAnimationFrame @ ",
+                "ms": 7.561
+              },
+              {
+                "name": "score @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 7.1850000000000005
+              },
+              {
+                "name": "now @ ",
+                "ms": 7.156
+              },
+              {
+                "name": "getContext @ ",
+                "ms": 6.9
+              },
+              {
+                "name": "setTransform @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 4.8469999999999995
+              },
+              {
+                "name": "LatLng @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 4.731
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 4.254
+              }
+            ]
+          }
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "6b178b3e3d81599170b84267b6cea2cfbf80d9e592a64048804f27bf257293ef",
+          "wallMs": 11557,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 4.4000000059604645,
+              "maxMs": 4.4000000059604645
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 23.399999998509884,
+              "maxMs": 23.399999998509884
+            },
+            "main.budgets": {
+              "count": 222,
+              "sumMs": 825.5000000372529,
+              "maxMs": 22.100000001490116
+            },
+            "main.post": {
+              "count": 222,
+              "sumMs": 411.69999999552965,
+              "maxMs": 66.29999999701977
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.29999999701976776,
+              "maxMs": 0.29999999701976776
+            },
+            "render.resolve": {
+              "count": 222,
+              "sumMs": 534.7000000402331,
+              "maxMs": 16.900000005960464
+            },
+            "raster.add": {
+              "count": 222,
+              "sumMs": 653.4999999403954,
+              "maxMs": 24.5,
+              "scanMs": 499.39999985694885,
+              "fillMs": 63.000000067055225,
+              "vertices": 1099690,
+              "runs": 677561,
+              "geometries": 8256
+            },
+            "render.standard": {
+              "count": 222,
+              "sumMs": 654.8999999314547,
+              "maxMs": 24.5
+            },
+            "render.paint": {
+              "count": 222,
+              "sumMs": 1239.000000037253,
+              "maxMs": 16.299999997019768
+            },
+            "render.extent": {
+              "count": 222,
+              "sumMs": 717.6000000312924,
+              "maxMs": 9.600000001490116
+            },
+            "render.total": {
+              "count": 222,
+              "sumMs": 3148.1000000312924,
+              "maxMs": 41.19999999552965
+            },
+            "data.cache.open": {
+              "count": 2266,
+              "sumMs": 4150.099999926984,
+              "maxMs": 84.19999999552965
+            },
+            "data.cache.read": {
+              "count": 2266,
+              "sumMs": 17211.80000001937,
+              "maxMs": 87.10000000149012
+            },
+            "data.hash": {
+              "count": 2266,
+              "sumMs": 185.79999992251396,
+              "maxMs": 3.4000000059604645
+            },
+            "data.verified": {
+              "count": 2266,
+              "sumMs": 21564.499999903142,
+              "maxMs": 93.39999999850988
+            },
+            "contour.inflate": {
+              "count": 2266,
+              "sumMs": 23117.500000208616,
+              "maxMs": 102.29999999701977
+            },
+            "contour.decode": {
+              "count": 2266,
+              "sumMs": 215.599999897182,
+              "maxMs": 5.399999998509884
+            },
+            "worker.load": {
+              "count": 2266,
+              "sumMs": 44936.59999996424,
+              "maxMs": 109.80000000447035
+            },
+            "main.nextFrame": {
+              "count": 2266,
+              "sumMs": 12691.5,
+              "maxMs": 20.399999998509884
+            },
+            "main.canvas": {
+              "count": 221,
+              "sumMs": 148,
+              "maxMs": 6.5
+            }
+          },
+          "events": 20128,
+          "firstPaintMs": 286.10009765625,
+          "lastPaintMs": 11546.199951171875,
+          "loadedFiles": 2266,
+          "loadedBytes": 63360570,
+          "cacheFiles": 2266,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 13157.8,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 4869.713999999995
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 1853.6260000000043
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1677.7930000000008
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1175.1460000000025
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 744.7070000000001
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 669.477
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 459.2540000000001
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 344.98600000000016
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 304.4310000000001
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 272.03699999999986
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 158.49199999999996
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 145.66899999999995
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 87.83200000000001
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 86.82699999999998
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 69.618
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 68.411
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 53.36500000000001
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 38.19300000000001
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 36.608000000000004
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 22.334999999999997
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 6.640000000000001
+              },
+              {
+                "name": "check @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 4.152
+              },
+              {
+                "name": "RegExp: ^\\/data\\/[a-zA-Z0-9._/-]+$ @ ",
+                "ms": 2.268
+              },
+              {
+                "name": "bandIndex @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 2.141
+              },
+              {
+                "name": "get caches @ ",
+                "ms": 1.371
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 13319.765,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 8880.91699999998
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 1410.4629999999986
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 870.8070000000002
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 535.9369999999999
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 460.8189999999997
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 417.2479999999999
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 283.3040000000001
+              },
+              {
+                "name": "putImageData @ ",
+                "ms": 91.35099999999997
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 56.87700000000001
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 49.71099999999999
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 38.05
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 31.869000000000003
+              },
+              {
+                "name": "image @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 30.733000000000004
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 18.381
+              },
+              {
+                "name": "removeEventListener @ ",
+                "ms": 14.844000000000001
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 12.399999999999995
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 12.151
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 10.962
+              },
+              {
+                "name": "distance @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 10.625000000000002
+              },
+              {
+                "name": "addEventListener @ ",
+                "ms": 7.619999999999999
+              },
+              {
+                "name": "requestAnimationFrame @ ",
+                "ms": 7.246
+              },
+              {
+                "name": "AbortController @ ",
+                "ms": 5.996
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.385
+              },
+              {
+                "name": "digest @ ",
+                "ms": 5.373
+              },
+              {
+                "name": "score @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.3149999999999995
+              }
+            ]
+          }
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "a7297e1f394c624ad06903a503373b97371f897a1e21e273c49ecd1fbbd4f411",
+          "wallMs": 208.699951171875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 2.7000000029802322,
+              "maxMs": 2.7000000029802322
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 1.1000000014901161,
+              "maxMs": 1.1000000014901161
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 1.1000000014901161,
+              "maxMs": 1.1000000014901161
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 54.599999994039536,
+              "maxMs": 54.599999994039536
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 36.900000005960464,
+              "maxMs": 36.900000005960464
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 5.699999995529652,
+              "maxMs": 5.699999995529652
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 98.29999999701977,
+              "maxMs": 98.29999999701977
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.6000000014901161,
+              "maxMs": 0.6000000014901161
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 168.400146484375,
+          "lastPaintMs": 168.400146484375,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 613.316,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 513.8970000000002
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 26.44100000000001
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 25.904
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 19.066
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 9.497
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 9.169
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.311
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.058
+              },
+              {
+                "name": "rasterBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.524
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 507.911,
+            "top": [
+              {
+                "name": "(program) @ ",
+                "ms": 208.99299999999997
+              },
+              {
+                "name": "(idle) @ ",
+                "ms": 166.34399999999994
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 68.403
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 33.28099999999999
+              },
+              {
+                "name": "digest @ ",
+                "ms": 24.692000000000004
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.355
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.17
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.157
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 0.225
+              }
+            ]
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "street-direct",
+      "zoom": 15,
+      "latency": 0,
+      "cpu": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "3e10f1d173204299729c2494c77b1056cede1f5f85ec28f6c04c7044f2204de7",
+          "wallMs": 4254.699951171875,
+          "requests": 383,
+          "bytes": 9501039,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 4.100000001490116,
+              "maxMs": 4.100000001490116
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 10.5,
+              "maxMs": 10.5
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "data.cache.open": {
+              "count": 383,
+              "sumMs": 984.8999999463558,
+              "maxMs": 44.20000000298023
+            },
+            "data.cache.read": {
+              "count": 383,
+              "sumMs": 1412.7000000625849,
+              "maxMs": 68.5
+            },
+            "data.fetch.headers": {
+              "count": 383,
+              "sumMs": 4127.900000073016,
+              "maxMs": 53.79999999701977
+            },
+            "data.fetch.body": {
+              "count": 383,
+              "sumMs": 2005.7999999150634,
+              "maxMs": 68.20000000298023
+            },
+            "data.hash": {
+              "count": 383,
+              "sumMs": 32.70000006258488,
+              "maxMs": 1.3000000044703484
+            },
+            "data.cache.write": {
+              "count": 383,
+              "sumMs": 2963.999999932945,
+              "maxMs": 62.099999994039536
+            },
+            "data.verified": {
+              "count": 383,
+              "sumMs": 11535.099999986589,
+              "maxMs": 150.89999999850988
+            },
+            "contour.inflate": {
+              "count": 383,
+              "sumMs": 5893.8000000193715,
+              "maxMs": 119.70000000298023
+            },
+            "contour.decode": {
+              "count": 383,
+              "sumMs": 54.39999998360872,
+              "maxMs": 4.200000002980232
+            },
+            "worker.load": {
+              "count": 383,
+              "sumMs": 17579.900000080466,
+              "maxMs": 193.39999999850988
+            },
+            "main.nextFrame": {
+              "count": 383,
+              "sumMs": 2763.8000000342727,
+              "maxMs": 31.30000000447035
+            },
+            "main.budgets": {
+              "count": 54,
+              "sumMs": 215.40000000596046,
+              "maxMs": 17.900000005960464
+            },
+            "main.post": {
+              "count": 54,
+              "sumMs": 24.30000001192093,
+              "maxMs": 1.8999999985098839
+            },
+            "render.resolve": {
+              "count": 54,
+              "sumMs": 32.29999998211861,
+              "maxMs": 1.6000000014901161
+            },
+            "raster.add": {
+              "count": 54,
+              "sumMs": 623.6000000163913,
+              "maxMs": 71.5,
+              "scanMs": 327.7999998778105,
+              "fillMs": 285.8000001013279,
+              "vertices": 160014,
+              "runs": 469368,
+              "geometries": 1502
+            },
+            "render.standard": {
+              "count": 54,
+              "sumMs": 624.1000000163913,
+              "maxMs": 71.5
+            },
+            "render.paint": {
+              "count": 54,
+              "sumMs": 735.0000000298023,
+              "maxMs": 25.69999999552965
+            },
+            "render.extent": {
+              "count": 54,
+              "sumMs": 710.5999999567866,
+              "maxMs": 16.30000000447035
+            },
+            "render.total": {
+              "count": 54,
+              "sumMs": 2104.099999986589,
+              "maxMs": 97.19999999552965
+            },
+            "main.canvas": {
+              "count": 54,
+              "sumMs": 55.799999974668026,
+              "maxMs": 5.799999997019768
+            }
+          },
+          "events": 4702,
+          "firstPaintMs": 181.2001953125,
+          "lastPaintMs": 4252.300048828125,
+          "loadedFiles": 383,
+          "loadedBytes": 9501039,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 4618.746,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 1249.2949999999994
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 738.7119999999998
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 726.3329999999999
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 368.59499999999986
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 307.19399999999973
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 262.20300000000003
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 221.57100000000003
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 202.65300000000002
+              },
+              {
+                "name": "fetch @ ",
+                "ms": 129.24799999999996
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 87.57600000000002
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 65.826
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 56.37499999999998
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 38.449000000000005
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 34.214
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 30.334999999999994
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 22.534
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 15.371
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 14.328
+              },
+              {
+                "name": "open @ ",
+                "ms": 10.066
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 9.783
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 8.218000000000002
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 4.936
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 4.371
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 4.2700000000000005
+              },
+              {
+                "name": "AbortController @ ",
+                "ms": 3.598
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 5148.519,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 3650.5049999999974
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 924.0100000000006
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 218.02400000000003
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 114.35500000000002
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 77.40799999999999
+              },
+              {
+                "name": "image @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 42.097
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 24.129
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 13.696000000000002
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 12.457999999999998
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 7.787
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 7.615
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 5.816000000000001
+              },
+              {
+                "name": "draw @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.526
+              },
+              {
+                "name": "pump @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.4879999999999995
+              },
+              {
+                "name": "requestAnimationFrame @ ",
+                "ms": 4.5969999999999995
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 4.386
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.6470000000000002
+              },
+              {
+                "name": "querySelector @ ",
+                "ms": 3.298
+              },
+              {
+                "name": "distance @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.691
+              },
+              {
+                "name": "budget @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.1
+              },
+              {
+                "name": "acceptProfile @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.032
+              },
+              {
+                "name": "clone @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.003
+              },
+              {
+                "name": "profileStart @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.917
+              },
+              {
+                "name": "evaluate @ ",
+                "ms": 1.423
+              },
+              {
+                "name": "score @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.169
+              }
+            ]
+          }
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "3e10f1d173204299729c2494c77b1056cede1f5f85ec28f6c04c7044f2204de7",
+          "wallMs": 2679.099853515625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 5.699999995529652,
+              "maxMs": 5.699999995529652
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 13.200000002980232,
+              "maxMs": 13.200000002980232
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 383,
+              "sumMs": 627.3999999463558,
+              "maxMs": 28.899999998509884
+            },
+            "data.cache.read": {
+              "count": 383,
+              "sumMs": 3380.9000001996756,
+              "maxMs": 133.69999999552965
+            },
+            "data.hash": {
+              "count": 383,
+              "sumMs": 30.89999994635582,
+              "maxMs": 0.3999999985098839
+            },
+            "data.verified": {
+              "count": 383,
+              "sumMs": 4044.4000000730157,
+              "maxMs": 135.10000000149012
+            },
+            "contour.inflate": {
+              "count": 383,
+              "sumMs": 5146.000000104308,
+              "maxMs": 133.70000000298023
+            },
+            "contour.decode": {
+              "count": 383,
+              "sumMs": 42.39999990910292,
+              "maxMs": 2
+            },
+            "worker.load": {
+              "count": 383,
+              "sumMs": 9241.500000074506,
+              "maxMs": 140
+            },
+            "main.nextFrame": {
+              "count": 383,
+              "sumMs": 2153.499999910593,
+              "maxMs": 17.200000002980232
+            },
+            "main.budgets": {
+              "count": 27,
+              "sumMs": 88.99999998509884,
+              "maxMs": 9.099999994039536
+            },
+            "main.post": {
+              "count": 27,
+              "sumMs": 9.200000002980232,
+              "maxMs": 0.9000000059604645
+            },
+            "render.resolve": {
+              "count": 27,
+              "sumMs": 24.19999997317791,
+              "maxMs": 7.700000002980232
+            },
+            "raster.add": {
+              "count": 27,
+              "sumMs": 607.5,
+              "maxMs": 99.60000000149012,
+              "scanMs": 321.59999991208315,
+              "fillMs": 279.5000000819564,
+              "vertices": 160014,
+              "runs": 469368,
+              "geometries": 1502
+            },
+            "render.standard": {
+              "count": 27,
+              "sumMs": 607.9000000059605,
+              "maxMs": 99.60000000149012
+            },
+            "render.paint": {
+              "count": 27,
+              "sumMs": 340.8999999910593,
+              "maxMs": 26.399999998509884
+            },
+            "render.extent": {
+              "count": 27,
+              "sumMs": 359.70000000298023,
+              "maxMs": 22.299999997019768
+            },
+            "render.total": {
+              "count": 27,
+              "sumMs": 1333.9999999776483,
+              "maxMs": 124
+            },
+            "main.canvas": {
+              "count": 27,
+              "sumMs": 32.599999986588955,
+              "maxMs": 6.399999998509884
+            }
+          },
+          "events": 3310,
+          "firstPaintMs": 201.7998046875,
+          "lastPaintMs": 2676.5,
+          "loadedFiles": 383,
+          "loadedBytes": 9501039,
+          "cacheFiles": 383,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 2917.76,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 787.9040000000008
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 376.8280000000005
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 325.54800000000023
+              },
+              {
+                "name": "add @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 300.3820000000002
+              },
+              {
+                "name": "deliveryProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 237.17100000000002
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 220.98499999999996
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 207.14400000000015
+              },
+              {
+                "name": "(anonymous) @ ",
+                "ms": 120.099
+              },
+              {
+                "name": "verified @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 100.34200000000001
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 55.813
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 50.298
+              },
+              {
+                "name": "contourRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 37.15800000000001
+              },
+              {
+                "name": "matches @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 22.863
+              },
+              {
+                "name": "decodeProfiles @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 15.792000000000003
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 14.562000000000001
+              },
+              {
+                "name": "mercator$1 @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 13.621000000000002
+              },
+              {
+                "name": "validate @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 10.353
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 7.445
+              },
+              {
+                "name": "profileEnd @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 6.625
+              },
+              {
+                "name": "unpack @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.3390000000000004
+              },
+              {
+                "name": "RegExp: .. @ ",
+                "ms": 1.11
+              },
+              {
+                "name": "bandColors @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.069
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 3022.542,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 2414.5759999999977
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 358.5749999999998
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 90.63700000000004
+              },
+              {
+                "name": "putImageData @ ",
+                "ms": 29.265000000000004
+              },
+              {
+                "name": "merger.onmessage @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 18.264000000000003
+              },
+              {
+                "name": "(garbage collector) @ ",
+                "ms": 13.714
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 12.817
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 9.834
+              },
+              {
+                "name": "walkingMinutes @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 8.754999999999999
+              },
+              {
+                "name": "digest @ ",
+                "ms": 8.434999999999999
+              },
+              {
+                "name": "serialize @ ",
+                "ms": 8.423
+              },
+              {
+                "name": "isTypedArray @ ",
+                "ms": 7.963999999999999
+              },
+              {
+                "name": "progress @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 5.445
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 3.818
+              },
+              {
+                "name": "score @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.623
+              },
+              {
+                "name": "now @ ",
+                "ms": 3.5649999999999995
+              },
+              {
+                "name": "draw @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 3.449
+              },
+              {
+                "name": "addEventListener @ ",
+                "ms": 3.2510000000000003
+              },
+              {
+                "name": "postMessage @ ",
+                "ms": 2.177
+              },
+              {
+                "name": "distance @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 2.0389999999999997
+              },
+              {
+                "name": "project @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.22
+              },
+              {
+                "name": "isDate @ ",
+                "ms": 1.215
+              },
+              {
+                "name": "equals @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.173
+              },
+              {
+                "name": "terminate @ ",
+                "ms": 1.142
+              },
+              {
+                "name": "contains @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 1.136
+              }
+            ]
+          }
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "79ac3d7e3f024680bbefe507a8ddd8f157825fd3814133b3ae1e9a0dad9e90f2",
+          "wallMs": 92.2998046875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.1000000014901161,
+              "maxMs": 1.1000000014901161
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0,
+              "maxMs": 0
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 4.600000001490116,
+              "maxMs": 4.600000001490116
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 16.19999999552965,
+              "maxMs": 16.19999999552965
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 4.399999998509884,
+              "maxMs": 4.399999998509884
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 25.399999998509884,
+              "maxMs": 25.399999998509884
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 1.2999999970197678,
+              "maxMs": 1.2999999970197678
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 89.699951171875,
+          "lastPaintMs": 89.699951171875,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "workerCPU": {
+            "durationMs": 183.511,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 156.43299999999988
+              },
+              {
+                "name": "paintBands @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 13.226
+              },
+              {
+                "name": "self.onmessage @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 4.628
+              },
+              {
+                "name": "packedRuns @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.4050000000000002
+              },
+              {
+                "name": "render @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 3.268
+              },
+              {
+                "name": "(anonymous) @ http://127.0.0.1:5192/assets/bands-worker-Bhg2Obj8.js",
+                "ms": 1.086
+              }
+            ]
+          },
+          "mainCPU": {
+            "durationMs": 166.972,
+            "top": [
+              {
+                "name": "(idle) @ ",
+                "ms": 94.99799999999999
+              },
+              {
+                "name": "(program) @ ",
+                "ms": 55.724000000000004
+              },
+              {
+                "name": "getImageData @ ",
+                "ms": 6.515
+              },
+              {
+                "name": "digest @ ",
+                "ms": 5.521
+              },
+              {
+                "name": "putImageData @ ",
+                "ms": 1.155
+              },
+              {
+                "name": "budget @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 0.764
+              },
+              {
+                "name": "innerSerialize @ ",
+                "ms": 0.619
+              },
+              {
+                "name": "send @ http://127.0.0.1:5192/assets/index-BF1W45Iu.js",
+                "ms": 0.323
+              }
+            ]
+          }
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-disabled",
+      "zoom": 13,
+      "latency": 0,
+      "disabled": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 6673.300048828125,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {},
+          "events": 0,
+          "firstPaintMs": null,
+          "lastPaintMs": null,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 4632.7998046875,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {},
+          "events": 0,
+          "firstPaintMs": null,
+          "lastPaintMs": null,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 105.300048828125,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {},
+          "events": 0,
+          "firstPaintMs": null,
+          "lastPaintMs": null,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-200ms",
+      "zoom": 13,
+      "latency": 0,
+      "paintEvery": 200,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 6214.599853515625,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.600000001490116,
+              "maxMs": 3.600000001490116
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 20.899999998509884,
+              "maxMs": 20.899999998509884
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.3999999985098839,
+              "maxMs": 0.3999999985098839
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1997.1000000014901,
+              "maxMs": 162.19999999552965
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 1439.0000000968575,
+              "maxMs": 56.20000000298023
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 6801.899999879301,
+              "maxMs": 181.60000000149012
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 4937.600000038743,
+              "maxMs": 81.30000000447035
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 67.40000004321337,
+              "maxMs": 2.2999999970197678
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 4401.400000110269,
+              "maxMs": 84.5
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 19654.200000166893,
+              "maxMs": 202.5
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 5336.0999999940395,
+              "maxMs": 84.60000000149012
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 83.2999998703599,
+              "maxMs": 2.600000001490116
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 25318.79999998957,
+              "maxMs": 214.10000000149012
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 6758.099999956787,
+              "maxMs": 147.30000000447035
+            },
+            "main.budgets": {
+              "count": 31,
+              "sumMs": 123.19999998062849,
+              "maxMs": 19.19999999552965
+            },
+            "main.post": {
+              "count": 31,
+              "sumMs": 1.400000013411045,
+              "maxMs": 0.20000000298023224
+            },
+            "render.resolve": {
+              "count": 31,
+              "sumMs": 104.5,
+              "maxMs": 62.900000005960464
+            },
+            "raster.add": {
+              "count": 31,
+              "sumMs": 611.599999986589,
+              "maxMs": 42,
+              "scanMs": 440.40000008046627,
+              "fillMs": 161.29999992996454,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 31,
+              "sumMs": 612.2999999821186,
+              "maxMs": 42
+            },
+            "render.paint": {
+              "count": 31,
+              "sumMs": 309.9000000208616,
+              "maxMs": 21.200000002980232
+            },
+            "render.extent": {
+              "count": 31,
+              "sumMs": 217.2999999895692,
+              "maxMs": 15.399999998509884
+            },
+            "render.total": {
+              "count": 31,
+              "sumMs": 1244.2999999895692,
+              "maxMs": 103.80000000447035
+            },
+            "main.canvas": {
+              "count": 31,
+              "sumMs": 31.80000000447035,
+              "maxMs": 3.899999998509884
+            }
+          },
+          "events": 9192,
+          "firstPaintMs": 178.499755859375,
+          "lastPaintMs": 6208,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 3931.300048828125,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.5,
+              "maxMs": 3.5
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 23,
+              "maxMs": 23
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.29999999701976776,
+              "maxMs": 0.29999999701976776
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 903.599999949336,
+              "maxMs": 17.100000001490116
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 6808.799999952316,
+              "maxMs": 100.5
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 60.80000006407499,
+              "maxMs": 0.6000000014901161
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 7782.20000000298,
+              "maxMs": 101.80000000447035
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 7953.399999938905,
+              "maxMs": 99.20000000298023
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 76.60000001639128,
+              "maxMs": 1.8000000044703484
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 15828.299999982119,
+              "maxMs": 108.60000000149012
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4597.700000040233,
+              "maxMs": 16.19999999552965
+            },
+            "main.budgets": {
+              "count": 20,
+              "sumMs": 66.49999997764826,
+              "maxMs": 8.200000002980232
+            },
+            "main.post": {
+              "count": 20,
+              "sumMs": 0.5000000074505806,
+              "maxMs": 0.10000000149011612
+            },
+            "render.resolve": {
+              "count": 20,
+              "sumMs": 32.49999999254942,
+              "maxMs": 3.899999998509884
+            },
+            "raster.add": {
+              "count": 20,
+              "sumMs": 562.4999999925494,
+              "maxMs": 72.89999999850988,
+              "scanMs": 387.2999998629093,
+              "fillMs": 165.00000012665987,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 20,
+              "sumMs": 563.1999999955297,
+              "maxMs": 72.89999999850988
+            },
+            "render.paint": {
+              "count": 20,
+              "sumMs": 223.60000000149012,
+              "maxMs": 18.700000002980232
+            },
+            "render.extent": {
+              "count": 20,
+              "sumMs": 214.00000000745058,
+              "maxMs": 23.200000002980232
+            },
+            "render.total": {
+              "count": 20,
+              "sumMs": 1033.6999999955297,
+              "maxMs": 90.60000000149012
+            },
+            "main.canvas": {
+              "count": 20,
+              "sumMs": 16.900000013411045,
+              "maxMs": 2.100000001490116
+            }
+          },
+          "events": 6663,
+          "firstPaintMs": 141.699951171875,
+          "lastPaintMs": 3927.39990234375,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 144.39990234375,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 0.7000000029802322,
+              "maxMs": 0.7000000029802322
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.10000000149011612,
+              "maxMs": 0.10000000149011612
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 1.2000000029802322,
+              "maxMs": 1.2000000029802322
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 39.899999998509884,
+              "maxMs": 39.899999998509884
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 17.899999998509884,
+              "maxMs": 17.899999998509884
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 6.299999997019768,
+              "maxMs": 6.299999997019768
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 65.5,
+              "maxMs": 65.5
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 3.3000000044703484,
+              "maxMs": 3.3000000044703484
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 134.89990234375,
+          "lastPaintMs": 134.89990234375,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "city-final-only",
+      "zoom": 13,
+      "latency": 0,
+      "finalOnly": true,
+      "phases": [
+        {
+          "phase": "cold",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 5228.10009765625,
+          "requests": 810,
+          "bytes": 20656031,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 3.5,
+              "maxMs": 3.5
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 17.900000005960464,
+              "maxMs": 17.900000005960464
+            },
+            "main.budgets": {
+              "count": 2,
+              "sumMs": 21.399999998509884,
+              "maxMs": 17.5
+            },
+            "main.post": {
+              "count": 2,
+              "sumMs": 1.0000000074505806,
+              "maxMs": 0.9000000059604645
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.09999999403953552,
+              "maxMs": 0.09999999403953552
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 1057.8000001087785,
+              "maxMs": 37.399999998509884
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 1169.1000000312924,
+              "maxMs": 10.700000002980232
+            },
+            "data.fetch.headers": {
+              "count": 810,
+              "sumMs": 4450.999999977648,
+              "maxMs": 121.20000000298023
+            },
+            "data.fetch.body": {
+              "count": 810,
+              "sumMs": 3865.2999999523163,
+              "maxMs": 171.89999999850988
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 70.00000002235174,
+              "maxMs": 1.1000000014901161
+            },
+            "data.cache.write": {
+              "count": 810,
+              "sumMs": 4265.200000017881,
+              "maxMs": 170.29999999701977
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 14893.100000053644,
+              "maxMs": 193.20000000298023
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 5055.400000013411,
+              "maxMs": 159.39999999850988
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 89.10000009834766,
+              "maxMs": 3.7999999970197678
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 20324.30000013113,
+              "maxMs": 198.10000000149012
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 5780.999999962747,
+              "maxMs": 106.89999999850988
+            },
+            "render.resolve": {
+              "count": 2,
+              "sumMs": 7,
+              "maxMs": 6.5
+            },
+            "raster.add": {
+              "count": 2,
+              "sumMs": 468.1000000014901,
+              "maxMs": 468.1000000014901,
+              "scanMs": 331.19999983906746,
+              "fillMs": 133.40000014007092,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 2,
+              "sumMs": 468.30000000447035,
+              "maxMs": 468.1000000014901
+            },
+            "render.paint": {
+              "count": 2,
+              "sumMs": 23.700000002980232,
+              "maxMs": 16.100000001490116
+            },
+            "render.extent": {
+              "count": 2,
+              "sumMs": 15.699999995529652,
+              "maxMs": 12.600000001490116
+            },
+            "render.total": {
+              "count": 2,
+              "sumMs": 514.8000000044703,
+              "maxMs": 503.30000000447035
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 3.3000000044703484,
+              "maxMs": 3.3000000044703484
+            }
+          },
+          "events": 8930,
+          "firstPaintMs": 5210.60009765625,
+          "lastPaintMs": 5210.60009765625,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "disk-warm",
+          "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "wallMs": 3000.60009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.prepare": {
+              "count": 1,
+              "sumMs": 2.399999998509884,
+              "maxMs": 2.399999998509884
+            },
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 9.600000001490116,
+              "maxMs": 9.600000001490116
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 810,
+              "sumMs": 843.1000000312924,
+              "maxMs": 21.899999998509884
+            },
+            "data.cache.read": {
+              "count": 810,
+              "sumMs": 3736.1000000163913,
+              "maxMs": 30.69999999552965
+            },
+            "data.hash": {
+              "count": 810,
+              "sumMs": 52.300000071525574,
+              "maxMs": 0.7999999970197678
+            },
+            "data.verified": {
+              "count": 810,
+              "sumMs": 4637.900000095367,
+              "maxMs": 44.69999999552965
+            },
+            "contour.inflate": {
+              "count": 810,
+              "sumMs": 4669.900000087917,
+              "maxMs": 14.899999998509884
+            },
+            "contour.decode": {
+              "count": 810,
+              "sumMs": 73.79999995976686,
+              "maxMs": 3.399999998509884
+            },
+            "worker.load": {
+              "count": 810,
+              "sumMs": 9397.400000095367,
+              "maxMs": 47.19999999552965
+            },
+            "main.budgets": {
+              "count": 2,
+              "sumMs": 10.199999995529652,
+              "maxMs": 6.199999995529652
+            },
+            "main.post": {
+              "count": 2,
+              "sumMs": 0.8000000044703484,
+              "maxMs": 0.8000000044703484
+            },
+            "main.nextFrame": {
+              "count": 810,
+              "sumMs": 4594.599999986589,
+              "maxMs": 16
+            },
+            "render.resolve": {
+              "count": 2,
+              "sumMs": 3.5,
+              "maxMs": 2.9000000059604645
+            },
+            "raster.add": {
+              "count": 2,
+              "sumMs": 451.59999999403954,
+              "maxMs": 430.19999999552965,
+              "scanMs": 315.1000000014901,
+              "fillMs": 131.49999997764826,
+              "vertices": 366156,
+              "runs": 720589,
+              "geometries": 3142
+            },
+            "render.standard": {
+              "count": 2,
+              "sumMs": 451.79999999701977,
+              "maxMs": 430.19999999552965
+            },
+            "render.paint": {
+              "count": 2,
+              "sumMs": 42.20000000298023,
+              "maxMs": 22.80000000447035
+            },
+            "render.extent": {
+              "count": 2,
+              "sumMs": 18.399999998509884,
+              "maxMs": 12.599999994039536
+            },
+            "render.total": {
+              "count": 2,
+              "sumMs": 515.8999999985099,
+              "maxMs": 468.5
+            },
+            "main.canvas": {
+              "count": 2,
+              "sumMs": 3.5,
+              "maxMs": 2.7999999970197678
+            }
+          },
+          "events": 6501,
+          "firstPaintMs": 2506,
+          "lastPaintMs": 2986.699951171875,
+          "loadedFiles": 810,
+          "loadedBytes": 20656031,
+          "cacheFiles": 810,
+          "memoryFiles": 0
+        },
+        {
+          "phase": "decoded-cutoff",
+          "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "wallMs": 131.60009765625,
+          "requests": 0,
+          "bytes": 0,
+          "stages": {
+            "main.budgets": {
+              "count": 1,
+              "sumMs": 1.2000000029802322,
+              "maxMs": 1.2000000029802322
+            },
+            "main.post": {
+              "count": 1,
+              "sumMs": 0.19999999552965164,
+              "maxMs": 0.19999999552965164
+            },
+            "render.resolve": {
+              "count": 1,
+              "sumMs": 0.3999999985098839,
+              "maxMs": 0.3999999985098839
+            },
+            "render.partial": {
+              "count": 1,
+              "sumMs": 45.5,
+              "maxMs": 45.5
+            },
+            "render.paint": {
+              "count": 1,
+              "sumMs": 13.5,
+              "maxMs": 13.5
+            },
+            "render.extent": {
+              "count": 1,
+              "sumMs": 3.899999998509884,
+              "maxMs": 3.899999998509884
+            },
+            "render.total": {
+              "count": 1,
+              "sumMs": 63.29999999701977,
+              "maxMs": 63.29999999701977
+            },
+            "main.canvas": {
+              "count": 1,
+              "sumMs": 0.6000000014901161,
+              "maxMs": 0.6000000014901161
+            }
+          },
+          "events": 8,
+          "firstPaintMs": 127.800048828125,
+          "lastPaintMs": 127.800048828125,
+          "loadedFiles": 0,
+          "loadedBytes": 0,
+          "cacheFiles": 0,
+          "memoryFiles": 0
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "routing": [
+    {
+      "name": "Arlanda terminal 4",
+      "wallMs": 3869.2001953125,
+      "elapsed": 2358.89999999851,
+      "labels": 176087,
+      "reachable": 7026,
+      "batches": 26,
+      "stages": {
+        "data.cache.open": {
+          "count": 8,
+          "sumMs": 30.100000001490116,
+          "maxMs": 5.600000001490116
+        },
+        "data.cache.read": {
+          "count": 8,
+          "sumMs": 16.69999999552965,
+          "maxMs": 2.7999999970197678
+        },
+        "data.fetch.headers": {
+          "count": 8,
+          "sumMs": 57,
+          "maxMs": 11.600000001490116
+        },
+        "data.fetch.body": {
+          "count": 8,
+          "sumMs": 814.8000000044703,
+          "maxMs": 266.1000000014901
+        },
+        "data.hash": {
+          "count": 8,
+          "sumMs": 55.19999999552965,
+          "maxMs": 18.80000000447035
+        },
+        "data.cache.write": {
+          "count": 8,
+          "sumMs": 572.8000000119209,
+          "maxMs": 144.69999999552965
+        },
+        "data.verified": {
+          "count": 8,
+          "sumMs": 1547.0000000149012,
+          "maxMs": 363.70000000298023
+        },
+        "network.jsonDecode": {
+          "count": 5,
+          "sumMs": 215.40000001341105,
+          "maxMs": 130.90000000596046
+        },
+        "network.connectionsDecode": {
+          "count": 3,
+          "sumMs": 218.79999999701977,
+          "maxMs": 90.10000000149012
+        },
+        "routing.loadNetwork": {
+          "count": 1,
+          "sumMs": 833.1000000014901,
+          "maxMs": 833.1000000014901
+        },
+        "routing.index": {
+          "count": 1,
+          "sumMs": 65.40000000596046,
+          "maxMs": 65.40000000596046
+        },
+        "routing.patterns": {
+          "count": 1,
+          "sumMs": 26.19999999552965,
+          "maxMs": 26.19999999552965
+        },
+        "routing.walkClosure": {
+          "count": 6,
+          "sumMs": 2065.39999999851,
+          "maxMs": 704.6999999955297
+        },
+        "routing.routeScan": {
+          "count": 6,
+          "sumMs": 191.8999999910593,
+          "maxMs": 92.60000000149012
+        },
+        "routing.journeys": {
+          "count": 1,
+          "sumMs": 7.100000001490116,
+          "maxMs": 7.100000001490116
+        },
+        "routing.search": {
+          "count": 1,
+          "sumMs": 2360.10000000149,
+          "maxMs": 2360.10000000149
+        }
+      },
+      "events": 81,
+      "firstPaintMs": null,
+      "lastPaintMs": null,
+      "loadedFiles": 8,
+      "loadedBytes": 31543894,
+      "cacheFiles": 0,
+      "memoryFiles": 0,
+      "workerCPU": {
+        "durationMs": 3250.128,
+        "top": [
+          {
+            "name": "push @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 731.7109999999994
+          },
+          {
+            "name": "search @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 685.3950000000004
+          },
+          {
+            "name": "contextKey @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 364.62000000000006
+          },
+          {
+            "name": "(garbage collector) @ ",
+            "ms": 290.32000000000005
+          },
+          {
+            "name": "(idle) @ ",
+            "ms": 241.90799999999984
+          },
+          {
+            "name": "json @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 143.466
+          },
+          {
+            "name": "(anonymous) @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 117.77499999999993
+          },
+          {
+            "name": "decodeConnections @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 116.25499999999997
+          },
+          {
+            "name": "self.onmessage @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 103.63999999999997
+          },
+          {
+            "name": "dominates @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 99.58599999999996
+          },
+          {
+            "name": "verified @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 69.32399999999998
+          },
+          {
+            "name": "baseTrip @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 63.364000000000004
+          },
+          {
+            "name": "matches @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 57.495
+          },
+          {
+            "name": "RegExp: ^\\d{4}-\\d{2}-\\d{2}: @ ",
+            "ms": 56.721999999999994
+          },
+          {
+            "name": "settled @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 53.04200000000001
+          },
+          {
+            "name": "cost @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 12.491999999999999
+          },
+          {
+            "name": "onProgress @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 10.52
+          },
+          {
+            "name": "decodeWalks @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 10.24
+          },
+          {
+            "name": "loadNetwork @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 5.7780000000000005
+          },
+          {
+            "name": "(program) @ ",
+            "ms": 4.219
+          },
+          {
+            "name": "fetch @ ",
+            "ms": 3.6180000000000003
+          },
+          {
+            "name": "validDate @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 1.331
+          },
+          {
+            "name": "buffer @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 1.3
+          },
+          {
+            "name": "profileStart @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 1.086
+          },
+          {
+            "name": "postMessage @ ",
+            "ms": 1.055
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vallentuna",
+      "wallMs": 13594.599853515625,
+      "elapsed": 12201.89999999851,
+      "labels": 769098,
+      "reachable": 9884,
+      "batches": 120,
+      "stages": {
+        "data.cache.open": {
+          "count": 8,
+          "sumMs": 37.70000001043081,
+          "maxMs": 7
+        },
+        "data.cache.read": {
+          "count": 8,
+          "sumMs": 7.700000002980232,
+          "maxMs": 1.7000000029802322
+        },
+        "data.fetch.headers": {
+          "count": 8,
+          "sumMs": 54.79999999701977,
+          "maxMs": 9.899999998509884
+        },
+        "data.fetch.body": {
+          "count": 8,
+          "sumMs": 717.8999999910593,
+          "maxMs": 238.89999999850988
+        },
+        "data.hash": {
+          "count": 8,
+          "sumMs": 46.8999999910593,
+          "maxMs": 16.100000001490116
+        },
+        "data.cache.write": {
+          "count": 8,
+          "sumMs": 464.0000000074506,
+          "maxMs": 117.80000000447035
+        },
+        "data.verified": {
+          "count": 8,
+          "sumMs": 1329.4000000059605,
+          "maxMs": 346.69999999552965
+        },
+        "network.jsonDecode": {
+          "count": 5,
+          "sumMs": 184.39999999850988,
+          "maxMs": 109.5
+        },
+        "network.connectionsDecode": {
+          "count": 3,
+          "sumMs": 153.39999999850988,
+          "maxMs": 69.10000000149012
+        },
+        "routing.loadNetwork": {
+          "count": 1,
+          "sumMs": 749.3000000044703,
+          "maxMs": 749.3000000044703
+        },
+        "routing.index": {
+          "count": 1,
+          "sumMs": 62.399999998509884,
+          "maxMs": 62.399999998509884
+        },
+        "routing.patterns": {
+          "count": 1,
+          "sumMs": 30.700000002980232,
+          "maxMs": 30.700000002980232
+        },
+        "routing.walkClosure": {
+          "count": 6,
+          "sumMs": 11357.20000000298,
+          "maxMs": 3362.9000000059605
+        },
+        "routing.routeScan": {
+          "count": 6,
+          "sumMs": 731.1999999880791,
+          "maxMs": 265.8999999985099
+        },
+        "routing.journeys": {
+          "count": 1,
+          "sumMs": 10.899999998509884,
+          "maxMs": 10.899999998509884
+        },
+        "routing.search": {
+          "count": 1,
+          "sumMs": 12203.19999999553,
+          "maxMs": 12203.19999999553
+        }
+      },
+      "events": 81,
+      "firstPaintMs": null,
+      "lastPaintMs": null,
+      "loadedFiles": 8,
+      "loadedBytes": 31543894,
+      "cacheFiles": 0,
+      "memoryFiles": 0,
+      "workerCPU": {
+        "durationMs": 13014.587,
+        "top": [
+          {
+            "name": "push @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 3971.408
+          },
+          {
+            "name": "search @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 2943.9970000000035
+          },
+          {
+            "name": "contextKey @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 2384.220000000007
+          },
+          {
+            "name": "settled @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 652.7480000000007
+          },
+          {
+            "name": "dominates @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 634.8850000000004
+          },
+          {
+            "name": "(garbage collector) @ ",
+            "ms": 604.993
+          },
+          {
+            "name": "baseTrip @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 336.6830000000001
+          },
+          {
+            "name": "(anonymous) @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 322.0150000000002
+          },
+          {
+            "name": "RegExp: ^\\d{4}-\\d{2}-\\d{2}: @ ",
+            "ms": 265.61
+          },
+          {
+            "name": "(idle) @ ",
+            "ms": 233.73200000000014
+          },
+          {
+            "name": "self.onmessage @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 206.69499999999994
+          },
+          {
+            "name": "json @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 125.731
+          },
+          {
+            "name": "decodeConnections @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 100.78499999999998
+          },
+          {
+            "name": "verified @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 56.394999999999996
+          },
+          {
+            "name": "cost @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 46.88099999999999
+          },
+          {
+            "name": "matches @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 45.26899999999999
+          },
+          {
+            "name": "postMessage @ ",
+            "ms": 28.456000000000003
+          },
+          {
+            "name": "onProgress @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 20.937000000000005
+          },
+          {
+            "name": "(program) @ ",
+            "ms": 10.815
+          },
+          {
+            "name": "applicable @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 3.588
+          },
+          {
+            "name": "now @ ",
+            "ms": 3.308
+          },
+          {
+            "name": "loadNetwork @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 3.2779999999999996
+          },
+          {
+            "name": "decodeWalks @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 3.244
+          },
+          {
+            "name": "fetch @ ",
+            "ms": 2.502
+          },
+          {
+            "name": "canTransfer @ http://127.0.0.1:5192/assets/worker-BfEv_GCQ.js",
+            "ms": 2.209
+          }
+        ]
+      }
+    }
+  ],
+  "fullApp": {
+    "standard": {
+      "dataset": "sl-40c8446978cb4fc009a6",
+      "note": "Current complete production bundle, mobile viewport, local verified HTTP data. Single run per delivery method, no CPU sampling. Date-only epoch shift reproduces query-date validation; performance clocks, timers and RAF remain native. Background requests can start before the measured city transition.",
+      "cases": [
+        {
+          "intercept": false,
+          "routing": "F\u00e4rdigt. 7025 h\u00e5llplatsl\u00e4gen n\u00e5s p\u00e5 h\u00f6gst 120 minuter. Ber\u00e4kning: 2778 ms.",
+          "browserMetrics": {
+            "TaskDuration": 8.837282,
+            "ScriptDuration": 0.557358,
+            "LayoutDuration": 0.135189,
+            "RecalcStyleDuration": 0.536557,
+            "DevToolsCommandDuration": 5.801069,
+            "TaskOtherDuration": 1.807109,
+            "LayoutCount": 457,
+            "RecalcStyleCount": 471
+          },
+          "wallMs": 19422.5,
+          "requests": 795,
+          "bytes": 20226365,
+          "stages": {
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 14.399999998509884,
+              "maxMs": 14.399999998509884
+            },
+            "main.nextFrame": {
+              "count": 801,
+              "sumMs": 32092.399999909103,
+              "maxMs": 4429.5
+            },
+            "render.paint": {
+              "count": 88,
+              "sumMs": 915.2999999970198,
+              "maxMs": 29.100000001490116
+            },
+            "render.extent": {
+              "count": 88,
+              "sumMs": 464.6999999731779,
+              "maxMs": 18.799999997019768
+            },
+            "main.budgets": {
+              "count": 87,
+              "sumMs": 333.1000000163913,
+              "maxMs": 11.600000001490116
+            },
+            "main.post": {
+              "count": 87,
+              "sumMs": 45.29999998211861,
+              "maxMs": 2.399999998509884
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "contour.decode": {
+              "count": 797,
+              "sumMs": 77.50000000745058,
+              "maxMs": 3.1999999955296516
+            },
+            "data.cache.open": {
+              "count": 795,
+              "sumMs": 1883.0000000819564,
+              "maxMs": 29
+            },
+            "data.cache.read": {
+              "count": 795,
+              "sumMs": 1772.199999883771,
+              "maxMs": 39.599999994039536
+            },
+            "render.resolve": {
+              "count": 87,
+              "sumMs": 86.20000001043081,
+              "maxMs": 4
+            },
+            "raster.add": {
+              "count": 87,
+              "sumMs": 593.5999999940395,
+              "maxMs": 25.19999999552965,
+              "scanMs": 411.4000001847744,
+              "fillMs": 156.09999982267618,
+              "vertices": 359620,
+              "runs": 689191,
+              "geometries": 3091
+            },
+            "render.standard": {
+              "count": 87,
+              "sumMs": 594.4000000059605,
+              "maxMs": 25.19999999552965
+            },
+            "render.total": {
+              "count": 87,
+              "sumMs": 2041.8999999836087,
+              "maxMs": 40.69999999552965
+            },
+            "data.fetch.headers": {
+              "count": 795,
+              "sumMs": 50711,
+              "maxMs": 6246.10000000149
+            },
+            "data.fetch.body": {
+              "count": 795,
+              "sumMs": 4603.000000014901,
+              "maxMs": 48
+            },
+            "data.hash": {
+              "count": 795,
+              "sumMs": 79.29999995976686,
+              "maxMs": 6.899999998509884
+            },
+            "data.cache.write": {
+              "count": 795,
+              "sumMs": 5685.20000012964,
+              "maxMs": 51.30000000447035
+            },
+            "data.verified": {
+              "count": 795,
+              "sumMs": 64746.60000003874,
+              "maxMs": 6273
+            },
+            "contour.inflate": {
+              "count": 795,
+              "sumMs": 6641.89999999851,
+              "maxMs": 55.099999994039536
+            },
+            "worker.load": {
+              "count": 795,
+              "sumMs": 71663.80000001192,
+              "maxMs": 6277.30000000447
+            },
+            "main.canvas": {
+              "count": 86,
+              "sumMs": 60.59999996423721,
+              "maxMs": 4.700000002980232
+            }
+          },
+          "events": 9539,
+          "firstPaintMs": 11994.199951171875,
+          "lastPaintMs": 19409.5,
+          "loadedFiles": 795,
+          "loadedBytes": 20226365,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "errors": []
+        },
+        {
+          "intercept": true,
+          "routing": "F\u00e4rdigt. 7025 h\u00e5llplatsl\u00e4gen n\u00e5s p\u00e5 h\u00f6gst 120 minuter. Ber\u00e4kning: 2923 ms.",
+          "browserMetrics": {
+            "TaskDuration": 10.062479,
+            "ScriptDuration": 0.848811,
+            "LayoutDuration": 0.126311,
+            "RecalcStyleDuration": 0.613292,
+            "DevToolsCommandDuration": 6.480662,
+            "TaskOtherDuration": 1.993403,
+            "LayoutCount": 440,
+            "RecalcStyleCount": 454
+          },
+          "wallMs": 20422.699951171875,
+          "requests": 801,
+          "bytes": 20310582,
+          "stages": {
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 12.899999998509884,
+              "maxMs": 12.899999998509884
+            },
+            "main.nextFrame": {
+              "count": 801,
+              "sumMs": 35099.99999985099,
+              "maxMs": 4953.89999999851
+            },
+            "data.fetch.body": {
+              "count": 801,
+              "sumMs": 4192.80000000447,
+              "maxMs": 69.89999999850988
+            },
+            "data.hash": {
+              "count": 801,
+              "sumMs": 69.69999992847443,
+              "maxMs": 1.7999999970197678
+            },
+            "data.cache.write": {
+              "count": 801,
+              "sumMs": 6013.200000040233,
+              "maxMs": 102.10000000149012
+            },
+            "contour.inflate": {
+              "count": 801,
+              "sumMs": 7636.400000013411,
+              "maxMs": 130.70000000298023
+            },
+            "contour.decode": {
+              "count": 801,
+              "sumMs": 85.59999996423721,
+              "maxMs": 1.7999999970197678
+            },
+            "main.budgets": {
+              "count": 108,
+              "sumMs": 478.1999999731779,
+              "maxMs": 12.800000004470348
+            },
+            "main.post": {
+              "count": 108,
+              "sumMs": 61.6000000089407,
+              "maxMs": 2.7999999970197678
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0,
+              "maxMs": 0
+            },
+            "data.cache.open": {
+              "count": 795,
+              "sumMs": 1736.1000001206994,
+              "maxMs": 32.30000000447035
+            },
+            "data.cache.read": {
+              "count": 795,
+              "sumMs": 1769.3999999910593,
+              "maxMs": 56.600000001490116
+            },
+            "render.resolve": {
+              "count": 108,
+              "sumMs": 121.60000002384186,
+              "maxMs": 6.799999997019768
+            },
+            "raster.add": {
+              "count": 108,
+              "sumMs": 557.9999999850988,
+              "maxMs": 38.899999998509884,
+              "scanMs": 395.0000000670552,
+              "fillMs": 145.59999991208315,
+              "vertices": 359620,
+              "runs": 689191,
+              "geometries": 3091
+            },
+            "render.standard": {
+              "count": 108,
+              "sumMs": 558.599999986589,
+              "maxMs": 38.899999998509884
+            },
+            "render.paint": {
+              "count": 108,
+              "sumMs": 1215.800000026822,
+              "maxMs": 36.20000000298023
+            },
+            "render.extent": {
+              "count": 108,
+              "sumMs": 566.0999999567866,
+              "maxMs": 14.100000001490116
+            },
+            "render.total": {
+              "count": 108,
+              "sumMs": 2463.2999999970198,
+              "maxMs": 55.600000001490116
+            },
+            "data.fetch.headers": {
+              "count": 795,
+              "sumMs": 51610.60000009835,
+              "maxMs": 6810.9000000059605
+            },
+            "data.verified": {
+              "count": 795,
+              "sumMs": 65356.30000016093,
+              "maxMs": 6832.70000000298
+            },
+            "worker.load": {
+              "count": 795,
+              "sumMs": 73438.20000015199,
+              "maxMs": 6837.30000000447
+            },
+            "main.canvas": {
+              "count": 107,
+              "sumMs": 175.29999993741512,
+              "maxMs": 92.69999999552965
+            }
+          },
+          "events": 9754,
+          "firstPaintMs": 13242.800048828125,
+          "lastPaintMs": 20405.800048828125,
+          "loadedFiles": 795,
+          "loadedBytes": 20226365,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "errors": []
+        }
+      ]
+    },
+    "domClick": {
+      "dataset": "sl-40c8446978cb4fc009a6",
+      "note": "Current complete production bundle, mobile viewport, local verified HTTP data. Single run per delivery method, no CPU sampling. Date-only epoch shift reproduces query-date validation; performance clocks, timers and RAF remain native. Background requests can start before the measured city transition.",
+      "cases": [
+        {
+          "intercept": false,
+          "domClick": true,
+          "panSyncMs": 127.19999999552965,
+          "tapWallMs": 90.21487500000057,
+          "routing": "F\u00e4rdigt. 7025 h\u00e5llplatsl\u00e4gen n\u00e5s p\u00e5 h\u00f6gst 120 minuter. Ber\u00e4kning: 2618 ms.",
+          "browserMetrics": {
+            "TaskDuration": 3.907527,
+            "ScriptDuration": 0.695784,
+            "LayoutDuration": 0.134833,
+            "RecalcStyleDuration": 0.562111,
+            "DevToolsCommandDuration": 0.39199199999999995,
+            "TaskOtherDuration": 2.1228070000000003,
+            "LayoutCount": 457,
+            "RecalcStyleCount": 459
+          },
+          "wallMs": 7886,
+          "requests": 800,
+          "bytes": 20364535,
+          "stages": {
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 14.100000001490116,
+              "maxMs": 14.100000001490116
+            },
+            "main.nextFrame": {
+              "count": 801,
+              "sumMs": 5228.300000146031,
+              "maxMs": 21.200000002980232
+            },
+            "render.paint": {
+              "count": 108,
+              "sumMs": 1252.3999999836087,
+              "maxMs": 38.100000001490116
+            },
+            "render.extent": {
+              "count": 108,
+              "sumMs": 615.1000000685453,
+              "maxMs": 21.299999997019768
+            },
+            "main.budgets": {
+              "count": 107,
+              "sumMs": 445.5999999642372,
+              "maxMs": 9.300000004470348
+            },
+            "main.post": {
+              "count": 107,
+              "sumMs": 58.40000003576279,
+              "maxMs": 2.7000000029802322
+            },
+            "data.fetch.body": {
+              "count": 800,
+              "sumMs": 4808.199999935925,
+              "maxMs": 57.29999999701977
+            },
+            "data.hash": {
+              "count": 800,
+              "sumMs": 70.20000004023314,
+              "maxMs": 1.7000000029802322
+            },
+            "data.cache.open": {
+              "count": 796,
+              "sumMs": 2344.9999998658895,
+              "maxMs": 88.20000000298023
+            },
+            "data.cache.write": {
+              "count": 800,
+              "sumMs": 5710.399999886751,
+              "maxMs": 43.399999998509884
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0,
+              "maxMs": 0
+            },
+            "data.cache.read": {
+              "count": 796,
+              "sumMs": 2110.5000001341105,
+              "maxMs": 69.79999999701977
+            },
+            "contour.inflate": {
+              "count": 798,
+              "sumMs": 7475.100000165403,
+              "maxMs": 65.60000000149012
+            },
+            "contour.decode": {
+              "count": 798,
+              "sumMs": 85.89999985694885,
+              "maxMs": 3.7999999970197678
+            },
+            "data.fetch.headers": {
+              "count": 795,
+              "sumMs": 12236.00000000745,
+              "maxMs": 56.399999998509884
+            },
+            "data.verified": {
+              "count": 795,
+              "sumMs": 27216.59999987483,
+              "maxMs": 136.39999999850988
+            },
+            "worker.load": {
+              "count": 795,
+              "sumMs": 35038.89999996871,
+              "maxMs": 153.79999999701977
+            },
+            "render.resolve": {
+              "count": 107,
+              "sumMs": 108.39999999850988,
+              "maxMs": 5.100000001490116
+            },
+            "raster.add": {
+              "count": 107,
+              "sumMs": 568.2999999970198,
+              "maxMs": 25.399999998509884,
+              "scanMs": 384.89999993890524,
+              "fillMs": 164.0000000372529,
+              "vertices": 359620,
+              "runs": 689191,
+              "geometries": 3091
+            },
+            "render.standard": {
+              "count": 107,
+              "sumMs": 568.5999999940395,
+              "maxMs": 25.399999998509884
+            },
+            "render.total": {
+              "count": 107,
+              "sumMs": 2533.8000000342727,
+              "maxMs": 52
+            },
+            "main.canvas": {
+              "count": 106,
+              "sumMs": 80.70000003278255,
+              "maxMs": 2.899999998509884
+            }
+          },
+          "events": 9740,
+          "firstPaintMs": 274.800048828125,
+          "lastPaintMs": 7876.300048828125,
+          "loadedFiles": 795,
+          "loadedBytes": 20226365,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "errors": []
+        }
+      ]
+    },
+    "touchInputDiagnostic": {
+      "dataset": "sl-40c8446978cb4fc009a6",
+      "note": "Current complete production bundle, mobile viewport, local verified HTTP data. Single run per delivery method, no CPU sampling. Date-only epoch shift reproduces query-date validation; performance clocks, timers and RAF remain native. Background requests can start before the measured city transition.",
+      "cases": [
+        {
+          "intercept": false,
+          "domClick": false,
+          "panSyncMs": 157.30000000447035,
+          "tapWallMs": 426.30601900000056,
+          "routing": "F\u00e4rdigt. 7025 h\u00e5llplatsl\u00e4gen n\u00e5s p\u00e5 h\u00f6gst 120 minuter. Ber\u00e4kning: 2546 ms.",
+          "browserMetrics": {
+            "TaskDuration": 43.553582999999996,
+            "ScriptDuration": 8.06252,
+            "LayoutDuration": 1.99237,
+            "RecalcStyleDuration": 7.742723,
+            "DevToolsCommandDuration": 0.767062,
+            "TaskOtherDuration": 24.988908,
+            "LayoutCount": 675,
+            "RecalcStyleCount": 680
+          },
+          "wallMs": 53201.10009765625,
+          "requests": 801,
+          "bytes": 20310582,
+          "stages": {
+            "main.viewport": {
+              "count": 1,
+              "sumMs": 13.399999998509884,
+              "maxMs": 13.399999998509884
+            },
+            "main.nextFrame": {
+              "count": 801,
+              "sumMs": 13310.000000029802,
+              "maxMs": 6422.20000000298
+            },
+            "data.hash": {
+              "count": 799,
+              "sumMs": 135.79999995231628,
+              "maxMs": 15.100000001490116
+            },
+            "data.cache.write": {
+              "count": 799,
+              "sumMs": 29714.300000026822,
+              "maxMs": 5264.60000000149
+            },
+            "data.fetch.body": {
+              "count": 797,
+              "sumMs": 28636.900000102818,
+              "maxMs": 8896.70000000298
+            },
+            "contour.inflate": {
+              "count": 801,
+              "sumMs": 40103.20000000298,
+              "maxMs": 13223.89999999851
+            },
+            "contour.decode": {
+              "count": 801,
+              "sumMs": 209.40000000596046,
+              "maxMs": 17.899999998509884
+            },
+            "main.budgets": {
+              "count": 134,
+              "sumMs": 4483.100000016391,
+              "maxMs": 1329.7000000029802
+            },
+            "main.post": {
+              "count": 134,
+              "sumMs": 1224.900000050664,
+              "maxMs": 878.7000000029802
+            },
+            "worker.retain": {
+              "count": 1,
+              "sumMs": 0.20000000298023224,
+              "maxMs": 0.20000000298023224
+            },
+            "data.cache.open": {
+              "count": 795,
+              "sumMs": 10546.100000187755,
+              "maxMs": 2824.3000000044703
+            },
+            "data.cache.read": {
+              "count": 795,
+              "sumMs": 8967.999999895692,
+              "maxMs": 1042.6000000014901
+            },
+            "data.fetch.headers": {
+              "count": 795,
+              "sumMs": 151953.59999996424,
+              "maxMs": 18369.89999999851
+            },
+            "data.verified": {
+              "count": 795,
+              "sumMs": 229882.00000012666,
+              "maxMs": 19456
+            },
+            "worker.load": {
+              "count": 795,
+              "sumMs": 271700.4000001028,
+              "maxMs": 19666.30000000447
+            },
+            "render.resolve": {
+              "count": 134,
+              "sumMs": 1844.7999999895692,
+              "maxMs": 362.1000000014901
+            },
+            "raster.add": {
+              "count": 134,
+              "sumMs": 5453.300000034273,
+              "maxMs": 2562.10000000149,
+              "scanMs": 3750.200000025332,
+              "fillMs": 421.69999996572733,
+              "vertices": 359620,
+              "runs": 689191,
+              "geometries": 3091
+            },
+            "render.standard": {
+              "count": 134,
+              "sumMs": 5453.600000031292,
+              "maxMs": 2562.1999999955297
+            },
+            "render.paint": {
+              "count": 134,
+              "sumMs": 6863.299999952316,
+              "maxMs": 1028.6000000014901
+            },
+            "render.extent": {
+              "count": 134,
+              "sumMs": 4260.000000081956,
+              "maxMs": 1488
+            },
+            "render.total": {
+              "count": 134,
+              "sumMs": 18423.100000046194,
+              "maxMs": 3925.60000000149
+            },
+            "main.canvas": {
+              "count": 133,
+              "sumMs": 557.400000013411,
+              "maxMs": 175.10000000149012
+            }
+          },
+          "events": 9980,
+          "firstPaintMs": 365,
+          "lastPaintMs": 53184.5,
+          "loadedFiles": 795,
+          "loadedBytes": 20226365,
+          "cacheFiles": 0,
+          "memoryFiles": 0,
+          "errors": []
+        }
+      ]
+    }
+  }
+}

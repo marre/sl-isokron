@@ -1,3 +1,4 @@
+import {profiling,acceptProfile,profileStart,profileEnd} from './core/profile';
 import { mobileLayout } from './layout';
 import L from 'leaflet';
 import { JourneyView } from './journey-view';
@@ -222,14 +223,15 @@ async function calculate(display?:number) {
     worker=new Worker(new URL('./worker.ts',import.meta.url),{type:'module'});
     worker.onmessage=({data})=>{
       if(data.id!==generation)return;
+      acceptProfile(data.profileEvents);
       if(data.type==='status')status(data.message);
       if(data.type==='progress')mapProgress.update(`1/3 · Data: ${data.completed} av ${data.total} filer`,data.bytesCompleted,data.bytesTotal);
-      if(data.type==='stations')renderPreview(data);
+      if(data.type==='stations'){const start=profileStart();renderPreview(data);profileEnd('main.stationBatch',start);}
       if(data.type==='error'){terminate();clearResults();status('Sökningen slutfördes inte. Hållplatsernas nåbarhet är okänd.');showError(data.message);}
-      if(data.type==='result'){const s=settings;terminate();renderResults(data.result,s);}
+      if(data.type==='result'){const start=profileStart(),s=settings;terminate();renderResults(data.result,s);profileEnd('main.results',start);}
     };
     worker.onerror=()=>{terminate();clearResults();showError('Beräkningsprocessen kunde inte köras. Försök igen.');status('Ofärdigt resultat. Nåbarheten är okänd.');};
-    worker.postMessage({id,manifest,settings});
+    worker.postMessage({id,manifest,settings,profiling:profiling()});
     runTimer=setTimeout(()=>{if(worker)status('Beräkningen pågår fortfarande. Kartan kan flyttas och sökningen kan avbrytas.');},10000);
   }catch(e){showError((e as Error).message);}
 }

@@ -1,3 +1,4 @@
+import {profileStart,profileEnd} from './profile';
 import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
@@ -23,6 +24,7 @@ export function canTransfer(l: Label, c: Connection, network: Network, candidate
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
 export function search(network: Network, settings: Settings, options: { prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
+  const indexing=profileStart();
   validateSettings(settings);
   const started = performance.now(), t0 = stockholmInstant(settings.date, settings.time);
   const start = network.stops.findIndex(s => s.id === settings.stop);
@@ -96,6 +98,8 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   }
   push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
   report(0);
+  profileEnd('routing.index',indexing);
+  const patternsStarted=profileStart();
   // A route pattern has the same route and ordered connection endpoints/sequences.
   // Trips can overtake: retain a separate onboard state for every trip instance.
   // Never choose just the earliest departure and discard later, shorter-cost anchors.
@@ -107,7 +111,9 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     if(!pattern){pattern={trips:[]};patterns.set(key,pattern);for(const c of trip)atStop[c.from].add(pattern);}
     pattern.trips.push(trip);
   }
+  profileEnd('routing.patterns',patternsStarted,{patterns:patterns.size,trips:trips.size});
   for(let round=0;round<queues.length;round++){
+    let stage=profileStart();
     const queue=queues[round];
     // Complete the continuous-walking closure before scanning vehicle routes.
     for(let head=0;head<queue.length;head++){
@@ -116,6 +122,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       if(options.prune!==false&&!frontiers.get(contextKey(l))?.includes(l))continue;
       for(const w of walking[l.stop])push({...l,stop:w.to,time:l.time+w.seconds,walk:l.walk+w.seconds,previous:l,via:w,alight:null});
     }
+    profileEnd('routing.walkClosure',stage,{round,labels:queue.length});stage=profileStart();
     if(round<queues.length-1){
       const active:Label[][]=network.stops.map(()=>[]),marked=new Set<Pattern>();
       for(const l of queue){
@@ -142,10 +149,12 @@ export function search(network: Network, settings: Settings, options: { prune?: 
         }
       }
     }
+    profileEnd('routing.routeScan',stage,{round});
     report(round+1);
   }
   // Serialize only the predecessor chains that actually explain a displayed value.
   // Shared nodes avoid copying a complete itinerary for every reachable destination.
+  const serialization=profileStart();
   const journeys: JourneyNode[] = [], ids = new Map<Label, number>();
   witnesses.forEach((witness, stop) => {
     if (!witness?.previous) return;
@@ -164,5 +173,6 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     }
     values[stop]!.journey = ids.get(witness)!;
   });
+  profileEnd('routing.journeys',serialization,{nodes:journeys.length,labels});
   return { values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
 }

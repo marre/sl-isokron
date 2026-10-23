@@ -4,9 +4,9 @@ import {archive,packFixed} from '../../src/core/contours';
 import type {AreaGeometry} from '../../src/core/bands';
 import { createHash } from 'node:crypto';
 
-async function walkingFixture(page: import('@playwright/test').Page,binary=false) {
+async function walkingFixture(page: import('@playwright/test').Page,binary=false,profile=false) {
   await page.route('https://tile.openstreetmap.org/**', r => r.abort());
-  await page.goto('/');
+  await page.goto(profile?'/?profile=1':'/');
   const geometry = { type: 'Polygon', coordinates: [[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]] };
   const bodies = ['a','b'].map(id => {if(!binary)return Buffer.from(JSON.stringify({ [id]: [{ minutes: 10, geometry }] }));const chunk=packFixed(geometry as AreaGeometry);return gzipSync(Buffer.from(archive({[id]:[{minutes:10,offset:0,length:chunk.byteLength}]},[chunk])));});
   const refs = bodies.map((body,i) => ({ url: `/data/progressive/${i}.json`, bytes: Buffer.byteLength(body), sha256: createHash('sha256').update(body).digest('hex') }));
@@ -117,4 +117,20 @@ test('walking profiles load for the visible map then follow a new viewport',asyn
   await page.evaluate(()=>{(window as any).progressiveView.toggle(false);(window as any).progressiveView.toggle(true)});
   await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
   await expect(page.locator('#progressive-map canvas')).toBeVisible();
+ });
+
+ test('opt-in profiling preserves contour pixels and reports worker stages',async({page})=>{
+  const hash=()=>page.locator('#progressive-map canvas').evaluate(async(c:HTMLCanvasElement)=>{
+   const pixels=c.getContext('2d')!.getImageData(0,0,c.width,c.height).data;
+   return [...new Uint8Array(await crypto.subtle.digest('SHA-256',pixels))].join(',');
+  });
+  let release=await walkingFixture(page,true);release();
+  await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');const baseline=await hash();
+  expect(await page.evaluate(()=>typeof (window as any).__slisoProfile)).toBe('undefined');
+  release=await walkingFixture(page,true,true);release();
+  await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');expect(await hash()).toBe(baseline);
+  const events=await page.evaluate(()=>(window as any).__slisoProfile.snapshot());
+  for(const name of ['data.hash','contour.inflate','contour.decode','raster.add','render.paint','main.canvas'])expect(events.some((e:any)=>e.name===name)).toBe(true);
+  expect(events.every((e:any)=>e.ms>=0&&Number.isFinite(e.at))).toBe(true);
+  expect(events.some((e:any)=>e.lane==='walking-worker')).toBe(true);
  });

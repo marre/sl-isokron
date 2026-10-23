@@ -1,3 +1,4 @@
+import {profileStart,profileEnd,profiling} from './profile';
 import type {Polygon,MultiPolygon} from 'geojson';
 import {packedRuns,type PackedGeometry} from './contours';
 import {colorFor} from './settings';
@@ -53,18 +54,23 @@ export class BandRaster {
  private earliest=new Map<RasterGeometry,number>();
  constructor(readonly grid:RasterGrid){this.field=new Uint8Array(grid.width*grid.height);}
  add(bands:AreaBand[]):Uint8Array{
+  const started=profileStart(),measure=profiling();let scanMs=0,fillMs=0,vertices=0,runsCount=0;
   const additions=new Map<RasterGeometry,number>();
   for(const band of bands)for(const geometry of band.geometries){
    const previous=additions.get(geometry)??this.earliest.get(geometry)??Infinity;
    if(band.minutes<previous)additions.set(geometry,band.minutes);
   }
   for(const [geometry,minutes] of additions){
+   let t=measure?performance.now():0;
    const runs=contourRuns(geometry,this.grid);
+   if(measure){scanMs+=performance.now()-t;runsCount+=runs.length/2;if(geometry.type==='Packed')vertices+=geometry.xy.length/2;t=performance.now();}
    for(let i=0;i<runs.length;i+=2)for(let p=runs[i];p<runs[i+1];p++){
     if(!this.field[p]||minutes<this.field[p])this.field[p]=minutes;
    }
+   if(measure)fillMs+=performance.now()-t;
    this.earliest.set(geometry,minutes);
   }
+  profileEnd('raster.add',started,{scanMs,fillMs,vertices,runs:runsCount,geometries:additions.size});
   return this.field;
  }
 }

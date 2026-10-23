@@ -1,3 +1,4 @@
+import {profileStart,profileEnd} from './profile';
 import type {AreaGeometry,RasterGrid} from './bands';
 export interface PackedGeometry {type:'Packed';xy:Float64Array|Int32Array;scale:number;rings:Uint32Array;polygons:Uint32Array}
 export function pack(geometry:AreaGeometry):ArrayBuffer{
@@ -92,8 +93,9 @@ export function legacyProfiles(buffer:ArrayBuffer):Profiles{
 export async function deliveryProfiles(bytes:ArrayBuffer):Promise<Profiles>{
  const magic=new Uint8Array(bytes,0,Math.min(2,bytes.byteLength));
  if(magic[0]===31&&magic[1]===139){
+  const start=profileStart();
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-  bytes=await new Response(stream).arrayBuffer();
+  bytes=await new Response(stream).arrayBuffer();profileEnd('contour.inflate',start,{bytes:bytes.byteLength});
  }
- return decodeProfiles(bytes);
+ const start=profileStart(),result=decodeProfiles(bytes);profileEnd('contour.decode',start,{bytes:bytes.byteLength});return result;
 }

@@ -1,3 +1,4 @@
+import {profileStart,profileEnd} from './profile';
 import type { Connection, FileRef, Manifest, Network, Walk } from './types';
 const memory = new Map<string, ArrayBuffer>();
 export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
@@ -10,34 +11,45 @@ export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
 export async function verified(ref: FileRef, signal?: AbortSignal): Promise<ArrayBuffer> {
   if (!/^\/data\/[a-zA-Z0-9._/-]+$/.test(ref.url) || ref.url.includes('..')) throw new Error('Ogiltig dataadress.');
   const key = ref.url + ':' + ref.sha256;
-  const fromMemory = memory.get(key); if (fromMemory) return fromMemory;
+  const total=profileStart();
+  const fromMemory = memory.get(key); if (fromMemory) {profileEnd('data.memory',total,{bytes:ref.bytes,url:ref.url});return fromMemory;}
   let cache: Cache | undefined;
+  let stage=profileStart();
   try { cache = await caches.open('sliso-data-v1'); } catch { /* In-memory fallback is intentional. */ }
+  profileEnd('data.cache.open',stage);
+  let source='network';
   let bytes: ArrayBuffer | undefined;
-  try { const saved = await cache?.match(ref.url); if (saved) bytes = await saved.arrayBuffer(); } catch { /* Cache is optional. */ }
-  const matches = async (b: ArrayBuffer) => b.byteLength === ref.bytes && Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', b)), b => b.toString(16).padStart(2, '0')).join('') === ref.sha256;
+  stage=profileStart();
+  try { const saved = await cache?.match(ref.url); if (saved) {bytes = await saved.arrayBuffer();source='cache';} } catch { /* Cache is optional. */ }
+  profileEnd('data.cache.read',stage);
+  const matches = async (b: ArrayBuffer) => {const start=profileStart();const valid=b.byteLength === ref.bytes && Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', b)), b => b.toString(16).padStart(2, '0')).join('') === ref.sha256;profileEnd('data.hash',start,{bytes:b.byteLength});return valid;};
   if (bytes && !await matches(bytes)) { try { await cache?.delete(ref.url); } catch { /* Storage may be revoked after reading. */ } bytes = undefined; }
   if (!bytes) {
+    source='network';stage=profileStart();
     const response = await fetch(ref.url, { signal });
+    profileEnd('data.fetch.headers',stage);
     if (!response.ok) throw new Error(response.status === 429 ? 'Datakvoten är uppnådd. Försök senare; ingen betald reservtjänst används.' : 'Nätverksfel vid hämtning av trafikdata.');
-    bytes = await response.arrayBuffer();
+    stage=profileStart();bytes = await response.arrayBuffer();profileEnd('data.fetch.body',stage,{bytes:bytes.byteLength});
     if (!await matches(bytes)) throw new Error('Datakontrollen misslyckades. Versionerna får inte blandas.');
+    stage=profileStart();
     try { await cache?.put(ref.url, new Response(bytes)); } catch { /* Full/denied cache: continue without persistence. */ }
+    profileEnd('data.cache.write',stage);
   }
   // Bound in-memory retention. A query owns its already loaded buffers independently.
   if (memory.size > 24) memory.clear();
-  memory.set(key, bytes); return bytes;
+  memory.set(key, bytes);profileEnd('data.verified',total,{source,bytes:ref.bytes,url:ref.url}); return bytes;
 }
 export async function loadJSON<T>(ref: FileRef, signal?: AbortSignal): Promise<T> { return JSON.parse(new TextDecoder().decode(await verified(ref, signal))) as T; }
 export function decodeConnections(buffer: ArrayBuffer, trips: string[]): Connection[] {
   if (buffer.byteLength % 36) throw new Error('Tidtabellspaketet är skadat.');
+  const started=profileStart();
   const view = new DataView(buffer), result: Connection[] = [];
   for (let at = 0; at < view.byteLength; at += 36) {
     const v = Array.from({ length: 9 }, (_, i) => view.getUint32(at + i * 4, true));
     if (!trips[v[4]]) throw new Error('Turindex saknas i dataversionen.');
     result.push({ from: v[0], to: v[1], departure: v[2], arrival: v[3], trip: trips[v[4]], route: v[5], sequence: v[6], pickup: !!(v[7]&1), dropoff: !!(v[8]&1), pickupRequest: !!(v[7]&2), dropoffRequest: !!(v[8]&2) });
   }
-  return result;
+  profileEnd('network.connectionsDecode',started,{rows:result.length,bytes:buffer.byteLength});return result;
 }
 // Large datasets share repeated provenance strings and omit repeated field names.
 // Existing immutable JSON arrays remain supported for older releases.
@@ -68,7 +80,7 @@ export async function loadNetwork(m: Manifest, t0: number, end: number, signal?:
     if(!done.has(ref.url)){done.add(ref.url);bytesCompleted+=ref.bytes;progress();}
     return bytes;
   }
-  async function json<T>(ref: FileRef): Promise<T> { return JSON.parse(new TextDecoder().decode(await buffer(ref))) as T; }
+  async function json<T>(ref: FileRef): Promise<T> {const bytes=await buffer(ref),start=profileStart();const result=JSON.parse(new TextDecoder().decode(bytes)) as T;profileEnd('network.jsonDecode',start,{bytes:bytes.byteLength,url:ref.url});return result;}
   const [stops, walks, routes, transfers, trips] = await Promise.all([json<Network['stops']>(m.stops), json<unknown>(m.walks).then(decodeWalks), json<Network['routes']>(m.routes), json<Network['transfers']>(m.transfers), json<string[]>(m.trips)]);
   const connections=(await Promise.all(hourly.map(async ref=>decodeConnections(await buffer(ref),trips)))).flat().filter(c=>c.departure>=t0&&c.departure<=end);
   return { stops, walks, routes, transfers, connections };

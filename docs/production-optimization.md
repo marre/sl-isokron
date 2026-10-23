@@ -54,3 +54,7 @@ The final compressed-delivery smoke measured 30.0 seconds to finish the first
 city viewport and 227 ms for a partial cutoff. Loading and composition therefore
 remain material costs; progressive paint and progress reporting are preserved.
 See [recorded integration measurements](production-optimization-results.json).
+
+A subsequent [stage-by-stage profile](profiling.md) separates contour work from
+the earlier full-app transition timing and identifies walking-state bookkeeping,
+file handling and repeated repainting as the next optimization targets.

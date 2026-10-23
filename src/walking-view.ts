@@ -1,3 +1,4 @@
+import {profiling,profileStart,profileEnd,acceptProfile,type ProfileEvent} from './core/profile';
 import L from 'leaflet';
 import { walkingMinutes } from './core/walking';
 import { bandLimits, type RasterGrid } from './core/bands';
@@ -60,6 +61,7 @@ export class WalkingView {
     if(!this.data||!this.enabled){this.progress?.(0,0,0);this.status('Gångområden är dolda.');return;}
     const {result,settings,manifest,stops}=this.data,areas=manifest.walkingAreas;
     if(!areas){this.status('Gångområden saknas i detta dataset.');return;}
+    const preparation=profileStart();
     const available=walkingMinutes(result.walkSources,settings.maxMinutes*60,settings.walkMinutes*60);
     const positions=new Map<number,number[]>();
     for(const index of available.keys()){
@@ -67,8 +69,10 @@ export class WalkingView {
       if(file!==undefined)positions.set(file,[...(positions.get(file)??[]),index]);
     }
     if(!positions.size){this.status('Inga gångområden finns för de nådda lägena. Gångtäckningen är ofullständig.');return;}
+    profileEnd('main.prepare',preparation);
     const controller=this.controller=new AbortController();
     const merger=this.merger=new Worker(new URL('./bands-worker.ts',import.meta.url),{type:'module'});
+    merger.postMessage({type:'profile',enabled:profiling()});
     const requests=new Map<number,AbortController>(),failed=new Set<number>();
     let wanted=new Set<number>(),queue:number[]=[],profileVersion=0,view=0,busy=false,pending=false,mergeError=false;
     let generation=0,nextToken=0;
@@ -105,6 +109,7 @@ export class WalkingView {
     const send=()=>{
       clearTimeout(this.timer);this.timer=undefined;
       if(controller.signal.aborted||busy||!pending)return;
+      const started=profileStart();
       pending=false;busy=true;
       const version=`${view}:${profileVersion}`,known=this.workerVersion===version;
       const partial=this.cutoff%10!==0&&this.cutoff!==settings.maxMinutes;
@@ -115,14 +120,17 @@ export class WalkingView {
       const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast()),w=se.x-nw.x,h=se.y-nw.y;
       const scale=Math.min(1,Math.sqrt(1_000_000/(w*h)),2048/Math.max(w,h));
       const grid:RasterGrid={width:Math.max(1,Math.ceil(w*scale)),height:Math.max(1,Math.ceil(h*scale)),bounds:[clip.getWest(),clip.getSouth(),clip.getEast(),clip.getNorth()]};
-      merger.postMessage({type:'render',version,view,generation,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands,grid});progress();
+      profileEnd('main.budgets',started,{files:this.profiles.size,wanted:wanted.size});
+      const post=profileStart();
+      merger.postMessage({type:'render',version,view,generation,cutoff:this.cutoff,maxMinutes:settings.maxMinutes,bands,grid});profileEnd('main.post',post);progress();
     };
     this.schedule=()=>{
       pending=true;
       if(!this.timer&&!busy)this.timer=setTimeout(send,60);
     };
-    merger.onmessage=({data}:{data:{type?:string;token?:number;version:string;view:number;cutoff:number;width:number;height:number;pixels?:Uint8ClampedArray;extent?:number[];cachedCutoffs?:number[];error?:boolean}})=>{
+    merger.onmessage=({data}:{data:{profileEvents?:ProfileEvent[];type?:string;token?:number;version:string;view:number;cutoff:number;width:number;height:number;pixels?:Uint8ClampedArray;extent?:number[];cachedCutoffs?:number[];error?:boolean}})=>{
       if(controller.signal.aborted)return;
+      acceptProfile(data.profileEvents);
       if(data.type==='loaded'){const task=loading.get(data.token!);loading.delete(data.token!);if(task)(data.error?task.reject:task.resolve)();return;}
       busy=false;
       if(data.view===view){
@@ -133,7 +141,8 @@ export class WalkingView {
           this.workerVersion=data.version;this.workerCutoffs=new Set(data.cachedCutoffs??[]);
           if(data.cutoff===this.cutoff&&(data.extent||this.image)){
             if(!this.image)this.image=new BandCanvas(this.pane,clip).addTo(this.map);
-            this.image.image(data.width,data.height,data.pixels,data.cutoff);
+            const start=profileStart();
+            this.image.image(data.width,data.height,data.pixels,data.cutoff);profileEnd('main.canvas',start,{pixels:data.width*data.height});
             if(data.extent){
               const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast());
               const point=(x:number,y:number)=>this.map.unproject(L.point(nw.x+(se.x-nw.x)*x/data.width,nw.y+(se.y-nw.y)*y/data.height));
@@ -162,7 +171,7 @@ export class WalkingView {
             controller.signal.removeEventListener('abort',abort);requests.delete(file);
             if(controller.signal.aborted)return;
             if(request.signal.aborted&&wanted.has(file)&&!queue.includes(file))queue.push(file);
-            progress();await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+            progress();const start=profileStart();await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));profileEnd('main.nextFrame',start);
             if(!controller.signal.aborted)pump();
           }
         })();
@@ -170,6 +179,7 @@ export class WalkingView {
     };
     const updateView=()=>{
       if(controller.signal.aborted)return;
+      const start=profileStart();
       const bounds=this.map.getBounds(),d=(settings.walkMinutes*80+50)/111320;
       const lon=d/Math.max(.1,Math.cos(this.map.getCenter().lat*Math.PI/180));
       const expanded=L.latLngBounds([bounds.getSouth()-d,bounds.getWest()-lon],[bounds.getNorth()+d,bounds.getEast()+lon]);
@@ -188,6 +198,7 @@ export class WalkingView {
         const score=(file:number)=>Math.min(...positions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));
         return score(a)-score(b);
       });
+      profileEnd('main.viewport',start,{wanted:wanted.size,moved,changed});
       if(moved||changed)this.schedule?.();progress();pump();
     };
     this.map.on('moveend zoomend resize',updateView);
