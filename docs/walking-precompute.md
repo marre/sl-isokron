@@ -78,3 +78,39 @@ routing time compared with optimized graph traversal. That excludes table loadin
 the initial extra download remains a tradeoff on slower connections. See the
 [implementation experiment](walking-state-implementation.md) for raw timings and
 their limits.
+
+## Production-worker recheck
+
+The actual minified production worker was also tested with verified release files,
+incremental station updates and the full table validation enabled. A fresh worker
+was used for each query; each engine/origin had one cold and one CacheStorage-warm
+run. No CPU sampler, bandwidth cap or phone hardware was used.
+
+| Origin | Graph routing, cold / warm | Precomputed routing, cold / warm |
+| --- | ---: | ---: |
+| Arlanda terminal 4 | 1.14 / 1.23 s | 0.97 / 1.09 s |
+| Vallentuna | 3.94 / 4.04 s | 2.25 / 3.41 s |
+| Skärvik | 2.68 / 2.13 s | 1.59 / 1.75 s |
+
+All stop objectives, boarding counts and walking Pareto frontiers matched. All
+walking edges, estimated markings, vehicle endpoints and itinerary predecessor
+timings were validated. The initial table was fetched once per new browser
+context; every warm search made **zero data requests**.
+
+Loading and validating the table are separate costs. Table decompression and
+validation took 0.13–0.20 s per worker. Total loading-plus-search times are retained
+in the [raw results](walking-precompute-results.json): for example, Arlanda's warm
+total was 2.07 s versus 1.85 s with graph routing, despite its shorter routing
+phase. General loading times varied, and one run per condition does not establish
+a uniform end-to-end speedup. These measurements support the routing savings and
+cache behaviour; they do not promise that every first or cached search is faster.
+
+The published release is `sl-e444dbdac6b699b9d8bf`, retaining
+`sl-f86213b8fb8e39a9260c` for older open clients. Only the small release descriptor
+is committed; the table and traffic data remain in the static release.
+
+To reproduce this integration test, build
+`experiments/walking-state/integration.config.ts`, serve the release using
+`experiments/profiling/server.mjs` with `SLISO_PROFILE_PORT=5196` and
+`SLISO_PROFILE_SITE=.data-build/precompute/site`, and run
+`npx tsx experiments/walking-state/integration.ts` with the same `SLISO_DATA_ROOT`.
