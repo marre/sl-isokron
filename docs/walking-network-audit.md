@@ -302,8 +302,8 @@ destination platform. This forced journeys to approach isolated station parts by
 vehicle, sometimes using a large detour.
 
 The general `gtfs-station-access-v1` rule adds only explicit unscoped timed pairs
-across previously separate walking components. It adds 1,008 directed links in
-the pinned feed and grows the exact walking closure from 819,970 to 856,912 pairs.
+across previously separate walking components. It adds 674 directed links in
+the pinned feed and grows the exact walking closure from 819,970 to 850,890 pairs.
 Existing walking paths, restrictions, indices and physical contour geometry stay
 intact. Costs are estimated from published transfer times; unknown distances stay
 unknown. See [the full policy](../data/README.md#published-gtfs-station-connections).

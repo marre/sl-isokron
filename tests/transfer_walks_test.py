@@ -34,6 +34,12 @@ class TransferWalkTests(unittest.TestCase):
         stops=copy.deepcopy(self.stops);stops[4]['retired']=True
         rules=[self.rule(0,1,0),self.rule(0,1,90,fromTrip='specific'),self.rule(0,1,90,toRoute='route'),self.rule(0,1,1801),self.rule(0,4),dict(**{'from':1,'to':2},seconds=240,type=0),self.rule(2,3),dict(**{'from':2,'to':3},seconds=0,type=3)]
         self.assertEqual(add_transfer_walks(stops,[],rules,30)[0],[])
+    def test_legacy_old_platforms_are_filtered_but_explicit_service_metadata_wins(self):
+        stops=copy.deepcopy(self.stops);stops[1]['platform']='Läge OLD1 · Buss'
+        self.assertEqual(add_transfer_walks(stops,[],[self.rule(0,1)],30)[0],[])
+        stops[1]['retired']=False
+        self.assertEqual(len(add_transfer_walks(stops,[],[self.rule(0,1)],30)[0]),1)
+
     def test_geometric_lower_bound_is_only_a_cost_guard_and_duplicate_times_use_the_maximum(self):
         stops=copy.deepcopy(self.stops);stops[1]['lat']=59.01
         walks,_=add_transfer_walks(stops,[],[self.rule(0,1,30)],30)

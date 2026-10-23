@@ -4,6 +4,7 @@ These are declared connections with estimated walking costs, not surveyed OSM
 geometry. Existing walking components/directions are never short-circuited.
 """
 import math
+import re
 from osm_walks import distance
 
 PREFIX='Assumed published GTFS station transfer; '
@@ -23,12 +24,14 @@ def add_transfer_walks(stops, walks, transfers, max_minutes):
     # Freeze components before adding any bridges. Every added direction must
     # have its own feed declaration; one new bridge cannot justify another.
     components=[find(i) for i in range(len(stops))]
+    def retired(s):
+        return s['retired'] if 'retired' in s else bool(re.match(r'^Läge OLD\S*(?:$|\s+·)',s.get('platform',''),re.IGNORECASE))
     blocked={(r['from'],r['to']) for r in transfers if r['type']==3 and not any(r.get(k) for k in ('fromTrip','toTrip','fromRoute','toRoute'))}
     candidates={};counts=dict(policy=POLICY,eligibleRows=0,addedLinks=0,existingComponent=0,rejectedCost=0)
     for r in transfers:
         a,b=r['from'],r['to'];seconds=r['seconds']
         if (r['type']!=2 or a==b or any(r.get(k) for k in ('fromTrip','toTrip','fromRoute','toRoute'))
-            or (a,b) in blocked or stops[a].get('retired') or stops[b].get('retired')
+            or (a,b) in blocked or retired(stops[a]) or retired(stops[b])
             or not isinstance(seconds,(int,float)) or isinstance(seconds,bool) or not math.isfinite(seconds) or seconds<=0):continue
         counts['eligibleRows']+=1
         if components[a]==components[b]:counts['existingComponent']+=1;continue
