@@ -202,3 +202,12 @@ test('broad views use only the labelled overview, replace it on zoom and cancel 
  await expect(page.locator('#layer-map canvas')).toHaveCount(0);
  await page.waitForTimeout(150);await expect(page.locator('#layer-map canvas')).toHaveCount(0);
 });
+
+test('profile arrivals during animated zoom keep raster dimensions consistent',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ const release=await walkingFixture(page,true);await expect(page.locator('#progressive-map canvas')).toBeVisible();
+ await page.evaluate(()=>{const map=(window as any).progressiveView.map;map.setZoom(map.getZoom()+1,{animate:true});});
+ await page.waitForFunction(()=>(window as any).progressiveView.map._animatingZoom);
+ release();await expect(page.locator('#progressive-status')).toContainText('Ungefärliga');
+ await expect(page.locator('#progressive-map canvas')).toBeVisible();expect(errors).toEqual([]);
+});

@@ -145,7 +145,9 @@ export class WalkingView {
       const bands=limits.map(minutes=>({minutes,allowances:[...budget(minutes)].flatMap(([index,allowance])=>{
         const id=stops[index].id,file=delivery.index[id];return selected.has(areas.sources?.[id]??areas.index[id])&&wanted.has(file)&&this.profiles.has(file)?[[id,allowance] as [string,number]]:[];
       })}));
-      const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast()),w=se.x-nw.x,h=se.y-nw.y;
+      // Profile deliveries may arrive during an animated zoom, before zoomend
+      // advances the viewport generation. Keep its raster grid at its own zoom.
+      const nw=this.map.project(clip.getNorthWest(),clipZoom),se=this.map.project(clip.getSouthEast(),clipZoom),w=se.x-nw.x,h=se.y-nw.y;
       const scale=Math.min(1,Math.sqrt(1_000_000/(w*h)),2048/Math.max(w,h));
       const grid:RasterGrid={width:Math.max(1,Math.ceil(w*scale)),height:Math.max(1,Math.ceil(h*scale)),bounds:[clip.getWest(),clip.getSouth(),clip.getEast(),clip.getNorth()]};
       profileEnd('main.budgets',started,{files:this.profiles.size,wanted:wanted.size});

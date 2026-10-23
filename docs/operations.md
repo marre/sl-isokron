@@ -186,3 +186,8 @@ Desktop hover continues to inspect destinations; right-click pins the journey.
 Touch/pen long-press dispatches the same inspection after 600 ms. Movement beyond
 8 px or map dragging cancels the hold; releasing an inspected point cannot also
 select an origin. Native context menus are supported without duplicate inspection.
+
+Walking raster grids use their viewport's captured zoom, rather than the live
+animation zoom. This keeps cached raster dimensions consistent when contour
+files finish loading between zoomstart and zoomend. A browser regression test
+delivers a delayed contour during a real zoom animation.
