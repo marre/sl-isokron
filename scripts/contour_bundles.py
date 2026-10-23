@@ -97,8 +97,10 @@ def bundle(areas, stops, target=TARGET):
                 if any(sources[sid] != old for sid in expected) or covered & expected:
                     raise ValueError('Logical contour source mismatch')
                 covered.update(expected)
-                for sid in expected:
-                    index[sid] = number
+                # Preserve archive order; set iteration varies with PYTHONHASHSEED.
+                for sid in p:
+                    if sid in expected:
+                        index[sid] = number
         for group in cells.values():
             pending, estimate = [], 0
             for i in group:

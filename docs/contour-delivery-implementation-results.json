@@ -1,0 +1,170 @@
+{
+  "dataset": "sl-44f458a396b05d888b63",
+  "measuredAt": "2026-10-23T09:08:55.829Z",
+  "cases": [
+    {
+      "latency": 0,
+      "phases": [
+        {
+          "phase": "cold",
+          "latency": 0,
+          "ms": 3953.60000000149,
+          "hash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 142,
+          "bytes": 21911874,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "cache-warm",
+          "latency": 0,
+          "ms": 3489.7999999970198,
+          "hash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "cutoff91",
+          "latency": 0,
+          "ms": 116.79999999701977,
+          "hash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "pan",
+          "latency": 0,
+          "ms": 935.1000000014901,
+          "hash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 3,
+          "bytes": 470852,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "overview",
+          "latency": 0,
+          "ms": 3217.39999999851,
+          "hash": "217491fecedd9f7608dab4e3f26cba6b690e1e8cc2fde2bfc8dac9ddffd63d26",
+          "layer": "overview",
+          "status": "Översiktliga gångområden · avrundade gångtider i femminuterssteg. Zooma in för fullständig detalj. Täckningen är ofullständig.",
+          "requests": 99,
+          "bytes": 19297076,
+          "overviewRequests": 99
+        },
+        {
+          "phase": "detail-return",
+          "latency": 0,
+          "ms": 2657,
+          "hash": "32fea1df0f5e8115c5101c405fade4b1e5918c98a8ea9f9bdc6f59237398beb5",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "detail-fresh",
+          "latency": 0,
+          "ms": 2514.2999999970198,
+          "hash": "32fea1df0f5e8115c5101c405fade4b1e5918c98a8ea9f9bdc6f59237398beb5",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        }
+      ]
+    },
+    {
+      "latency": 40,
+      "phases": [
+        {
+          "phase": "cold",
+          "latency": 40,
+          "ms": 4019.2999999970198,
+          "hash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 142,
+          "bytes": 21911874,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "cache-warm",
+          "latency": 40,
+          "ms": 2396.7999999970198,
+          "hash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "cutoff91",
+          "latency": 40,
+          "ms": 101.60000000149012,
+          "hash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "pan",
+          "latency": 40,
+          "ms": 620.2000000029802,
+          "hash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 3,
+          "bytes": 470852,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "overview",
+          "latency": 40,
+          "ms": 3307.7000000029802,
+          "hash": "217491fecedd9f7608dab4e3f26cba6b690e1e8cc2fde2bfc8dac9ddffd63d26",
+          "layer": "overview",
+          "status": "Översiktliga gångområden · avrundade gångtider i femminuterssteg. Zooma in för fullständig detalj. Täckningen är ofullständig.",
+          "requests": 99,
+          "bytes": 19297076,
+          "overviewRequests": 99
+        },
+        {
+          "phase": "detail-return",
+          "latency": 40,
+          "ms": 2447.5,
+          "hash": "32fea1df0f5e8115c5101c405fade4b1e5918c98a8ea9f9bdc6f59237398beb5",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        },
+        {
+          "phase": "detail-fresh",
+          "latency": 40,
+          "ms": 2250.2999999970198,
+          "hash": "32fea1df0f5e8115c5101c405fade4b1e5918c98a8ea9f9bdc6f59237398beb5",
+          "layer": "detail",
+          "status": "Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.",
+          "requests": 0,
+          "bytes": 0,
+          "overviewRequests": 0
+        }
+      ]
+    }
+  ]
+}

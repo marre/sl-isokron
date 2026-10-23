@@ -24,7 +24,7 @@ try{
     phase==='detail-fresh'?window.production.fresh(manifest):phase==='overview'?window.production.zoom(11):phase==='detail-return'?window.production.zoom(13):phase==='pan'?window.production.pan():phase==='cutoff91'?window.production.cutoff(91):window.production.run(manifest),
     new Promise((_,reject)=>setTimeout(()=>reject(new Error('Overlay timeout')),120000))
    ]),{phase,manifest});
-   assert.deepEqual(errors,[]);assert.equal(result.layer,phase==='detail-fresh'?window.production.fresh(manifest):phase==='overview'?'overview':'detail');
+   assert.deepEqual(errors,[]);assert.equal(result.layer,phase==='overview'?'overview':'detail');
    const row={phase,latency,...result,requests:requests-before.requests,bytes:bytes-before.bytes,overviewRequests:overviewRequests-before.overviewRequests};
    if(phase==='cold'||phase==='cache-warm')assert.equal(result.hash,reference('cold'));
    if(phase==='cutoff91')assert.equal(result.hash,reference('cutoff91'));

@@ -1,4 +1,6 @@
 import sys
+import os
+import subprocess
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'scripts'))
@@ -43,6 +45,20 @@ class Bundles(unittest.TestCase):
         self.assertEqual(len(result['detailFiles']), 3)
         with self.assertRaisesRegex(ValueError, 'already bundled'):
             bundle(result, stops)
+
+    def test_layout_is_stable_across_python_hash_seeds(self):
+        code = """
+import sys, hashlib
+sys.path[:0]=['scripts','tests']
+from contour_bundles_test import Bundles
+from contour_bundles import bundle
+from contour_format import compact
+stops, source=Bundles().fixture()
+result=bundle(source, stops)
+print(hashlib.sha256(compact({k:v for k,v in result.items() if k!='files'})+b''.join(result['files'].values())).hexdigest())
+"""
+        hashes = [subprocess.check_output([sys.executable, '-c', code], cwd=Path(__file__).resolve().parents[1], env={**os.environ,'PYTHONHASHSEED':str(seed)}) for seed in (1,2,3,4)]
+        self.assertEqual(len(set(hashes)), 1)
 
     def test_corrupt_archives_are_rejected(self):
         stops, source = self.fixture()
