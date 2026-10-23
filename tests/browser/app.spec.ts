@@ -114,7 +114,7 @@ test('driver-coordinated stops are routable and show a rider notice',async({page
  await expect(page.locator('#journey-panel')).toContainText('meddela föraren');
 });
 
-test('destination route previews on hover, pins on touch or click, and clears on origin change',async({page},info)=>{
+test('destination route previews on hover, pins with keyboard, and recalculates on origin change',async({page},info)=>{
  await init(page);await select(page);await page.locator('#calculate').click();
  await expect(page.locator('#legend')).toBeVisible();
  const colors=await page.locator('#legend .legend-scale i').evaluateAll(items=>items.map(e=>(e as HTMLElement).style.backgroundColor));
@@ -129,7 +129,7 @@ test('destination route previews on hover, pins on touch or click, and clears on
   await expect(page.locator('#journey-panel')).toBeHidden();
   await marker.hover({force:true});
   await page.locator('#journey-pin').click();
- }else {await marker.tap({force:true});await page.locator('#journey-expand').click();}
+ }else {await marker.press('Enter');await page.locator('#journey-expand').click();}
  await expect(page.locator('#journey-pin')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#journey-panel')).toContainText('Avgång');
  await expect(page.locator('#journey-panel')).toContainText('Ankomst');
@@ -143,7 +143,7 @@ test('destination route previews on hover, pins on touch or click, and clears on
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
  await expect(page.locator('#journey-panel')).toBeHidden();
  await expect(page.locator('.journey-line')).toHaveCount(0);
- await expect(page.locator('#legend')).toBeHidden();
+ await expect(page.locator('#legend')).toBeVisible();
 });
 
 test('only known destinations remain after search; new search restores the map and retains filters',async({page})=>{

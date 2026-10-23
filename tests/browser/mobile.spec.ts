@@ -3,6 +3,7 @@ import {test,expect} from '@playwright/test';
 test('phone map stays clear while search, legend and journey details open on demand',async({page},info)=>{
  test.skip(info.project.name!=='mobile','Touch layout');
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
+ await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).touchMap=map;return map;};}});});
  await page.goto('/');
  await expect(page.locator('#stop-search')).toBeEnabled();
  await expect(page.locator('#calculate')).toBeInViewport();
@@ -21,19 +22,25 @@ test('phone map stays clear while search, legend and journey details open on dem
  await page.locator('#fit').tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
- await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).tap();
+ await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).tap({trial:true});
+ const station=await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).boundingBox();
+ const hold=await page.context().newCDPSession(page);
+ await hold.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:station!.x+station!.width/2,y:station!.y+station!.height/2}]});
+ await page.waitForTimeout(800);await hold.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await hold.detach();
  await expect(page.locator('#journey-panel')).toBeVisible();
  await expect(page.locator('#legend')).toBeHidden();
  await expect(page.locator('#journey-content')).toBeHidden();
  expect((await page.locator('#journey-panel').boundingBox())!.height).toBeLessThan(140);
  await page.screenshot({path:'test-results/mobile-compact-journey.png'});
- const before=(await page.locator('.journey-line').first().boundingBox())!;
+ // Clipped SVG routes can keep the same bounding box while the map pans.
+ const before=await page.evaluate(()=>(window as any).touchMap.getCenter().lng);
  const touch=await page.context().newCDPSession(page);
  const x=map!.x+100,y=map!.y+map!.height*.4;
- await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
- for(let step=1;step<=6;step++)await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+step*10,y:y+step*5,id:1}]});
+ await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+ for(let step=1;step<=6;step++){await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+step*10,y:y+step*5}]});await page.waitForTimeout(25);}
  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
- await expect.poll(async()=>Math.abs((await page.locator('.journey-line').first().boundingBox())!.x-before.x)).toBeGreaterThan(20);
+ await expect.poll(async()=>Math.abs(await page.evaluate(()=>(window as any).touchMap.getCenter().lng)-before)).toBeGreaterThan(.00001);
+ await expect(page.locator('.journey-line').first()).toBeAttached();
  await touch.detach();
  await page.locator('#journey-expand').tap();
  await expect(page.locator('#journey-content')).toBeVisible();

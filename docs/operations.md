@@ -171,3 +171,18 @@ metro 10/11, 13/14 and 17/18/19 are blue, red and green. This fallback never use
 foreign operator's line number as evidence of an SL bus class. Other operators'
 buses remain neutral when no classification/colour is provided. The icons are
 inline SVGs, with no icon font or image fetch; the time-colour scale is unchanged.
+
+### Automatic origin placement
+
+A single map click/tap selects a new point origin and starts the worker immediately
+after a 450 ms double-click guard. Clicking a stop uses that stop as the new origin.
+New origin clicks also work during calculation: the previous worker is terminated
+and generation IDs reject stale replies. Drag/zoom movement cancels pending origin
+selection, and double clicks bubble through station and origin markers to zoom.
+Restoring a point-origin sharing link suppresses the automatic call while applying
+settings, then launches exactly one search with its saved display cutoff.
+
+Desktop hover continues to inspect destinations; right-click pins the journey.
+Touch/pen long-press dispatches the same inspection after 600 ms. Movement beyond
+8 px or map dragging cancels the hold; releasing an inspected point cannot also
+select an origin. Native context menus are supported without duplicate inspection.

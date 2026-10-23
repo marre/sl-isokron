@@ -4,13 +4,34 @@ import type {Manifest,SearchResult,Settings,Stop} from './core/types';
 
 /** One persistent worker per search; pointer changes invalidate stale previews. */
 export class PointDestinations {
- private worker?:Worker;private id=0;private timer?:ReturnType<typeof setTimeout>;private cutoff=0;private pinPending=false;
+ private worker?:Worker;private id=0;private timer?:ReturnType<typeof setTimeout>;private cutoff=0;private inspected=false;private pinPending=false;private holdTimer?:ReturnType<typeof setTimeout>;
  constructor(private map:L.Map,private view:JourneyView,private status:HTMLElement){
   document.querySelector('#journey-panel')!.addEventListener('journeyclose',()=>this.cancel());
   map.on('mousemove',e=>this.move(e));
-  map.on('click',e=>{this.cancel();if(this.available()&&!this.onStop(e)&&!(e.originalEvent?.detail>1)){this.pinPending=true;this.timer=setTimeout(()=>this.query(e.latlng,true),450);}});
+  const container=map.getContainer();let down:{x:number;y:number}|undefined;
+  const cancelHold=()=>{clearTimeout(this.holdTimer);down=undefined;};
+  container.addEventListener('pointerdown',e=>{
+   this.inspected=false;cancelHold();
+   if(!e.isPrimary||(e.pointerType!=='touch'&&e.pointerType!=='pen')||(e.target as Element)?.closest?.('.leaflet-control'))return;
+   down={x:e.clientX,y:e.clientY};const target=e.target;
+   this.holdTimer=setTimeout(()=>{
+    if(target instanceof Element)target.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY,button:2}));
+   },600);
+  },true);
+  // Consume a hold's compatibility clicks before Leaflet can interpret them
+  // as a second tap and start an unwanted zoom animation.
+  const consumeInspectionClick=(e:MouseEvent)=>{if(this.inspected){e.preventDefault();e.stopImmediatePropagation();}};
+  container.addEventListener('click',consumeInspectionClick,true);container.addEventListener('dblclick',consumeInspectionClick,true);
+  container.addEventListener('pointermove',e=>{if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)cancelHold();},true);
+  container.addEventListener('pointerup',cancelHold,true);container.addEventListener('pointercancel',cancelHold,true);
+  map.on('contextmenu',e=>{
+   cancelHold();e.originalEvent?.preventDefault();
+   if(this.inspected)return;
+   this.inspected=true;this.cancel();
+   if(this.available()&&!this.onStop(e))this.query(e.latlng,true);
+  });
   map.on('dblclick',()=>this.cancel());
-  map.on('movestart',()=>{this.cancel();this.view.leave();});
+  map.on('movestart',()=>{cancelHold();this.cancel();this.view.leave();});
   map.on('mouseout',e=>{const target=(e.originalEvent as MouseEvent)?.relatedTarget;if(target instanceof Node&&map.getContainer().contains(target))return;this.cancel();this.view.leave();});
  }
  private available(){return !!this.worker;}
@@ -43,7 +64,8 @@ export class PointDestinations {
   this.worker.onerror=()=>{this.pinPending=false;this.status.textContent='Gångvägen till punkten kunde inte beräknas. Sök igen för att försöka på nytt.';this.status.hidden=false;this.worker?.terminate();this.worker=undefined;};
   this.worker.postMessage({type:'configure',context:{manifest,settings,stops,result:{...result,values:[],routes:[],walkSources:[]}}});
  }
+ consumesOriginClick(){return this.inspected;}
  pause(){this.cancel();}
  setCutoff(minutes:number){this.cutoff=minutes;this.cancel();}
- reset(){this.cancel();this.worker?.terminate();this.worker=undefined;}
+ reset(){clearTimeout(this.holdTimer);this.inspected=false;this.cancel();this.worker?.terminate();this.worker=undefined;}
 }

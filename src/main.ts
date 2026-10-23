@@ -64,7 +64,7 @@ let stops: Stop[] = [], manifest: Manifest, selected = -1, worker: Worker | unde
 let result: SearchResult | undefined, usedSettings: Settings | undefined, dirty = false;
 let settings: Settings, runTimer: ReturnType<typeof setTimeout>;
 let activeOption = -1, displayMinutes = 0, displayFrame = 0;
-const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index); if(mobileLayout.matches)setMobileSearch(true); },point=>setPointStart(point));
+const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index,true); },point=>setPointStart(point));
 const pointDestinations=new PointDestinations(map,journeyView,$('#point-status'));
 const mapProgress=new MapProgress($('#map-progress'));
 let previewValues: (Reach|null)[] = [], previewActive=false;
@@ -109,7 +109,7 @@ function setStart(index: number, recalculate = false) {
   $('#platform-field').hidden = siblings.length <= 1;
   $<HTMLSelectElement>('#platform').innerHTML = siblings.map(({s,i})=>`<option value="${i}" ${i===index?'selected':''}>${escape(s.platform)}</option>`).join('');
   startLayer.clearLayers();
-  L.marker([stop.lat,stop.lon], { icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]}) }).addTo(startLayer).bindTooltip('Start: '+escape(stop.name)+' · '+escape(stop.platform));
+  L.marker([stop.lat,stop.lon], { bubblingMouseEvents:true,icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]}) }).addTo(startLayer).bindTooltip('Start: '+escape(stop.name)+' · '+escape(stop.platform));
   $('#start-data-gap').textContent=stop.walking==='estimated'?'Gång härifrån kan innehålla uppskattade stationsbyten: publicerade bytestider, granskade passager eller hållplatser med samma namn inom 250 meter. Se resedetaljerna för den valda resan.':'Gånganslutningar saknas från detta läge. Välj ett annat läge vid samma hållplats för att få med fler resor.';
   $('#start-data-gap').hidden=manifest.demo||stop.walking==='available'||!!stop.walkingArea;
   $('#map-label').textContent = `FRÅN ${stop.name.toLocaleUpperCase('sv')}`;
@@ -166,7 +166,7 @@ function renderResults(r: SearchResult,s: Settings) {
   const exitGap=walkingExitGap(r,s,stops);
   const exitWarning='Ingen kollektivresa hittades. De nådda hållplatslägena saknar koppling till kartans gångnät. Resultatet kan därför missa möjliga resor. Prova en närliggande hållplats eller ett annat avgångsfönster.';
   displayMinutes=0;
-  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2 id="result-count"></h2><span class="complete-badge ${exitGap?'exit-gap-badge':''}">${exitGap?'Gångdata saknas':'Färdig'}</span></div><button id="reset-search" class="reset-search" title="Välj ny startpunkt och behåll restidsinställningarna">Ny sökning</button><button id="legend-toggle" class="legend-toggle" aria-expanded="false" aria-controls="legend-details" aria-label="Visa färgskala och kartalternativ">⌃</button></div><div class="legend-scale" aria-hidden="true">${bandColors(s.maxMinutes).map((color,i)=>`<i data-band-end="${Math.min((i+1)*10,s.maxMinutes)}" style="background:${color}"></i>`).join('')}</div><div class="legend-range" aria-hidden="true"><span>0 min</span><span>${s.maxMinutes} min</span></div><div id="legend-details" class="legend-details">${exitGap?`<p class="exit-warning">${exitWarning}</p>`:''}<div class="display-time-control"><label for="display-time">Visa inom <output id="display-output" for="display-time">${s.maxMinutes} min</output></label><input id="display-time" type="range" min="1" max="${s.maxMinutes}" step="1" value="${s.maxMinutes}" aria-describedby="display-hint"><p id="display-hint">Utforska resultatet utan att söka igen.</p><button id="show-all-results" type="button" hidden>Visa alla ${s.maxMinutes} minuter</button></div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">Visar bara hållplatser med känd resa.${!manifest.demo&&!manifest.walkingCoverage?.reviewed?' Saknade gångkopplingar kan ge längre restider och dölja nåbara hållplatser.':''} Övre bandgränsen ingår.</p><p>Hovra över en hållplats eller punkt på kartan för resväg. Klicka eller tryck för att fästa resan; sista gången följer kartlagda vägar.</p><label class="walking-toggle"><input id="walking-toggle" type="checkbox" ${walkingView.enabled?'checked':''}> Visa gångområden</label><p id="walking-status" class="walking-status" role="status"></p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}</div>`;
+  $('#legend').innerHTML=`<div class="legend-top"><div><span class="eyebrow">DIN RESTIDSKARTA</span><h2 id="result-count"></h2><span class="complete-badge ${exitGap?'exit-gap-badge':''}">${exitGap?'Gångdata saknas':'Färdig'}</span></div><button id="reset-search" class="reset-search" title="Välj ny startpunkt och behåll restidsinställningarna">Ny sökning</button><button id="legend-toggle" class="legend-toggle" aria-expanded="false" aria-controls="legend-details" aria-label="Visa färgskala och kartalternativ">⌃</button></div><div class="legend-scale" aria-hidden="true">${bandColors(s.maxMinutes).map((color,i)=>`<i data-band-end="${Math.min((i+1)*10,s.maxMinutes)}" style="background:${color}"></i>`).join('')}</div><div class="legend-range" aria-hidden="true"><span>0 min</span><span>${s.maxMinutes} min</span></div><div id="legend-details" class="legend-details">${exitGap?`<p class="exit-warning">${exitWarning}</p>`:''}<div class="display-time-control"><label for="display-time">Visa inom <output id="display-output" for="display-time">${s.maxMinutes} min</output></label><input id="display-time" type="range" min="1" max="${s.maxMinutes}" step="1" value="${s.maxMinutes}" aria-describedby="display-hint"><p id="display-hint">Utforska resultatet utan att söka igen.</p><button id="show-all-results" type="button" hidden>Visa alla ${s.maxMinutes} minuter</button></div><p>Utan initial väntan · Väntan vid byten ingår${s.modes.length===0?' · Endast gång':''}</p><p class="legend-muted">Visar bara hållplatser med känd resa.${!manifest.demo&&!manifest.walkingCoverage?.reviewed?' Saknade gångkopplingar kan ge längre restider och dölja nåbara hållplatser.':''} Övre bandgränsen ingår.</p><p>Klicka på kartan för en ny start och direkt beräkning. Hovra för resväg, eller högerklicka / håll kvar fingret för att fästa resan. Sista gången följer kartlagda vägar.</p><label class="walking-toggle"><input id="walking-toggle" type="checkbox" ${walkingView.enabled?'checked':''}> Visa gångområden</label><p id="walking-status" class="walking-status" role="status"></p>${r.values.some(v=>v?.requestStop)?'<p>Stopp på signal kan ingå – se hållplatsens restid.</p>':''}</div>`;
   $('#legend').hidden=false;$('#reset-search').onclick=resetSearch;
   $('#legend-toggle').onclick=()=>{
     const open=$('#legend').classList.toggle('legend-expanded');
@@ -259,15 +259,15 @@ function popup(index: number) {
   detail.textContent = previewActive ? value ? `Preliminärt ${Math.ceil(value.seconds/60)} min · Beräkningen pågår` : 'Beräkningen pågår. Nåbarheten är ännu okänd.' : result ? value ? `${Math.ceil(value.seconds/60)} min · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} byten`}${value.requestStop?' · Stopp på signal – meddela föraren':''} · Färdig beräkning` : (!manifest.demo&&!manifest.walkingCoverage?.reviewed?'Ingen känd resa. Gångunderlaget är ofullständigt, så nåbarheten är osäker.':'Ej nåbar inom valda gränser i tillgänglig data.') : 'Restid okänd – ingen färdig beräkning.';
   box.append(detail);
   if(value){const note=document.createElement('small');note.textContent='Utan initial väntan. Restiden gäller detta hållplatsläge.';box.append(note);}
-  const button=document.createElement('button');button.textContent='Res härifrån ↗';button.className='popup-start';button.onclick=()=>{map.closePopup();setStart(index);};box.append(button);
+  const button=document.createElement('button');button.textContent='Res härifrån ↗';button.className='popup-start';button.onclick=()=>{map.closePopup();setStart(index,true);};box.append(button);
   L.popup().setLatLng([stop.lat,stop.lon]).setContent(box).openOn(map);
 }
 
 function cancelOriginClick(){clearTimeout(originClick);}
 function addPointPin(point:{lat:number;lon:number},mapped=false){
-  L.marker([point.lat,point.lon],{icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]})}).addTo(startLayer).bindTooltip(mapped?'Start på kartlagd gångväg':'Vald startpunkt · gångvägen kontrolleras vid sökning');
+  L.marker([point.lat,point.lon],{bubblingMouseEvents:true,icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]})}).addTo(startLayer).bindTooltip(mapped?'Start på kartlagd gångväg':'Vald startpunkt · gångvägen kontrolleras vid sökning');
 }
-function setPointStart(point:{lat:number;lon:number}){
+function setPointStart(point:{lat:number;lon:number},recalculate=true){
   if(!manifest.footpaths){showError('Gångnät för kartstart saknas i denna dataversion.');return;}
   cancelOriginClick();invalidate('Ny kartpunkt vald. Visa en ny restidskarta.');selected=-1;
   pointOrigin={lat:Math.round(point.lat*1e7)/1e7,lon:Math.round(point.lon*1e7)/1e7};
@@ -276,18 +276,21 @@ function setPointStart(point:{lat:number;lon:number}){
   $('#start-data-gap').hidden=false;$('#start-data-gap').textContent='Gång följer kartlagda vägar. Starten läggs på närmaste gångväg inom 25 m och visas på kartan. Saknas väg får du välja en ny punkt. Gången ingår i restid och gånggräns.';
   startLayer.clearLayers();addPointPin(pointOrigin);$('#calculate').removeAttribute('disabled');$('#share').removeAttribute('disabled');$('#reset-search').hidden=false;
   $('#map-label').textContent='FRÅN VALD KARTPUNKT';$('#form-error').hidden=true;status('Kartpunkt vald. Redo att beräkna gångvägar och resor.');
-  if(mobileLayout.matches)setMobileSearch(true);
+  if(recalculate)void calculate();
 }
 // Delay selection until a double-click has had a chance to zoom instead.
 map.on('click',(event:L.LeafletMouseEvent)=>{
   cancelOriginClick();
-  if(!manifest?.footpaths||result||worker||previewActive||event.originalEvent?.detail>1)return;
-  originClick=setTimeout(()=>{if(!result&&!worker)setPointStart({lat:event.latlng.lat,lon:event.latlng.lng});},450);
+  if(event.originalEvent?.detail>1||pointDestinations.consumesOriginClick())return;
+  const target=(event.originalEvent?.target as Element|null)?.closest?.('[data-stop-index]');
+  const index=target?Number(target.getAttribute('data-stop-index')):undefined;
+  if(!manifest||(index===undefined&&!manifest.footpaths))return;
+  originClick=setTimeout(()=>{if(index!==undefined&&isMapStop(stops[index]))setStart(index,true);else setPointStart({lat:event.latlng.lat,lon:event.latlng.lng});},450);
 });
-map.on('dblclick movestart',cancelOriginClick);
+map.on('dblclick movestart contextmenu',cancelOriginClick);
 map.getContainer().addEventListener('keydown',event=>{
   if(event.key==='Escape')cancelOriginClick();
-  if(event.key==='Enter'&&event.target===map.getContainer()&&manifest?.footpaths&&!result&&!worker){const p=map.getCenter();setPointStart({lat:p.lat,lon:p.lng});}
+  if(event.key==='Enter'&&event.target===map.getContainer()&&manifest?.footpaths){const p=map.getCenter();setPointStart({lat:p.lat,lon:p.lng});}
 });
 
 $('#search-form').addEventListener('submit',e=>{e.preventDefault();void calculate();});
@@ -395,7 +398,7 @@ async function restoreLink() {
   $('#form-error').hidden=true;
   const s=parseHash(location.hash);if(!s)return;
   applySettings(s);
-  if(s.origin==='point'){setPointStart(s);map.setView([s.lat,s.lon],16);validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);await calculate(s.displayMinutes);return;}
+  if(s.origin==='point'){setPointStart(s,false);map.setView([s.lat,s.lon],16);validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);await calculate(s.displayMinutes);return;}
   const index=stops.findIndex(stop=>stop.id===s.stop);
   if(index<0||!isMapStop(stops[index])){invalidate();selected=-1;$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');startLayer.clearLayers();$<HTMLInputElement>('#stop-search').value=s.name;$('#platform-field').hidden=true;$('#start-data-gap').hidden=true;throw new Error(`Hållplatsläget ”${s.name}” (${s.stop}) ${index<0?'finns inte längre':'har utgått'}. Sök och välj ett aktivt läge; startpunkten har inte flyttats.`);}
   setStart(index);map.setView([stops[index].lat,stops[index].lon],13);
@@ -420,7 +423,7 @@ async function init(){
     if(manifest.warnings.length&&!manifest.demo)banner.textContent+=' · Databegränsningar finns, se Om datan.';
     if(!manifest.demo&&!manifest.walkingCoverage?.reviewed){banner.classList.add('demo');banner.textContent=`UTVECKLINGSLÄGE · Tidtabell ${manifest.sourceUpdated||manifest.updated.slice(0,10)}. Ofullständigt gångunderlag kan underskatta nåbarheten.`;$('#map-demo').hidden=false;$('#map-demo').textContent='UTVECKLING · Gångdata ofullständiga';}
     markers.length=stops.length;
-    stops.forEach((s,i)=>{if(!isMapStop(s))return;const m=L.circleMarker([s.lat,s.lon],{bubblingMouseEvents:false,radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('click',()=>{pointDestinations.pause();if(result?.values[i]){map.closePopup();journeyView.pin(i);}else{journeyView.close();if(!result&&!previewActive){setStart(i);if(mobileLayout.matches){setMobileSearch(true);return;}}popup(i);}});const el=m.getElement();if(el){el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>{pointDestinations.pause();journeyView.hover(i);});el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();pointDestinations.pause();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i);if(mobileLayout.matches){setMobileSearch(true);return;}}popup(i);}}});}markers[i]=m;});
+    stops.forEach((s,i)=>{if(!isMapStop(s))return;const m=L.circleMarker([s.lat,s.lon],{bubblingMouseEvents:true,radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('contextmenu',()=>{if(result?.values[i]){map.closePopup();journeyView.pin(i);}});const el=m.getElement();if(el){el.setAttribute('data-stop-index',String(i));el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>{pointDestinations.pause();journeyView.hover(i);});el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();pointDestinations.pause();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i,true);return;}popup(i);}}});}markers[i]=m;});
     $('#stop-search').removeAttribute('disabled');
     if(!await cacheAvailable()){const p=document.createElement('p');p.className='hint';p.textContent='Lokal lagring är inte tillgänglig. Data hämtas på nytt vid behov.';banner.after(p);}
     void pruneCache(manifest);
