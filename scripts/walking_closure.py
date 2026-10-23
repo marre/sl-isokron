@@ -124,6 +124,7 @@ def migrate(root):
         refs = [migrated[k] for k in ('stops', 'walks', 'routes', 'transfers', 'trips')]
         refs += [r for entries in migrated['days'].values() for r in entries]
         refs += migrated.get('walkingAreas', {}).get('files', [])
+        refs += migrated.get('walkingAreas', {}).get('overview', {}).get('files', [])
         for ref in refs:
             source = root / ref['url'].removeprefix('/data/')
             if not (staging / source.name).exists():

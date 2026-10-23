@@ -114,6 +114,9 @@ def compact_walks(walks):
 
 
 def publish(output, stops, routes, walks, transfers, trips, days, meta, report, areas=None):
+    if areas:
+        from contour_bundles import bundle
+        areas = bundle(areas, stops)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix='.sliso-', dir=output))
@@ -141,7 +144,7 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
             report['walkingClosure'] = dict(pairs=pairs, bytes=len(files['walking-closure.bin']), witnessesVerified=True)
         files.update(time_files)
         if areas: files.update(areas['files'])
-        fingerprint = hashlib.sha256(compact(meta) + (compact(areas['index']) if areas else b'') + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
+        fingerprint = hashlib.sha256(compact(meta) + (compact({k:v for k,v in areas.items() if k != 'files'}) if areas else b'') + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
         version = ('demo-' if meta['demo'] else 'sl-') + fingerprint
         refs = {}
         for name, raw in files.items():
@@ -159,7 +162,9 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
             staging.rename(dest)
         manifest = dict(schema=2, version=version, **meta, trips=refs['trips.json'], days={d:[{**refs[n],'from':a,'until':b} for n,a,b in parts] for d,parts in day_files.items()}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
         if has_closure: manifest['walkingClosure'] = dict(**refs['walking-closure.bin'], format=CLOSURE_FORMAT, maxMinutes=meta['walkingMaxMinutes'])
-        if areas: manifest['walkingAreas'] = dict(**({'format':areas['format']} if 'format' in areas else {}), stepMinutes=1, index=areas['index'], files=[refs[n] for n in areas['files']], reviewed=False)
+        if areas:
+            from contour_bundles import manifest_fields
+            manifest['walkingAreas'] = manifest_fields(areas, refs)
         pending = output / '.manifest.tmp'
         pending.write_bytes(compact(manifest))
         os.replace(pending, output / 'manifest.json')

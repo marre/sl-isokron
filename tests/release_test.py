@@ -9,6 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from release_data import fetch, install, pack, validate
 from convert_contours import convert
+from bundle_contours import migrate as bundle_contours
+from contour_format import delivery_profiles, FORMAT
 from contour_format import decode_profiles, equivalent
 
 
@@ -44,6 +46,35 @@ class ReleaseTests(unittest.TestCase):
             installed=Path(temp)/'installed';install(Path(temp)/'data.zip',release,installed)
             self.assertEqual(validate(installed),migrated)
             self.assertTrue((installed/previous/name).exists())
+
+    def test_bundled_release_roundtrip_validates_overview_and_retains_previous(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)/'data';m=self.fixture(root);old=m['version']
+            def ref(name, raw):
+                (root/old/name).write_bytes(raw)
+                return dict(url=f'/data/{old}/{name}',bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())
+            m['stops']=ref('stops.json',json.dumps([dict(id='a',lat=59.33,lon=18.),dict(id='b',lat=59.3301,lon=18.)]).encode())
+            geometry=dict(type='Polygon',coordinates=[[[18.,59.],[18.1,59.],[18.1,59.1],[18.,59.]]])
+            profiles={sid:[dict(minutes=n,geometry=geometry) for n in range(1,31)] for sid in 'ab'}
+            m['walkingAreas']=dict(format=FORMAT,stepMinutes=1,index=dict(a=0,b=0),files=[ref('areas-0.bin',delivery_profiles(profiles))],reviewed=False)
+            (root/old/'report.json').write_text(json.dumps(dict(generator='sliso-data-v2',version=old)))
+            (root/'manifest.json').write_text(json.dumps(m))
+            updated=bundle_contours(root)
+            self.assertNotEqual(old,updated['version'])
+            self.assertEqual(m['stops']['sha256'],updated['stops']['sha256'])
+            self.assertEqual(updated['walkingAreas']['sources'],dict(a=0,b=0))
+            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sl-isokron')
+            installed=Path(temp)/'installed';install(Path(temp)/'data.zip',release,installed)
+            self.assertEqual(validate(installed),updated)
+            self.assertTrue((installed/old/'areas-0.bin').exists())
+            overview=installed/updated['walkingAreas']['overview']['files'][0]['url'].removeprefix('/data/')
+            overview.write_bytes(b'bad')
+            with self.assertRaisesRegex(ValueError,'mismatch'):
+                validate(installed)
+            broken=json.loads(json.dumps(updated));broken['walkingAreas']['overview']['index']['b']=1
+            (root/'manifest.json').write_text(json.dumps(broken))
+            with self.assertRaisesRegex(ValueError,'Invalid contour index'):
+                validate(root)
 
     def test_pinned_bundle_is_repeatable_and_installs_without_source_or_secrets(self):
         with tempfile.TemporaryDirectory() as temp:

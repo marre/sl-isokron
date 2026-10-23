@@ -134,3 +134,71 @@ test('walking profiles load for the visible map then follow a new viewport',asyn
   expect(events.every((e:any)=>e.ms>=0&&Number.isFinite(e.at))).toBe(true);
   expect(events.some((e:any)=>e.lane==='walking-worker')).toBe(true);
  });
+
+test('bundled neighbours contribute only through logical selection and can be removed without a refetch',async({page})=>{
+ await page.route('https://tile.openstreetmap.org/**',r=>r.abort());await page.goto('/');
+ const g={type:'Polygon',coordinates:[[[17.9,59.2],[18.1,59.2],[18.1,59.5],[17.9,59.5],[17.9,59.2]]]};
+ const body=JSON.stringify({a:[{minutes:10,geometry:g}],b:[{minutes:10,geometry:g}]});
+ const ref={url:'/data/logical/bundle.json',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')};let requests=0;
+ await page.route('**/data/logical/bundle.json',r=>{requests++;return r.fulfill({contentType:'application/json',body})});
+ await page.evaluate(async ref=>{
+  const component='/src/walking-view.ts',leaflet='/node_modules/leaflet/dist/leaflet-src.esm.js';const {WalkingView}=await import(component),L=await import(leaflet);
+  const el=document.createElement('div');el.id='logical-map';el.style.cssText='position:fixed;left:0;top:0;width:300px;height:300px;z-index:10000';document.body.append(el);
+  const status=document.createElement('p');status.id='logical-status';document.body.append(status);
+  const map=L.map(el,{zoomAnimation:false}).setView([59.33,18],14);(window as any).logicalMap=map;
+  // Just beyond the padded selection; a small pan admits b without changing raster bounds.
+  const north=map.getBounds().getNorth()+(10*80+50)/111320;
+  const view=new WalkingView(map,(text:string)=>status.textContent=text,()=>{});
+  view.setData({walkSources:[{stop:0,seconds:600,walked:0},{stop:1,seconds:0,walked:0}]},{maxMinutes:20,walkMinutes:10},{walkingAreas:{index:{a:0,b:0},sources:{a:0,b:1},files:[ref]}},[{id:'a',lat:59.33,lon:18},{id:'b',lat:north+.0005,lon:18}]);
+ },ref);
+ const canvas=page.locator('#logical-map canvas');
+ const pixels=()=>canvas.evaluate((c:HTMLCanvasElement)=>Array.from(c.getContext('2d')!.getImageData(c.width/2,c.height/2,1,1).data));
+ await expect(page.locator('#logical-status')).toContainText('Ungefärliga');const original=await pixels();expect(original[3]).toBe(255);
+ await page.evaluate(()=>(window as any).logicalMap.panBy([0,-30],{animate:false}));
+ await expect.poll(pixels).not.toEqual(original);
+ await page.evaluate(()=>(window as any).logicalMap.panBy([0,30],{animate:false}));
+ await expect.poll(pixels).toEqual(original);expect(requests).toBe(1);
+});
+
+test('broad views use only the labelled overview, replace it on zoom and cancel late detail on reset',async({page})=>{
+ await page.route('https://tile.openstreetmap.org/**',r=>r.abort());await page.goto('/');
+ const geometry={type:'Polygon',coordinates:[[[17.99,59.32],[18.01,59.32],[18.01,59.34],[17.99,59.34],[17.99,59.32]]]};
+ const stops=Array.from({length:48},(_,i)=>({id:'s'+i,lat:59.33,lon:18}));
+ const bodies=stops.map(s=>JSON.stringify({[s.id]:[{minutes:7,geometry}]}).padEnd(45000,' '));
+ const ref=(url:string,body:string)=>({url,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
+ const refs=bodies.map((b,i)=>ref(`/data/layers/detail-${i}.json`,b));
+ const preview=JSON.stringify(Object.fromEntries(stops.map(s=>[s.id,[{minutes:5,geometry}]])));
+ const overview=ref('/data/layers/overview.json',preview);let details=0,previews=0,hold=false,release!:()=>void;const held=new Promise<void>(resolve=>release=resolve);
+ await page.route('**/data/layers/*.json',async r=>{
+  if(r.request().url().endsWith('/overview.json')){previews++;await r.fulfill({contentType:'application/json',body:preview});return;}
+  details++;if(hold)await held;
+  const i=Number(r.request().url().split('detail-')[1].split('.')[0]);await r.fulfill({contentType:'application/json',body:bodies[i]}).catch(()=>{});
+ });
+ await page.evaluate(async({refs,overview,stops})=>{
+  const component='/src/walking-view.ts',leaflet='/node_modules/leaflet/dist/leaflet-src.esm.js';const {WalkingView}=await import(component),L=await import(leaflet);
+  const el=document.createElement('div');el.id='layer-map';el.style.cssText='position:fixed;left:0;top:0;width:300px;height:300px;z-index:10000';document.body.append(el);
+  const status=document.createElement('p');status.id='layer-status';document.body.append(status);
+  const map=L.map(el,{zoomAnimation:false}).setView([59.33,18],12),view=new WalkingView(map,(text:string)=>status.textContent=text,()=>{});
+  (window as any).layerMap=map;(window as any).layerView=view;
+  const index=Object.fromEntries(stops.map((s,i)=>[s.id,i]));
+  view.setData({walkSources:stops.map((s,i)=>({stop:i,seconds:0,walked:0}))},{maxMinutes:20,walkMinutes:7},{walkingAreas:{index,sources:index,files:refs,overview:{index:Object.fromEntries(stops.map(s=>[s.id,0])),files:[overview],stepMinutes:5}}},stops);
+ },{refs,overview,stops});
+ await expect(page.locator('#layer-status')).toContainText('Översiktliga');
+ await expect(page.locator('#layer-map canvas')).toHaveAttribute('data-layer','overview');
+ await expect(page.locator('#layer-map .walking-overview-note')).toBeVisible();
+ expect(previews).toBe(1);expect(details).toBe(0);
+ expect(await page.locator('#layer-map canvas').evaluate((c:HTMLCanvasElement)=>c.getContext('2d')!.getImageData(0,0,c.width,c.height).data.some((v,i)=>i%4===3&&v>0))).toBe(true);
+ await page.evaluate(()=>(window as any).layerMap.setZoom(13,{animate:false}));
+ await expect(page.locator('#layer-status')).toContainText('Ungefärliga');
+ await expect(page.locator('#layer-map canvas')).toHaveAttribute('data-layer','detail');expect(details).toBe(48);
+ await expect(page.locator('#layer-map .walking-overview-note')).toHaveCount(0);
+ await page.evaluate(()=>(window as any).layerMap.setZoom(12,{animate:false}));
+ await expect(page.locator('#layer-map canvas')).toHaveAttribute('data-layer','overview');
+ // Clear persistent detail files, hold a fresh refinement, then reset before it returns.
+ await page.evaluate(async()=>{const cache=await caches.open('sliso-data-v1');for(const req of await cache.keys())if(req.url.includes('/data/layers/detail-'))await cache.delete(req);});
+ hold=true;await page.evaluate(()=>(window as any).layerMap.setZoom(13,{animate:false}));
+ await expect.poll(()=>details).toBeGreaterThan(48);
+ await page.evaluate(()=>(window as any).layerView.reset());release();
+ await expect(page.locator('#layer-map canvas')).toHaveCount(0);
+ await page.waitForTimeout(150);await expect(page.locator('#layer-map canvas')).toHaveCount(0);
+});

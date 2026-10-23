@@ -44,7 +44,9 @@ def validate(root):
         raise ValueError('A real schema-2 dataset is required for publication')
     refs = [manifest[k] for k in ('stops', 'walks', 'routes', 'transfers', 'trips')]
     refs += [ref for entries in manifest['days'].values() for ref in entries]
-    refs += manifest.get('walkingAreas', {}).get('files', [])
+    areas = manifest.get('walkingAreas', {})
+    refs += areas.get('files', [])
+    refs += areas.get('overview', {}).get('files', [])
     if manifest.get('walkingClosure'):
         refs.append(manifest['walkingClosure'])
     for ref in refs:
@@ -54,6 +56,21 @@ def validate(root):
         path = root / member_path(ref['url'].removeprefix('/data/'))
         if path.is_symlink() or not path.is_file() or path.stat().st_size != ref['bytes'] or digest(path) != ref['sha256']:
             raise ValueError('Data file missing or checksum/size mismatch: ' + ref['url'])
+    if 'sources' in areas:
+        sources = areas['sources']
+        if set(sources) != set(areas['index']):
+            raise ValueError('Contour source index mismatch')
+        for layer in [areas] + ([areas['overview']] if 'overview' in areas else []):
+            if set(layer['index']) != set(sources):
+                raise ValueError('Contour layer coverage mismatch')
+            groups = {}
+            for sid, file in layer['index'].items():
+                source = sources[sid]
+                if type(source) is not int or source < 0 or type(file) is not int or not 0 <= file < len(layer['files']):
+                    raise ValueError('Invalid contour index')
+                if source in groups and groups[source] != file:
+                    raise ValueError('Logical contour source split between files')
+                groups[source] = file
     closure = manifest.get('walkingClosure')
     if closure:
         from walking_closure import validate as validate_closure, decode_walks, FORMAT
