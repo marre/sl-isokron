@@ -267,9 +267,6 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     validate_walks(walk_meta,[dict(id=s['stop_id'],lat=float(s['stop_lat']),lon=float(s['stop_lon'])) for s in raw_stops if s.get('location_type','0') in ('','0')])
     scope_walks = {**walk_meta, 'edges':[e for e in walk_meta['edges'] if e['from'] in stop_ids and e['to'] in stop_ids]}
     walks, excluded = validate_walks(scope_walks, stops)
-    outgoing={w['from'] for w in walks}
-    mapped_outgoing={w['from'] for w in walks if not w['source'].startswith('Assumed ')}
-    for i,stop in enumerate(stops):stop['walking']='available' if i in mapped_outgoing else 'estimated' if i in outgoing else 'missing'
     areas = None
     if walking_areas:
         area_root = Path(walking_areas)
@@ -365,20 +362,24 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     for i,stop in enumerate(stops):
         if re.fullmatch(r'OLD\S*',platform_codes[stop['id']],re.IGNORECASE):
             stop['retired']=i not in scheduled_stops
+    from transfer_walks import add_transfer_walks,update_walking_status,WARNING as TRANSFER_WARNING,POLICY as TRANSFER_POLICY
+    walks,transfer_access=add_transfer_walks(stops,walks,expanded,walk_meta['maxMinutes'])
+    update_walking_status(stops,walks)
     boarding_by_route=Counter(r[5] for records in days.values() for r in records if r[7]&1)
     unsupported_routes=[r['id'] for i,r in enumerate(routes) if not boarding_by_route[i]]
     gaps = len(stops)-len({w['from'] for w in walks})
     warnings = list(walk_meta.get('warnings',[]))
+    if transfer_access['addedLinks']:warnings.append(TRANSFER_WARNING)
     if gaps:
-        warnings.append(f'{gaps} hållplatslägen saknar utgående fysisk gånganslutning. Inga genvägar har skapats.')
+        warnings.append(f'{gaps} hållplatslägen saknar utgående gånganslutning i underlaget.')
     if unsupported_routes: warnings.append(f'{len(unsupported_routes)} linjeposter saknar stödd påstigning inom det byggda tidsintervallet. Kalender- och bokningsvillkor redovisas i byggrapporten.')
     warnings.append('Trafikurval: '+scope_report['description'])
     warnings.append('Olika trip_id räknas konservativt som olika fordon. Telefonbokning (typ 2) och bokningsregler används inte. Typ 3 ingår: samordna med föraren/signalera för på- och avstigning.')
     source_version=feed_info[0].get('feed_version','') if feed_info else ''
     try: source_updated=parse_date(source_version).isoformat()
     except ValueError: source_updated=None
-    meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids and not s.get('binding','').startswith('assumed-')}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
-    report = dict(stops=len(stops),retiredPlatforms=sum(s.get('retired',False) for s in stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
+    meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version']+'+'+TRANSFER_POLICY,transferWalking=transfer_access,walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids and not s.get('binding','').startswith('assumed-')}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
+    report = dict(transferWalking=transfer_access,stops=len(stops),retiredPlatforms=sum(s.get('retired',False) for s in stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
     publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report,areas)
 
 if __name__ == '__main__':

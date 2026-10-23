@@ -1,0 +1,33 @@
+name: Publish declared station transfers
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the checksum-pinned existing release
+        run: python scripts/release_data.py fetch --output .data-build/station-transfers/data
+      - name: Add declared missing access and recompute exact walking closure
+        run: |
+          python scripts/migrate_transfer_walks.py --root .data-build/station-transfers/data
+          python scripts/prune_data.py --root .data-build/station-transfers/data --keep 2
+      - name: Validate and package static data
+        run: python scripts/release_data.py pack --root .data-build/station-transfers/data --output .data-build/station-transfers/sliso-data.zip --descriptor .data-build/station-transfers/release.json --repository "$GITHUB_REPOSITORY"
+      - name: Publish data outside Git
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python -c "import json; print(json.load(open('.data-build/station-transfers/release.json'))['version'])")
+          gh release create "data-$version" .data-build/station-transfers/sliso-data.zip .data-build/station-transfers/release.json --target "$GITHUB_SHA" --latest=false --title "sliso declared station access $version" --notes 'Previously disconnected walking components joined only by explicit directed unscoped GTFS type-2 transfers with positive published times. Walking costs estimated; no fabricated distance or corridor geometry. Existing walking components/directions and all boarding restrictions preserved. Exact closure regenerated; timetable, footpath tiles and contour bytes unchanged. No GTFS/OSM request. Previous immutable version retained. CC0 / ODbL; provenance and limitations in data/README.md.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: station-transfer-release-descriptor
+          path: .data-build/station-transfers/release.json
+          retention-days: 7

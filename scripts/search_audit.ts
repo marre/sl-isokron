@@ -1,4 +1,5 @@
 /** Offline result diagnostics. Geographic proximity flags a question, never a route. */
+import {isPublicStop} from '../src/core/stops';
 import { journeyFor } from '../src/core/journey';
 import type { Network, SearchResult, Settings, Stop } from '../src/core/types';
 function metres(a: Stop, b: Stop): number {
@@ -23,11 +24,11 @@ export function auditSearch(network: Network, result: SearchResult, settings: Se
       upperBoundSeconds:from.seconds+w.seconds,actualSeconds:to?.seconds??null});
   }
   const bins=new Map<string,number[]>();
-  network.stops.forEach((s,i)=>{const key=`${Math.floor(s.lat*400)}|${Math.floor(s.lon*200)}`;bins.set(key,[...(bins.get(key)??[]),i]);});
+  network.stops.forEach((s,i)=>{if(!isPublicStop(s))return;const key=`${Math.floor(s.lat*400)}|${Math.floor(s.lon*200)}`;bins.set(key,[...(bins.get(key)??[]),i]);});
   const active=new Set(network.connections.flatMap(c=>[c.from,c.to]).concat(network.walks.flatMap(w=>[w.from,w.to])));
   const outliers=[];
   for(let i=0;i<network.stops.length;i++) {
-    const a=network.stops[i],r=result.values[i];if(!r)continue;
+    const a=network.stops[i],r=result.values[i];if(!r||!isPublicStop(a))continue;
     const x=Math.floor(a.lat*400),y=Math.floor(a.lon*200);
     for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++)for(const j of bins.get(`${x+dx}|${y+dy}`)??[]) {
       if(j===i || (!result.values[j]&&!active.has(j)))continue;

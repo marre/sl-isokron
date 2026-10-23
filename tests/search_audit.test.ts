@@ -25,3 +25,9 @@ test('unused timetable positions do not crowd out actionable geographic findings
  const audit=auditSearch(n,search(n,s),s);
  assert.ok(audit.outliers.every(o=>o.to!=='unused'));
 });
+
+test('retired routing nodes cannot become public geographic outlier findings',()=>{
+ const n=fixture();n.stops[2].retired=true;
+ const s={...defaults(n.stops[0]),date:'2026-10-23',time:'08:00',walkMinutes:15};
+ const report=auditSearch(n,search(n,s),s);assert.ok(report.outliers.every(o=>o.from!=='c'&&o.to!=='c'));
+});

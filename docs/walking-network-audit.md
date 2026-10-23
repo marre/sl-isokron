@@ -290,3 +290,29 @@ These are local measurements, not a device-performance guarantee. Tests cover
 fastest overlapping colours, holes, islands, partial thresholds, cache eviction,
 progressive arrival, cancellation, viewport changes, stable colours, filtered
 stop visibility, share restoration and absence of new searches/downloads.
+
+### Declared station transfers across missing walking components (2026-10-23)
+
+The point-origin search at 59.3361032, 18.0118006, 2026-10-23 16:26,
+60-minute travel limit / 15-minute walking limit / three changes exposed missing
+access at Odenplan, Stockholm City and Slussen's ferry piers. The feed already
+contained positive, directed minimum-transfer rows for those connections, but
+those rows only constrained vehicle boarding. They did not create a walk to the
+destination platform. This forced journeys to approach isolated station parts by
+vehicle, sometimes using a large detour.
+
+The general `gtfs-station-access-v1` rule adds only explicit unscoped timed pairs
+across previously separate walking components. It adds 1,008 directed links in
+the pinned feed and grows the exact walking closure from 819,970 to 856,912 pairs.
+Existing walking paths, restrictions, indices and physical contour geometry stay
+intact. Costs are estimated from published transfer times; unknown distances stay
+unknown. See [the full policy](../data/README.md#published-gtfs-station-connections).
+
+Regression coverage includes direction, scoped/forbidden/zero-time rows, retirement,
+preserving a longer existing mapped route and its one-way restriction, independent
+provenance for every bridge, conservative duplicate handling, boarding minima
+without double charging, continuous walking budget, immutable migration, and
+byte-preserved footpath/contour delivery. Geographic diagnostics now exclude
+retired presentation stops while retaining correctness checks on all routing nodes.
+The offline search auditor also accepts point-origin sharing settings and uses the
+same checksum-bound walking closure and mapped initial access as the application.

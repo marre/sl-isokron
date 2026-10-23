@@ -19,6 +19,7 @@ export const aboutHTML = `
 <details>
   <summary>Öppen data och förberäkning</summary>
   <p>Trafikuppgifterna kommer från GTFS Regional via Trafiklab. Alla linjer i den importerade SL-feeden ingår, med dina valda trafikslag som filter. Gångunderlaget bygger på OpenStreetMap. Python-skript förbereder data; Valhalla tar fram gångområden längs gångnätet.</p>
+  <p>När gångnätet saknar en stationsanslutning kan ett uttryckligt, riktat GTFS-byte med positiv minsta bytestid koppla stationens delar. Detta gäller bara olika, tidigare åtskilda gångkomponenter. Kända gångvägar ersätts inte och enkelriktningar kringgås inte. Gångtiden märks som uppskattad och har ingen påhittad korridorgeometri eller uppmätt sträcka; bytestidsvillkoret gäller fortfarande vid påstigning.</p>
   <p>Vi förberäknar kortaste gångkopplingar mellan hållplatslägen inom den stödda gånggränsen, upp till 30 minuter. Tabellen innehåller gångtid och hänvisningar till de ursprungliga gångkanterna, så att resväg och avstånd kan återskapas. Sökningen kan slå upp dessa kopplingar utan att söka igenom hela gångnätet vid varje byte.</p>
   <p>Data publiceras som versionsbundna, statiska filer via GitHub Releases och Cloudflares CDN. Ett litet manifest talar om vilka filer som hör ihop. SHA-256-kontrollsummor kontrollerar att innehållet är rätt. Det gör att tjänsten kan drivas utan en stor server som räknar ut varje resa.</p>
 </details>

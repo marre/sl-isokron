@@ -242,3 +242,36 @@ The migration preserves traffic, closure and contour bytes, publishes a new
 immutable version and retains the preceding version for clients already open.
 Normal data builds accept `--footpaths` and CI refuses to silently drop this feature
 if the prepared walking cache is missing. Regenerate with `prepare_walking=true`.
+
+## Published GTFS station connections
+
+The `gtfs-station-access-v1` build policy supplements missing station access using
+explicit, directed, unscoped GTFS `transfer_type=2` rows with a positive
+`min_transfer_time`. These rows previously constrained boarding without providing
+a walking connection, leaving named parts of a complex disconnected (for example
+Odenplan / Stockholm Odenplan and T-Centralen / Stockholm City).
+
+Only pairs in **different original weakly connected walking components** are
+eligible. Existing walking paths are never shortened, and mapped one-way
+restrictions cannot be bypassed by adding a reverse edge inside a component.
+Components are frozen before adding links: each added direction requires its own
+GTFS declaration. Self-transfers, retired endpoints, zero-time transfers,
+trip/route-specific rows and explicitly forbidden generic pairs are excluded.
+The walking cost uses the published time, conservatively bounded below by physical
+straight-line travel time at 4.8 km/h, and must fit the supported walking limit.
+Duplicate generic declarations use the longest time. Straight-line distance is
+only a consistency guard; it is never displayed as a measured walking distance.
+
+These links are labelled **estimated**. They have no invented path geometry or
+measured distance, add no contours, and do not alter strict mapped access from an
+arbitrary map origin. Actual GTFS minimum-transfer and scoped prohibition checks
+still apply at boarding; walking time and minimum transfer time overlap rather
+than being charged twice. All walking continues to share the same continuous-leg
+budget. The exact offline closure is rebuilt with original-edge witnesses, so the
+client continues to use precomputed lookups.
+
+Normal feed compilation applies this policy. To update an existing pinned release
+without fetching GTFS or OSM, run `scripts/migrate_transfer_walks.py --root DATA`.
+It preserves timetable, footpath-tile and contour bytes, publishes a new immutable
+version, and retains the previous one. The `Publish declared station transfers`
+Actions workflow packages that migration outside Git.

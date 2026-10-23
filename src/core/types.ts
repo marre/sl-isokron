@@ -22,6 +22,7 @@ export interface Manifest {
   sourceVersion?: string; sourceUpdated?: string | null;
   schema: 2; version: string; demo: boolean; updated: string; validFrom: string; validTo: string;
   walkingMaxMinutes: number; walkingVersion: string; walkingSpeedKmh: number;
+  transferWalking?: {policy:string;eligibleRows:number;addedLinks:number;existingComponent:number;rejectedCost:number};
   walkingCoverage?: { totalStops: number; boundStops: number; pairs: number; reviewed: boolean };
   walkingAreas?: ContourFiles & { stepMinutes: 1; sources?: Record<string, number>; overview?: ContourFiles & {stepMinutes:5}; reviewed: boolean };
   stops: FileRef; walks: FileRef; routes: FileRef; transfers: FileRef;
