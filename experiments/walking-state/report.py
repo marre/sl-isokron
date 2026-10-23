@@ -15,7 +15,7 @@ for batch,report in zip(['bookkeeping','numeric'],reports):
 log=(root/'regressions.log').read_text()
 passed=int(re.search(r'ℹ pass (\d+)',log)[1]);failed=int(re.search(r'ℹ fail (\d+)',log)[1])
 assert passed==205 and failed==0,'Run the complete five-variant regression set before publishing this report.'
-result={'routerSHA256':hashlib.sha256(Path('src/core/router.ts').read_bytes()).hexdigest(),'summary':summary,'batches':reports,'closure':json.loads((root/'closure-all.json').read_text()),'counters':json.loads((root/'counters.json').read_text()),'regressions':{'passed':passed,'failed':failed,'variants':5,'seededTransferNetworksPerVariant':150,'independentExhaustiveNetworksPerVariant':60}}
+result={'referenceSHA256':hashlib.sha256(Path('experiments/walking-state/reference.ts').read_bytes()).hexdigest(),'summary':summary,'batches':reports,'closure':json.loads((root/'closure-all.json').read_text()),'counters':json.loads((root/'counters.json').read_text()),'regressions':{'passed':passed,'failed':failed,'variants':5,'seededTransferNetworksPerVariant':150,'independentExhaustiveNetworksPerVariant':60}}
 result['closure'].pop('rows')
 Path('docs/walking-state-results.json').write_text(json.dumps(result,indent=2)+'\n')
 for row in summary:print(row['batch'],row['origin'],row['variant'],round(row['medianMs']),f"{row['speedup']:.2f}x",f"{row['reductionPercent']:.1f}%")

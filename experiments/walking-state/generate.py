@@ -1,10 +1,9 @@
-"""Generate isolated, reviewable variants from the production router. Never edits src/."""
+"""Generate historical experiment variants from a frozen router. Never edits src/."""
 from pathlib import Path
 
 out = Path('.data-build/walking-state')
 out.mkdir(parents=True, exist_ok=True)
-source = Path('src/core/router.ts').read_text()
-source = source.replace("from './", "from '../../src/core/")
+source = Path('experiments/walking-state/reference.ts').read_text()
 (out/'baseline.ts').write_text(source)
 
 cached = source.replace('  stop: number;', '  _key?: string; _settled?: boolean; _active?: boolean;\n  stop: number;', 1)

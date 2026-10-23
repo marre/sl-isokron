@@ -1,0 +1,277 @@
+{
+  "dataset": "sl-40c8446978cb4fc009a6",
+  "measuredAt": "2026-10-23T07:06:14.448Z",
+  "runtime": "154.0.8037.57",
+  "metadata": {
+    "dataset": "sl-40c8446978cb4fc009a6",
+    "fixtureSHA256": "17f0285e9c1d842e9317cc7a358e0dc77bd958e43c07239adcfa510a6aeaa8d2",
+    "sha256": "a5e67cc404da30d9bbf3d343028c60d85bec2058dcdfd752aecde87aa019d156",
+    "pairs": 819970,
+    "bytes": 6616576,
+    "gzipBytes": 3888084,
+    "buildSecondsIncludingCompression": 12.965224491003028,
+    "stopCount": 14195,
+    "walkCount": 483245,
+    "maxSeconds": 1800
+  },
+  "notes": [
+    "Fresh Chromium worker per run, reversed variant order on second trial; no CPU sampling.",
+    "Fixture load excluded; table fetch/decompression/checksum/validation separately reported.",
+    "Production bookkeeping engine compared with research-only full walking closure; no closure data is published to the app.",
+    "Equal-objective witness paths can differ; all returned itinerary edges and predecessor timing are validated."
+  ],
+  "cases": [
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "baseline",
+      "trial": 0,
+      "ms": 2357.60000000149,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 2357.60000000149,
+      "labels": 176087,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "production",
+      "trial": 0,
+      "ms": 873.3999999985099,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 873.3999999985099,
+      "labels": 176087,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "closure",
+      "trial": 0,
+      "ms": 620.3999999985099,
+      "tableLoadMs": 158.30000000447035,
+      "totalSearchAndTableMs": 778.7000000029802,
+      "labels": 168430,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "closure",
+      "trial": 1,
+      "ms": 658,
+      "tableLoadMs": 129,
+      "totalSearchAndTableMs": 787,
+      "labels": 168430,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "production",
+      "trial": 1,
+      "ms": 972,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 972,
+      "labels": 176087,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Arlanda terminal 4",
+      "variant": "baseline",
+      "trial": 1,
+      "ms": 2307.0999999940395,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 2307.0999999940395,
+      "labels": 176087,
+      "reachable": 7026,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "baseline",
+      "trial": 0,
+      "ms": 12752,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 12752,
+      "labels": 769098,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "production",
+      "trial": 0,
+      "ms": 3054,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 3054,
+      "labels": 769098,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "closure",
+      "trial": 0,
+      "ms": 1733.4000000059605,
+      "tableLoadMs": 130.89999999850988,
+      "totalSearchAndTableMs": 1864.3000000044703,
+      "labels": 728730,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "closure",
+      "trial": 1,
+      "ms": 1646.6000000014901,
+      "tableLoadMs": 127.19999999552965,
+      "totalSearchAndTableMs": 1773.7999999970198,
+      "labels": 728730,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "production",
+      "trial": 1,
+      "ms": 3041.7000000029802,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 3041.7000000029802,
+      "labels": 769098,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Vallentuna",
+      "variant": "baseline",
+      "trial": 1,
+      "ms": 12940,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 12940,
+      "labels": 769098,
+      "reachable": 9884,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "baseline",
+      "trial": 0,
+      "ms": 8444.40000000596,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 8444.40000000596,
+      "labels": 502371,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "production",
+      "trial": 0,
+      "ms": 1804.5999999940395,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 1804.5999999940395,
+      "labels": 502371,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "closure",
+      "trial": 0,
+      "ms": 1337.5,
+      "tableLoadMs": 137.70000000298023,
+      "totalSearchAndTableMs": 1475.2000000029802,
+      "labels": 473443,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "closure",
+      "trial": 1,
+      "ms": 1290.7999999970198,
+      "tableLoadMs": 136.10000000149012,
+      "totalSearchAndTableMs": 1426.8999999985099,
+      "labels": 473443,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "production",
+      "trial": 1,
+      "ms": 1765.1999999955297,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 1765.1999999955297,
+      "labels": 502371,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "variant": "baseline",
+      "trial": 1,
+      "ms": 7790.60000000149,
+      "tableLoadMs": 0,
+      "totalSearchAndTableMs": 7790.60000000149,
+      "labels": 502371,
+      "reachable": 8294,
+      "allObjectivesAndWalkingFrontiersEqual": true,
+      "allJourneyEdgesValidated": true
+    }
+  ],
+  "routerSHA256": "1be7fd3d0b1121b83900c89000ca9412f4c1c6d20862d7621d88fb49def79a45",
+  "validation": {
+    "dataset": "sl-40c8446978cb4fc009a6",
+    "allRealWitnessPathsChecked": 819970,
+    "independentFloydWarshallSeededNetworks": 100,
+    "allObjectivesAndWalkingFrontiersEqual": true
+  },
+  "summary": [
+    {
+      "origin": "Arlanda terminal 4",
+      "baseline": 2332.349999997765,
+      "production": 922.6999999992549,
+      "closure": 639.1999999992549,
+      "productionSpeedup": 2.5277446624034337,
+      "closureAdditionalSpeedup": 1.443523153942945,
+      "closureMedianLoadMs": 143.65000000223517
+    },
+    {
+      "origin": "Vallentuna",
+      "baseline": 12846.0,
+      "production": 3047.85000000149,
+      "closure": 1690.0000000037253,
+      "productionSpeedup": 4.214774349129295,
+      "closureAdditionalSpeedup": 1.8034615384584447,
+      "closureMedianLoadMs": 129.04999999701977
+    },
+    {
+      "origin": "Sk\u00e4rvik",
+      "baseline": 8117.500000003725,
+      "production": 1784.8999999947846,
+      "closure": 1314.1499999985099,
+      "productionSpeedup": 4.547873830482069,
+      "closureAdditionalSpeedup": 1.358216337554167,
+      "closureMedianLoadMs": 136.90000000223517
+    }
+  ]
+}

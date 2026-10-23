@@ -5,7 +5,7 @@ const numeric=process.argv[2]==='numeric';
 const objectives=r=>r.values.map(v=>v?{seconds:v.seconds,arrival:v.arrival,boardings:v.boardings,requestStop:v.requestStop,kind:v.kind}:null);
 const sources=r=>[...r.walkSources].sort((a,b)=>a.stop-b.stop||a.seconds-b.seconds||a.walked-b.walked);
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
-const report={dataset:fixture.dataset,routerSHA256:createHash('sha256').update(await readFile('src/core/router.ts')).digest('hex'),measuredAt:new Date().toISOString(),runtime:browser.version(),cpu:os.cpus()[0].model,notes:['Desktop Chromium worker, fresh worker per trial; no CPU sampler.','Local fixture load excluded; algorithm elapsed includes indexing, route scanning, walking propagation and journey serialization.','Alternating variant order; two trials per variant per origin. No production changes.'],cases:[]};
+const report={dataset:fixture.dataset,referenceSHA256:createHash('sha256').update(await readFile('experiments/walking-state/reference.ts')).digest('hex'),measuredAt:new Date().toISOString(),runtime:browser.version(),cpu:os.cpus()[0].model,notes:['Desktop Chromium worker, fresh worker per trial; no CPU sampler.','Local fixture load excluded; algorithm elapsed includes indexing, route scanning, walking propagation and journey serialization.','Alternating variant order; two trials per variant per origin. Historical variants generated from the frozen pre-optimization reference.'],cases:[]};
 try{
  const page=await browser.newPage();await page.goto('http://127.0.0.1:5194/experiments/walking-state/index.html');await page.waitForFunction(()=>window.run);
  for(const origin of [0,1,2]){

@@ -1,5 +1,10 @@
 # Faster walking-state bookkeeping
 
+Implementation follow-up: the numeric contexts, cached flags and rejection before
+allocation are now part of the production router. The original measurements below
+describe the preceding investigation. The historical generator now uses a frozen
+reference so these comparisons remain reproducible after production changes.
+
 Implement **numeric transfer-context IDs, cached active/settled flags, and walking
 candidate rejection before allocation** next. In the isolated prototypes this
 reduced search time by **63–78%**, with identical results. Keep the route scanner
@@ -177,6 +182,6 @@ python experiments/walking-state/report.py
 ```
 
 The generated router copies and 66 MB local JSON fixture live under ignored
-`.data-build/`. The generator derives its variants from `src/core/router.ts`;
-review its transformations when that source changes. The result file records
-the source hash. No benchmark scripts are imported by the application.
+`.data-build/`. The historical generator derives its variants from the frozen
+`experiments/walking-state/reference.ts`. Result files record the source hash.
+No benchmark scripts are imported by the application.

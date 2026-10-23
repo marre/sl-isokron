@@ -2,7 +2,11 @@ import {profileStart,profileEnd} from './profile';
 import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
+interface TransferContext {
+  ready: number; pending: number; threshold: number; blocked: boolean;
+}
 interface Label {
+  context?: TransferContext; settled?: boolean; active?: boolean;
   stop: number; time: number; anchor: number | null; walk: number; boardings: number;
   requestStop: boolean; lastTrip: string; lastRoute: string; alightStop: number; alightTime: number;
   previous: Label | null; via: Connection | Walk | null; alight: Connection | null;
@@ -54,12 +58,24 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   // Once every minimum transfer time from an alighting event has elapsed,
   // its stop/time cannot restrict any future boarding. Forget only that spent
   // context, retaining trip/route distinctions and all prohibited transfers.
-  function settled(l: Label): boolean {
-    return !transferBlocked.has(l.alightStop) && l.time >= l.alightTime + transferDelay[l.alightStop];
+  const groupIds = new Map<string, number>();
+  function group(key: string): number {
+    let id = groupIds.get(key);
+    if (id === undefined) {
+      id = groupIds.size;
+      // Numeric (context, stop) keys must remain collision-free integers.
+      if (!Number.isSafeInteger((id + 1) * network.stops.length)) throw new Error('För stort nät för exakta kontextnycklar.');
+      groupIds.set(key, id);
+    }
+    return id;
   }
-  function contextKey(l: Label): string {
+  function prepareContext(l: Label): TransferContext {
+    if (l.context) return l.context;
     const trip = (tripSpecific.has(l.lastTrip) || tripSpecific.has(baseTrip(l.lastTrip))) ? l.lastTrip : '*';
-    return `${l.stop}|${l.boardings}|${trip}|${routeSpecific ? l.lastRoute : '*'}|${settled(l) ? '*' : l.alightStop}`;
+    const prefix = JSON.stringify([l.boardings, trip, routeSpecific ? l.lastRoute : '*']);
+    // Walking inherits this immutable alighting context. No string/regex work
+    // is needed when relaxing a walking edge or checking queued membership.
+    return l.context = { ready: group(prefix + '|*'), pending: group(prefix + '|' + l.alightStop), threshold: l.alightTime + transferDelay[l.alightStop], blocked: transferBlocked.has(l.alightStop) };
   }
   const values: (Reach | null)[] = network.stops.map(() => null);
   const witnesses: (Label | null)[] = network.stops.map(() => null);
@@ -72,7 +88,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     options.onProgress({completedRounds,totalRounds:queues.length,processedLabels:processed,queuedLabels:labels,changes:[...changes].map(([stop,value])=>({stop,value:{...value}}))});
     changes.clear(); lastProgress=performance.now();
   }
-  const frontiers = new Map<string, Label[]>();
+  const frontiers = new Map<number, Label[]>();
   function cost(l: Label): number { return l.time - (l.anchor ?? t0); }
   function push(l: Label): void {
     if (cost(l) > max || l.walk > maxWalk || l.time > latest) return;
@@ -89,11 +105,17 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       if(options.onProgress)changes.set(l.stop,values[l.stop]!);
     }
     // Context must match: transfer constraints refer to the actual previous trip/alighting event.
-    const key = contextKey(l);
+    const context = prepareContext(l);
+    l.settled = !context.blocked && l.time >= context.threshold;
+    l.active = true;
+    const key = (l.settled ? context.ready : context.pending) * network.stops.length + l.stop;
     const list = frontiers.get(key) ?? [];
-    const dominates = (a: Label, b: Label) => a.time <= b.time && (settled(a) && settled(b) || a.alightTime <= b.alightTime) && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
+    const dominates = (a: Label, b: Label) => a.time <= b.time && (a.settled && b.settled || a.alightTime <= b.alightTime) && a.walk <= b.walk && (a.anchor ?? t0) >= (b.anchor ?? t0);
     if (options.prune !== false && list.some(a => dominates(a, l))) return;
-    frontiers.set(key, [...list.filter(a => !dominates(l, a)), l]); queues[l.boardings].push(l);labels++;
+    frontiers.set(key, [...list.filter(a => {
+      if (dominates(l, a)) { a.active = false; return false; }
+      return true;
+    }), l]); queues[l.boardings].push(l);labels++;
     if (labels > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
   push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
@@ -119,14 +141,24 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     for(let head=0;head<queue.length;head++){
       const l=queue[head];processed++;
       if(options.onProgress&&(processed&127)===0&&performance.now()-lastProgress>=100)report(round);
-      if(options.prune!==false&&!frontiers.get(contextKey(l))?.includes(l))continue;
-      for(const w of walking[l.stop])push({...l,stop:w.to,time:l.time+w.seconds,walk:l.walk+w.seconds,previous:l,via:w,alight:null});
+      if(options.prune!==false&&!l.active)continue;
+      const context = l.context!;
+      for(const w of walking[l.stop]){
+        const time=l.time+w.seconds,walk=l.walk+w.seconds;
+        if(time-(l.anchor??t0)>max||walk>maxWalk||time>latest)continue;
+        const settled=!context.blocked&&time>=context.threshold;
+        const key=(settled?context.ready:context.pending)*network.stops.length+w.to;
+        // A retained dominator has already contributed an equal/better stop
+        // value AND walking frontier. Reject before allocating a candidate.
+        if(options.prune!==false&&frontiers.get(key)?.some(a=>a.time<=time&&(a.settled&&settled||a.alightTime<=l.alightTime)&&a.walk<=walk&&(a.anchor??t0)>=(l.anchor??t0)))continue;
+        push({...l,stop:w.to,time,walk,previous:l,via:w,alight:null});
+      }
     }
     profileEnd('routing.walkClosure',stage,{round,labels:queue.length});stage=profileStart();
     if(round<queues.length-1){
       const active:Label[][]=network.stops.map(()=>[]),marked=new Set<Pattern>();
       for(const l of queue){
-        if(options.prune!==false&&!frontiers.get(contextKey(l))?.includes(l))continue;
+        if(options.prune!==false&&!l.active)continue;
         active[l.stop].push(l);for(const p of atStop[l.stop])marked.add(p);
       }
       for(const pattern of marked){

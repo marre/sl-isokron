@@ -1,8 +1,8 @@
 # Pipeline profiling
 
-Follow-up: [walking-state experiments](walking-state-investigation.md) found a
-2.7–4.5× routing speedup from numeric contexts and rejection before allocation,
-with identical results in the tested queries. These remain isolated prototypes.
+Follow-up: [walking-state bookkeeping is now optimized in production](walking-state-implementation.md).
+The implementation recheck found a 2.5–4.5× routing speedup, with identical results
+in the tested queries. A further precomputed-walking experiment remains isolated.
 
 The next performance work should focus on **walking-state bookkeeping inside the
 router**, and **file handling / repeated full-raster painting in the overlay**.
