@@ -1,6 +1,6 @@
 """Isolate one-hop closure traversal from the production algorithm."""
 from pathlib import Path
-source=Path('src/core/router.ts').read_text().replace("from './", "from '../../src/core/")
+source=Path('experiments/walking-state/bookkeeping-reference.ts').read_text()
 source="import {WalkingClosure} from '../../experiments/walking-state/table';\n"+source
 source=source.replace('options: { prune?: boolean;', 'options: { walkingClosure?: WalkingClosure; prune?: boolean;')
 source=source.replace('  const indexing=profileStart();', "  const closure=options.walkingClosure;if(!closure)throw new Error('Precomputed walking closure required');\n  const indexing=profileStart();",1)

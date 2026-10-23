@@ -45,6 +45,8 @@ def validate(root):
     refs = [manifest[k] for k in ('stops', 'walks', 'routes', 'transfers', 'trips')]
     refs += [ref for entries in manifest['days'].values() for ref in entries]
     refs += manifest.get('walkingAreas', {}).get('files', [])
+    if manifest.get('walkingClosure'):
+        refs.append(manifest['walkingClosure'])
     for ref in refs:
         prefix = '/data/' + manifest['version'] + '/'
         if not ref['url'].startswith(prefix):
@@ -52,6 +54,15 @@ def validate(root):
         path = root / member_path(ref['url'].removeprefix('/data/'))
         if path.is_symlink() or not path.is_file() or path.stat().st_size != ref['bytes'] or digest(path) != ref['sha256']:
             raise ValueError('Data file missing or checksum/size mismatch: ' + ref['url'])
+    closure = manifest.get('walkingClosure')
+    if closure:
+        from walking_closure import validate as validate_closure, decode_walks, FORMAT
+        if closure.get('format') != FORMAT or closure.get('maxMinutes') != manifest['walkingMaxMinutes']:
+            raise ValueError('Unsupported walking closure metadata')
+        validate_closure((root/member_path(closure['url'].removeprefix('/data/'))).read_bytes(),
+                         json.loads((root/member_path(manifest['stops']['url'].removeprefix('/data/'))).read_bytes()),
+                         decode_walks(json.loads((root/member_path(manifest['walks']['url'].removeprefix('/data/'))).read_bytes())),
+                         manifest['walks']['sha256'], manifest['stops']['sha256'], closure['maxMinutes']*60)
     return manifest
 
 
@@ -93,7 +104,7 @@ def pack(root, output, descriptor, repository):
     release = dict(schema=1, version=manifest['version'], sourceVersion=manifest.get('sourceVersion'),
                    validFrom=manifest['validFrom'], validTo=manifest['validTo'],
                    url=f"https://github.com/{repository}/releases/download/data-{manifest['version']}/sliso-data.zip",
-                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total, features={'walkingAreas':bool(manifest.get('walkingAreas'))})
+                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total, features={'walkingAreas':bool(manifest.get('walkingAreas')), 'walkingClosure':bool(manifest.get('walkingClosure'))})
     Path(descriptor).parent.mkdir(parents=True, exist_ok=True)
     Path(descriptor).write_text(json.dumps(release, indent=2) + '\n')
     return release

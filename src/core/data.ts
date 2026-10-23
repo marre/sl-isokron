@@ -1,5 +1,6 @@
 import {profileStart,profileEnd} from './profile';
 import type { Connection, FileRef, Manifest, Network, Walk } from './types';
+import {decodeWalkingClosure} from './walking-closure';
 const memory = new Map<string, ArrayBuffer>();
 export async function loadManifest(signal?: AbortSignal): Promise<Manifest> {
   const response = await fetch('/data/manifest.json', { cache: 'no-cache', signal });
@@ -66,12 +67,13 @@ export function decodeWalks(payload: unknown): Walk[] {
 
 export interface LoadProgress { completed: number; total: number; bytesCompleted: number; bytesTotal: number }
 export async function loadNetwork(m: Manifest, t0: number, end: number, signal?: AbortSignal, onProgress?: (progress: LoadProgress) => void): Promise<Network> {
+  if(m.walkingClosure&&(m.walkingClosure.format!=='sliso-walk-closure-v1'||!Number.isInteger(m.walkingClosure.maxMinutes)||m.walkingClosure.maxMinutes!==m.walkingMaxMinutes))throw new Error('Gångpaketets dataversion stöds inte.');
   const first = new Date(t0 * 1000).toISOString().slice(0,10), last = new Date(end * 1000).toISOString().slice(0,10);
   const selected = Object.entries(m.days).filter(([d]) => d >= first && d <= last);
   const wanted = Math.round((Date.parse(last) - Date.parse(first)) / 86400000) + 1;
   if (selected.length !== wanted) throw new Error('Tidtabell saknas för hela resan, inklusive trafik efter midnatt. Välj ett annat datum.');
   const hourly=selected.flatMap(([,refs])=>refs.filter(ref=>ref.from<=end&&ref.until>t0));
-  const refs=[...new Map([m.stops,m.walks,m.routes,m.transfers,m.trips,...hourly].map(r=>[r.url,r])).values()];
+  const refs=[...new Map([m.stops,m.walks,m.routes,m.transfers,m.trips,...hourly,...(m.walkingClosure?[m.walkingClosure]:[])].map(r=>[r.url,r])).values()];
   const done=new Set<string>(),bytesTotal=refs.reduce((n,r)=>n+r.bytes,0);let bytesCompleted=0;
   const progress=()=>onProgress?.({completed:done.size,total:refs.length,bytesCompleted,bytesTotal});
   progress();
@@ -81,9 +83,11 @@ export async function loadNetwork(m: Manifest, t0: number, end: number, signal?:
     return bytes;
   }
   async function json<T>(ref: FileRef): Promise<T> {const bytes=await buffer(ref),start=profileStart();const result=JSON.parse(new TextDecoder().decode(bytes)) as T;profileEnd('network.jsonDecode',start,{bytes:bytes.byteLength,url:ref.url});return result;}
-  const [stops, walks, routes, transfers, trips] = await Promise.all([json<Network['stops']>(m.stops), json<unknown>(m.walks).then(decodeWalks), json<Network['routes']>(m.routes), json<Network['transfers']>(m.transfers), json<string[]>(m.trips)]);
+  const [stops, walks, routes, transfers, trips, closureBytes] = await Promise.all([json<Network['stops']>(m.stops), json<unknown>(m.walks).then(decodeWalks), json<Network['routes']>(m.routes), json<Network['transfers']>(m.transfers), json<string[]>(m.trips),m.walkingClosure?buffer(m.walkingClosure):Promise.resolve(null)]);
   const connections=(await Promise.all(hourly.map(async ref=>decodeConnections(await buffer(ref),trips)))).flat().filter(c=>c.departure>=t0&&c.departure<=end);
-  return { stops, walks, routes, transfers, connections };
+  const network:Network={ stops, walks, routes, transfers, connections };
+  if(closureBytes&&m.walkingClosure){const started=profileStart();network.walkingClosure=await decodeWalkingClosure(closureBytes,network,{walksSHA256:m.walks.sha256,stopsSHA256:m.stops.sha256,maxSeconds:m.walkingClosure.maxMinutes*60});profileEnd('network.walkingClosureDecode',started,{pairs:network.walkingClosure.pairs,bytes:closureBytes.byteLength});}
+  return network;
 }
 export async function cacheAvailable(): Promise<boolean> {
   try { const cache = await caches.open('sliso-data-v1'); await cache.put('/data/cache-test', new Response('ok')); await cache.delete('/data/cache-test'); return true; } catch { return false; }
@@ -91,7 +95,7 @@ export async function cacheAvailable(): Promise<boolean> {
 export async function pruneCache(m: Manifest): Promise<void> {
   try {
     const cache = await caches.open('sliso-data-v1');
-    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days).flat(), ...(m.walkingAreas?.files ?? [])].map(f => new URL(f.url, location.origin).href));
+    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days).flat(), ...(m.walkingAreas?.files ?? []),...(m.walkingClosure?[m.walkingClosure]:[])].map(f => new URL(f.url, location.origin).href));
     for (const req of await cache.keys()) if (!keep.has(req.url)) await cache.delete(req);
   } catch { /* Cache access is optional. */ }
 }

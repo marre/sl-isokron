@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>Precomputed walking integration</title><script type="module">
+window.run=(manifest,settings)=>new Promise((resolve,reject)=>{
+ const worker=new Worker(new URL('../../src/worker.ts',import.meta.url),{type:'module'});let batches=0;
+ const timer=setTimeout(()=>{worker.terminate();reject(new Error('Worker timeout'))},180000);
+ worker.onerror=e=>{clearTimeout(timer);worker.terminate();reject(new Error(e.message))};
+ worker.onmessage=({data})=>{if(data.type==='stations')batches++;if(data.type==='result'||data.type==='error'){clearTimeout(timer);worker.terminate();data.type==='error'?reject(new Error(data.message)):resolve({...data,batches})}};
+ worker.postMessage({id:1,manifest,settings,profiling:true});
+});
+</script>

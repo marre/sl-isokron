@@ -1,5 +1,9 @@
 # Walking-state optimization: implementation and next experiment
 
+Follow-up: [precomputed walking is now integrated into the production data build
+and router](walking-precompute.md). The experimental measurements below record
+the earlier comparison; source generation is frozen for reproducibility.
+
 The production router now uses numeric transfer-context IDs, cached settled/active
 flags, and budget/dominance checks before allocating walking candidates. All
 routing remains in the browser worker. The deployed data format, walking graph,

@@ -196,6 +196,9 @@ test('compact walking payload is verified and used by the worker',async({page})=
   const sources=[...new Set(walks.map((w:any)=>w.source))];
   packed=JSON.stringify({schema:1,sources,edges:walks.map((w:any)=>[w.from,w.to,w.seconds,w.metres??null,sources.indexOf(w.source)])});
   m.walks={url:'/data/browser-compact/walks.json',bytes:Buffer.byteLength(packed),sha256:createHash('sha256').update(packed).digest('hex')};
+  // Exercise the legacy graph format; the inherited closure is bound to the
+  // original walking file's checksum and cannot accompany a rewritten payload.
+  delete m.walkingClosure;
   await route.fulfill({json:m});
  });
  await page.route('**/data/browser-compact/walks.json',r=>{seen=true;return r.fulfill({contentType:'application/json',body:packed});});

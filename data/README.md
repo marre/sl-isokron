@@ -194,3 +194,9 @@ Från gångprofil v9 tillåts ett användarvalt undantag: saknade gångriktninga
 mellan lägen med samma namn inom 250 meter får en tydligt märkt uppskattning.
 Tid och avstånd ingår i gångbudgeten; uppskattningarna skapar inga gångytor.
 Se [metod och begränsningar](../docs/walking-network-audit.md#antagna-byten-mellan-lägen-med-samma-namn-v9).
+## Precomputed stop-to-stop walking
+
+Compiled releases may include a checksum-bound, bounded walking-closure table.
+It preserves original walking edges and provenance for itinerary reconstruction,
+and is generated offline from the existing directed walking graph. It adds no
+new inferred access links. See [format, caching and compatibility](../docs/walking-precompute.md).

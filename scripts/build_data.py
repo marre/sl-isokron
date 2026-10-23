@@ -134,6 +134,11 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
         walk_payload=compact(walks)
         if len(walk_payload)>8*1024*1024:walk_payload=compact(compact_walks(walks))
         files = {'trips.json': compact(trips), 'stops.json': compact(stops), 'routes.json': compact(routes), 'walks.json': walk_payload, 'transfers.json': compact(transfers)}
+        from walking_closure import build as build_closure, supported as closure_supported, FORMAT as CLOSURE_FORMAT
+        has_closure = closure_supported(stops, walks, meta['walkingMaxMinutes'])
+        if has_closure:
+            files['walking-closure.bin'], pairs = build_closure(stops, walks, meta['walkingMaxMinutes'], hashlib.sha256(walk_payload).hexdigest(), hashlib.sha256(files['stops.json']).hexdigest())
+            report['walkingClosure'] = dict(pairs=pairs, bytes=len(files['walking-closure.bin']), witnessesVerified=True)
         files.update(time_files)
         if areas: files.update(areas['files'])
         fingerprint = hashlib.sha256(compact(meta) + (compact(areas['index']) if areas else b'') + b''.join(files[n] for n in sorted(files))).hexdigest()[:20]
@@ -153,6 +158,7 @@ def publish(output, stops, routes, walks, transfers, trips, days, meta, report, 
         if not dest.exists():
             staging.rename(dest)
         manifest = dict(schema=2, version=version, **meta, trips=refs['trips.json'], days={d:[{**refs[n],'from':a,'until':b} for n,a,b in parts] for d,parts in day_files.items()}, **{k: refs[k + '.json'] for k in ('stops','routes','walks','transfers')})
+        if has_closure: manifest['walkingClosure'] = dict(**refs['walking-closure.bin'], format=CLOSURE_FORMAT, maxMinutes=meta['walkingMaxMinutes'])
         if areas: manifest['walkingAreas'] = dict(**({'format':areas['format']} if 'format' in areas else {}), stepMinutes=1, index=areas['index'], files=[refs[n] for n in areas['files']], reviewed=False)
         pending = output / '.manifest.tmp'
         pending.write_bytes(compact(manifest))

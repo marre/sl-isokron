@@ -34,6 +34,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
   const start = network.stops.findIndex(s => s.id === settings.stop);
   if (start < 0) throw new Error('Starthållplatsen saknas i datan. Välj en ersättare.');
   const max = settings.maxMinutes * 60, maxWalk = settings.walkMinutes * 60;
+  const closure=network.walkingClosure&&network.walkingClosure.maxSeconds>=maxWalk?network.walkingClosure:undefined;
   const windowEnd = t0 + settings.windowMinutes * 60, latest = windowEnd + max;
   const walking = network.stops.map(() => [] as Network['walks']);
   const trips = new Map<string, Connection[]>();
@@ -42,7 +43,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     const trip = trips.get(c.trip) ?? []; trip.push(c); trips.set(c.trip, trip);
   }
   for (const a of trips.values()) a.sort((a,b) => a.sequence - b.sequence);
-  for (const w of network.walks) walking[w.from].push(w);
+  if(!closure)for (const w of network.walks) walking[w.from].push(w);
   const ruleIndex = new Map<string, TransferRule[]>();
   const tripSpecific = new Set<string>();
   const transferDelay = network.stops.map(() => 0);
@@ -142,19 +143,25 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l=queue[head];processed++;
       if(options.onProgress&&(processed&127)===0&&performance.now()-lastProgress>=100)report(round);
       if(options.prune!==false&&!l.active)continue;
+      // The complete table expands a whole walking leg from its origin or
+      // alighting event. Walking-reached labels still participate in boarding.
+      if(closure&&l.via&&'seconds' in l.via)continue;
       const context = l.context!;
-      for(const w of walking[l.stop]){
-        const time=l.time+w.seconds,walk=l.walk+w.seconds;
+      const first=closure?closure.begin(l.stop):0,until=closure?closure.end(l.stop):walking[l.stop].length;
+      for(let entry=first;entry<until;entry++){
+        const to=closure?closure.destination(entry):walking[l.stop][entry].to,seconds=closure?closure.seconds(entry):walking[l.stop][entry].seconds;
+        const time=l.time+seconds,walk=l.walk+seconds;
         if(time-(l.anchor??t0)>max||walk>maxWalk||time>latest)continue;
         const settled=!context.blocked&&time>=context.threshold;
-        const key=(settled?context.ready:context.pending)*network.stops.length+w.to;
+        const key=(settled?context.ready:context.pending)*network.stops.length+to;
         // A retained dominator has already contributed an equal/better stop
         // value AND walking frontier. Reject before allocating a candidate.
         if(options.prune!==false&&frontiers.get(key)?.some(a=>a.time<=time&&(a.settled&&settled||a.alightTime<=l.alightTime)&&a.walk<=walk&&(a.anchor??t0)>=(l.anchor??t0)))continue;
-        push({...l,stop:w.to,time,walk,previous:l,via:w,alight:null});
+        const via:Walk=closure?{from:l.stop,to,seconds,source:'precomputed'}:walking[l.stop][entry];
+        push({...l,stop:to,time,walk,previous:l,via,alight:null});
       }
     }
-    profileEnd('routing.walkClosure',stage,{round,labels:queue.length});stage=profileStart();
+    profileEnd('routing.walkClosure',stage,{round,labels:queue.length,precomputed:!!closure});stage=profileStart();
     if(round<queues.length-1){
       const active:Label[][]=network.stops.map(()=>[]),marked=new Set<Pattern>();
       for(const l of queue){
@@ -196,6 +203,14 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
       let node: JourneyNode;
       if ('seconds' in via) {
+        if(closure){
+          let predecessor=previous,time=l.previous!.time;
+          for(const edge of closure.path(via.from,via.to)){
+            node={previous:predecessor,kind:'walk',from:edge.from,to:edge.to,departure:time,arrival:time+edge.seconds,stops:[edge.from,edge.to],metres:edge.metres,estimated:edge.source.startsWith('Assumed ')||undefined};
+            time+=edge.seconds;predecessor=journeys.length;journeys.push(node);
+          }
+          ids.set(l,predecessor!);continue;
+        }
         node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres, estimated: via.source.startsWith('Assumed ') || undefined };
       } else {
         const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
