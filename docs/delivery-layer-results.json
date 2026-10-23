@@ -1,0 +1,1567 @@
+{
+  "walkingViewSHA256": "dace72db0833dd155a0ab01f3852f5af2695b642ff1c76fe8a440e41d9ee8ca6",
+  "inputFixtureSHA256": "9f2c3ee6e0a98bb4f3038cf690d3086f3a5ed1c308d51fe2df2a4ae02763f623",
+  "layout": {
+    "dataset": "sl-e444dbdac6b699b9d8bf",
+    "sourceFiles": 7153,
+    "sourceBytes": 215187587,
+    "sourceArchivesVerified": 7153,
+    "cellDegrees": [
+      0.009,
+      0.018
+    ],
+    "variants": {
+      "full128": {
+        "files": 2935,
+        "bytes": 214163549,
+        "largestBytes": 138989,
+        "oversizedSingleSourceFiles": 1
+      },
+      "full256": {
+        "files": 2351,
+        "bytes": 213965664,
+        "largestBytes": 260208,
+        "oversizedSingleSourceFiles": 0
+      },
+      "full512": {
+        "files": 2227,
+        "bytes": 213911862,
+        "largestBytes": 507281,
+        "oversizedSingleSourceFiles": 0
+      },
+      "preview256": {
+        "files": 2221,
+        "bytes": 52569308,
+        "largestBytes": 152584,
+        "oversizedSingleSourceFiles": 0
+      }
+    },
+    "buildSeconds": 177.50673273400025
+  },
+  "widePreview": {
+    "files": 514,
+    "bytes": 52165570,
+    "largestBytes": 259567,
+    "cellDegrees": [
+      0.036,
+      0.072
+    ],
+    "buildSeconds": 12.493228969004122
+  },
+  "renderPhasesChecked": 96,
+  "reports": {
+    "city": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:24:07.510Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "baseline",
+          "manifest": "baseline",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 810,
+              "bytes": 20656031,
+              "ms": 7615.5,
+              "firstPaintMs": 311.6000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 112
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 4694,
+              "firstPaintMs": 242.59999999403954,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 68
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 120.70000000298023,
+              "firstPaintMs": -19930.79999999702,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 14,
+              "bytes": 350313,
+              "ms": 649.1000000014901,
+              "firstPaintMs": -20515.29999999702,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        },
+        {
+          "name": "full128",
+          "manifest": "full128",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 228,
+              "bytes": 21537954,
+              "ms": 3432.8000000044703,
+              "firstPaintMs": 348.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 36
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2694.1999999955297,
+              "firstPaintMs": 194.89999999850988,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 38
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 105.89999999850988,
+              "firstPaintMs": -12117.89999999851,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 5,
+              "bytes": 473710,
+              "ms": 505.5,
+              "firstPaintMs": -12681.09999999404,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "full256",
+          "manifest": "full256",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 2715.5,
+              "firstPaintMs": 353.8999999985099,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 34
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2143.3000000044703,
+              "firstPaintMs": 346.6000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 25
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 110.30000000447035,
+              "firstPaintMs": -10454.69999999553,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 537.3000000044703,
+              "firstPaintMs": -10925.19999999553,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "full512",
+          "manifest": "full512",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 105,
+              "bytes": 21997847,
+              "ms": 2858.7000000029802,
+              "firstPaintMs": 400.5,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 25
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2569.89999999851,
+              "firstPaintMs": 450.19999999552965,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 31
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 121.19999999552965,
+              "firstPaintMs": -10460.60000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 508.90000000596046,
+              "firstPaintMs": -10910.19999999553,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "full256-200ms",
+          "manifest": "full256",
+          "interval": 200,
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 2546,
+              "firstPaintMs": 429.69999999552965,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 13
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2319.2000000029802,
+              "firstPaintMs": 416.20000000298023,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 12
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 128.20000000298023,
+              "firstPaintMs": -10156.79999999702,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 514.1999999955297,
+              "firstPaintMs": -10637,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "layered256",
+          "manifest": "full256",
+          "preview": "preview256",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 245,
+              "bytes": 27333347,
+              "ms": 4439.10000000149,
+              "firstPaintMs": 415.1000000014901,
+              "previewMs": 1586.2000000029802,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 49
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 3728,
+              "firstPaintMs": 474.70000000298023,
+              "previewMs": 1344.6000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 40
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 141.69999999552965,
+              "firstPaintMs": -16744.60000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 563.2000000029802,
+              "firstPaintMs": -18090.39999999851,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "baseline-40ms",
+          "manifest": "baseline",
+          "latency": 40,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 810,
+              "bytes": 20656031,
+              "ms": 12034.80000000447,
+              "firstPaintMs": 257.5,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 153
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 4990.10000000149,
+              "firstPaintMs": 254.10000000149012,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 90
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 112.5,
+              "firstPaintMs": -23822.60000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 14,
+              "bytes": 350313,
+              "ms": 692,
+              "firstPaintMs": -24417.79999999702,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 3
+            }
+          ]
+        },
+        {
+          "name": "full256-40ms",
+          "manifest": "full256",
+          "latency": 40,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 3783.10000000149,
+              "firstPaintMs": 429.20000000298023,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 28
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2198.10000000149,
+              "firstPaintMs": 389.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 22
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 108.10000000149012,
+              "firstPaintMs": -11547,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 565.4000000059605,
+              "firstPaintMs": -12090.39999999851,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        },
+        {
+          "name": "layered256-40ms",
+          "manifest": "full256",
+          "preview": "preview256",
+          "latency": 40,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 245,
+              "bytes": 27333347,
+              "ms": 8375.60000000149,
+              "firstPaintMs": 519.5,
+              "previewMs": 3202.3000000044703,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 52
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 3748.6999999955297,
+              "firstPaintMs": 411.29999999701977,
+              "previewMs": 1360.5999999940395,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 40
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 130.89999999850988,
+              "firstPaintMs": -20975.10000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 580.0999999940395,
+              "firstPaintMs": -22486.80000000447,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        }
+      ]
+    },
+    "repeat": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:32:04.393Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "full256-repeat",
+          "manifest": "full256",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 2584,
+              "firstPaintMs": 357.30000000447035,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 26
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2294.39999999851,
+              "firstPaintMs": 375.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 30
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 102.29999999701977,
+              "firstPaintMs": -10126,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 456.30000000447035,
+              "firstPaintMs": -10549.59999999404,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "baseline-repeat",
+          "manifest": "baseline",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 810,
+              "bytes": 20656031,
+              "ms": 6278.20000000298,
+              "firstPaintMs": 255.40000000596046,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 81
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 4672.5,
+              "firstPaintMs": 268.8999999985099,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 83
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 123.70000000298023,
+              "firstPaintMs": -17427.39999999851,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 14,
+              "bytes": 350313,
+              "ms": 639.3999999985099,
+              "firstPaintMs": -18021.60000000149,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        }
+      ]
+    },
+    "wide": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:30:15.147Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "layeredWide",
+          "manifest": "full256",
+          "preview": "previewWide",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 178,
+              "bytes": 28973006,
+              "ms": 4278.39999999851,
+              "firstPaintMs": 664.5,
+              "previewMs": 1561.8999999985099,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 42
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 3708.60000000149,
+              "firstPaintMs": 458.5,
+              "previewMs": 1183.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 55
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 131.80000000447035,
+              "firstPaintMs": -16729.10000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 583.3000000044703,
+              "firstPaintMs": -17986,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "layeredWide-40ms",
+          "manifest": "full256",
+          "preview": "previewWide",
+          "latency": 40,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 178,
+              "bytes": 28973006,
+              "ms": 5429.39999999851,
+              "firstPaintMs": 483.8999999985099,
+              "previewMs": 1409.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 40
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 3388,
+              "firstPaintMs": 502.59999999403954,
+              "previewMs": 1108.3999999985099,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 657152,
+                "changed": 91437,
+                "gained": 34,
+                "lost": 2955,
+                "changedPercent": 13.914132499026099
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 44
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 105.20000000298023,
+              "firstPaintMs": -16646.89999999851,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 702.9000000059605,
+              "firstPaintMs": -17982.69999999553,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        }
+      ]
+    },
+    "airport": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:30:53.987Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "airport-baseline",
+          "manifest": "baseline",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 31,
+              "bytes": 833064,
+              "ms": 419.8999999985099,
+              "firstPaintMs": 153.79999999701977,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 5
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 366.8999999985099,
+              "firstPaintMs": 149.10000000149012,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 7
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 117.10000000149012,
+              "firstPaintMs": -6672.60000000149,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 4,
+              "bytes": 113023,
+              "ms": 161,
+              "firstPaintMs": -7238.20000000298,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "airport-full128",
+          "manifest": "full128",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 13,
+              "bytes": 922765,
+              "ms": 336.19999999552965,
+              "firstPaintMs": 169.89999999850988,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 4
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 274,
+              "firstPaintMs": 148.5,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 109.19999999552965,
+              "firstPaintMs": -5552.80000000447,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 2,
+              "bytes": 112442,
+              "ms": 142.79999999701977,
+              "firstPaintMs": -6023.10000000149,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "airport-full256",
+          "manifest": "full256",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 12,
+              "bytes": 922309,
+              "ms": 283.70000000298023,
+              "firstPaintMs": 292.6000000014901,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 357.8999999985099,
+              "firstPaintMs": 229.10000000149012,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 3
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 114.40000000596046,
+              "firstPaintMs": -5655.0999999940395,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 2,
+              "bytes": 112442,
+              "ms": 163.79999999701977,
+              "firstPaintMs": -6128.89999999851,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "airport-layeredWide",
+          "manifest": "full256",
+          "preview": "previewWide",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 16,
+              "bytes": 1405150,
+              "ms": 684.7999999970198,
+              "firstPaintMs": 350.6000000014901,
+              "previewMs": 337.3999999985099,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 172962,
+                "changed": 36233,
+                "gained": 19,
+                "lost": 683,
+                "changedPercent": 20.948532047501764
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 5
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 575.6000000014901,
+              "firstPaintMs": 284.3999999985099,
+              "previewMs": 276.6000000014901,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 172962,
+                "changed": 36233,
+                "gained": 19,
+                "lost": 683,
+                "changedPercent": 20.948532047501764
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 4
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 123.30000000447035,
+              "firstPaintMs": -9081.09999999404,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 2,
+              "bytes": 112442,
+              "ms": 264.8999999985099,
+              "firstPaintMs": -10450.79999999702,
+              "pixelHash": "1641d5d77418b53bbcf20ffd3376527a108053eeeb03cb0f5883e63728bcb4c3",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        }
+      ]
+    },
+    "lindholmen": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:31:26.529Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "lindholmen-baseline",
+          "manifest": "baseline",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 28,
+              "bytes": 1019603,
+              "ms": 552.7000000029802,
+              "firstPaintMs": 317.8999999985099,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 5
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 349.80000000447035,
+              "firstPaintMs": 167.60000000149012,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 3
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 106.89999999850988,
+              "firstPaintMs": -7635.70000000298,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 25.399999998509884,
+              "firstPaintMs": -8197.80000000447,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 0
+            }
+          ]
+        },
+        {
+          "name": "lindholmen-full128",
+          "manifest": "full128",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 16,
+              "bytes": 1069713,
+              "ms": 456.30000000447035,
+              "firstPaintMs": 343.1000000014901,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 6
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 389.29999999701977,
+              "firstPaintMs": 155.29999999701977,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 4
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 134.39999999850988,
+              "firstPaintMs": -7185.70000000298,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 21.399999998509884,
+              "firstPaintMs": -7826.60000000149,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 0
+            }
+          ]
+        },
+        {
+          "name": "lindholmen-full256",
+          "manifest": "full256",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 14,
+              "bytes": 1069049,
+              "ms": 530.7000000029802,
+              "firstPaintMs": 371,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 6
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 411,
+              "firstPaintMs": 258.3999999985099,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 3
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 120.60000000149012,
+              "firstPaintMs": -7481.5,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 17.799999997019768,
+              "firstPaintMs": -7981.60000000149,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 0
+            }
+          ]
+        },
+        {
+          "name": "lindholmen-layeredWide",
+          "manifest": "full256",
+          "preview": "previewWide",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 19,
+              "bytes": 1450944,
+              "ms": 714.3000000044703,
+              "firstPaintMs": 371.8999999985099,
+              "previewMs": 358.1000000014901,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 391005,
+                "changed": 85064,
+                "gained": 37,
+                "lost": 6204,
+                "changedPercent": 21.755220521476705
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 5
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 655.1000000014901,
+              "firstPaintMs": 341.80000000447035,
+              "previewMs": 330.5,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "previewDifference": {
+                "union": 391005,
+                "changed": 85064,
+                "gained": 37,
+                "lost": 6204,
+                "changedPercent": 21.755220521476705
+              },
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 6
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 116.79999999701977,
+              "firstPaintMs": -10526.90000000596,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 12,
+              "firstPaintMs": -11736.70000000298,
+              "pixelHash": "4832399b8598719f632bf61ca81d78fab89f8d090bcd0ad28765c05b5f4bdccb",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 0
+            }
+          ]
+        }
+      ]
+    },
+    "admission": {
+      "dataset": "sl-e444dbdac6b699b9d8bf",
+      "measuredAt": "2026-10-23T08:32:50.446Z",
+      "runtime": "154.0.8037.57",
+      "notes": [
+        "Actual production WalkingView, bands worker and codec; recorded exact routing result, routing excluded.",
+        "Full-region spatial bundles; whole native archives included, so offscreen/unreached profiles are real overfetch.",
+        "HTTP/1.1 local keep-alive; added 40ms is fixed response latency, not cellular bandwidth or CDN HTTP/2.",
+        "Fresh browser context for each case; cold and CacheStorage-warm use fresh walking workers.",
+        "Experimental wrapper quantizes preview allowances to native five-minute knots and swaps to a separate exact raster at completion.",
+        "Two-layer data and canvases coexist during refinement; preview does not change any station time."
+      ],
+      "cases": [
+        {
+          "name": "baseline-no-frame",
+          "manifest": "baselineNoFrame",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 810,
+              "bytes": 20656031,
+              "ms": 5406.79999999702,
+              "firstPaintMs": 256.69999999552965,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 84
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 4632.19999999553,
+              "firstPaintMs": 268.59999999403954,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 111
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 115.89999999850988,
+              "firstPaintMs": -16866.79999999702,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 14,
+              "bytes": 350313,
+              "ms": 649.3000000044703,
+              "firstPaintMs": -17431.69999999553,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        },
+        {
+          "name": "full256-no-frame",
+          "manifest": "fullNoFrame",
+          "latency": 0,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 2528.2000000029802,
+              "firstPaintMs": 397.70000000298023,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 27
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 1826,
+              "firstPaintMs": 320.5,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 27
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 123,
+              "firstPaintMs": -9763.70000000298,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 523.1000000014901,
+              "firstPaintMs": -10293.39999999851,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            }
+          ]
+        },
+        {
+          "name": "full256-no-frame-40ms",
+          "manifest": "fullNoFrame",
+          "latency": 40,
+          "phases": [
+            {
+              "phase": "cold",
+              "requests": 142,
+              "bytes": 21911874,
+              "ms": 3674.7000000029802,
+              "firstPaintMs": 406,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 25
+            },
+            {
+              "phase": "cache-warm",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 2147.89999999851,
+              "firstPaintMs": 328.1000000014901,
+              "pixelHash": "14cd27f72104ae8232113c9d44cfaf79f257bfff7adb2b2715487bbd5e6f17a4",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 26
+            },
+            {
+              "phase": "cutoff91",
+              "requests": 0,
+              "bytes": 0,
+              "ms": 117.10000000149012,
+              "firstPaintMs": -12166.60000000149,
+              "pixelHash": "f434f4a8e83951b130aa3ce1fc2b4d3807d6ebb827313fb510ae92d7ed954355",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 1
+            },
+            {
+              "phase": "pan",
+              "requests": 3,
+              "bytes": 470852,
+              "ms": 603.3999999985099,
+              "firstPaintMs": -12607.10000000149,
+              "pixelHash": "259721492acb4221facb32bc82c83b294e7a100ee6b5c9c2e0f295b3144573e8",
+              "width": 585,
+              "height": 1267,
+              "status": "Ungef\u00e4rliga g\u00e5ngomr\u00e5den \u00b7 ofullst\u00e4ndig t\u00e4ckning. En f\u00e4rgad yta garanterar inte tilltr\u00e4de \u00f6verallt.",
+              "renders": 2
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
