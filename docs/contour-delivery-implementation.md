@@ -94,7 +94,7 @@ python scripts/bundle_contours.py --root .data-build/migration/data
 python scripts/prune_data.py --root .data-build/migration/data --keep 2
 python scripts/release_data.py pack --root .data-build/migration/data \
   --output .data-build/migration/sliso-data.zip \
-  --descriptor .data-build/migration/release.json --repository marre/sl-isokron
+  --descriptor .data-build/migration/release.json --repository marre/sliso
 ```
 
 The **Bundle contour delivery** workflow performs the migration, retains the

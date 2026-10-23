@@ -191,3 +191,21 @@ Walking raster grids use their viewport's captured zoom, rather than the live
 animation zoom. This keeps cached raster dimensions consistent when contour
 files finish loading between zoomstart and zoomend. A browser regression test
 delivers a delayed contour during a real zoom animation.
+
+### Repository renamed to marre/sliso
+
+The canonical source repository is https://github.com/marre/sliso. The data
+release pointer uses the renamed repository while retaining its original version,
+archive size and SHA-256 checksum. Existing releases do not need repackaging.
+Release workflows use `GITHUB_REPOSITORY` and follow the rename automatically.
+Repository secrets and variables remain attached to the same GitHub repository.
+The Cloudflare Worker/project name (`sliso`) and custom domain (`sliso.xr.se`)
+remain unchanged. Check the Cloudflare build status after a push to verify that
+its Git integration still follows the repository; reconnect it to `marre/sliso`
+only if builds stop triggering.
+
+Existing checkouts should run:
+
+```sh
+git remote set-url origin https://github.com/marre/sliso.git
+```

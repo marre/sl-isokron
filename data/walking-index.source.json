@@ -3,7 +3,7 @@
     "feed": "SE-sl",
     "feedVersion": "2026-10-19",
     "license": "CC0-1.0",
-    "run": "https://github.com/marre/sl-isokron/actions/runs/39314795436"
+    "run": "https://github.com/marre/sliso/actions/runs/39314795436"
   },
   "osm": {
     "source": "https://download.geofabrik.de/europe/sweden-261018.osm.pbf",

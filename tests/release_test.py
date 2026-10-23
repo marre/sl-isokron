@@ -42,7 +42,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual((root/previous/name).read_bytes(),raw)
             binary=root/migrated['walkingAreas']['files'][0]['url'].removeprefix('/data/')
             self.assertTrue(equivalent(native,decode_profiles(binary.read_bytes())))
-            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sl-isokron')
+            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sliso')
             installed=Path(temp)/'installed';install(Path(temp)/'data.zip',release,installed)
             self.assertEqual(validate(installed),migrated)
             self.assertTrue((installed/previous/name).exists())
@@ -63,7 +63,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertNotEqual(old,updated['version'])
             self.assertEqual(m['stops']['sha256'],updated['stops']['sha256'])
             self.assertEqual(updated['walkingAreas']['sources'],dict(a=0,b=0))
-            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sl-isokron')
+            release=pack(root,Path(temp)/'data.zip',Path(temp)/'release.json','marre/sliso')
             installed=Path(temp)/'installed';install(Path(temp)/'data.zip',release,installed)
             self.assertEqual(validate(installed),updated)
             self.assertTrue((installed/old/'areas-0.bin').exists())
@@ -80,8 +80,8 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             manifest = self.fixture(base / 'source')
-            release = pack(base / 'source', base / 'sliso-data.zip', base / 'release.json', 'marre/sl-isokron')
-            repeated = pack(base / 'source', base / 'second.zip', base / 'second.json', 'marre/sl-isokron')
+            release = pack(base / 'source', base / 'sliso-data.zip', base / 'release.json', 'marre/sliso')
+            repeated = pack(base / 'source', base / 'second.zip', base / 'second.json', 'marre/sliso')
             self.assertEqual(release['sha256'], repeated['sha256'])
             self.assertEqual(install(base / 'sliso-data.zip', release, base / 'public/data'), manifest)
             self.assertEqual(install(base / 'sliso-data.zip', release, base / 'public/data'), manifest)
@@ -91,7 +91,7 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             self.fixture(base / 'source')
-            release = pack(base / 'source', base / 'sliso-data.zip', base / 'release.json', 'marre/sl-isokron')
+            release = pack(base / 'source', base / 'sliso-data.zip', base / 'release.json', 'marre/sliso')
             output = base / 'public/data'
             output.mkdir(parents=True)
             previous = b'{"previous":"keep"}'
@@ -118,7 +118,7 @@ class ReleaseTests(unittest.TestCase):
             manifest = self.fixture(base / 'source')
             (base / 'source' / manifest['version'] / 'index.json').write_text('corrupted')
             with self.assertRaisesRegex(ValueError, 'mismatch'):
-                pack(base / 'source', base / 'data.zip', base / 'release.json', 'marre/sl-isokron')
+                pack(base / 'source', base / 'data.zip', base / 'release.json', 'marre/sliso')
 
 
 if __name__ == '__main__':

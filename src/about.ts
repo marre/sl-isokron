@@ -54,5 +54,5 @@ export const aboutHTML = `
 <p>Utgångna hållplatslägen döljs i kartan och sökningen. De kan finnas kvar som interna punkter i gångnätet för att bevara gångförbindelser mellan aktuella lägen.</p>
 <p>Gångområden är ungefärliga ytor och kan innehålla otillgängliga delar. De garanterar inte tillträde till alla entréer. Även detaljerade minutkonturer är uppskattningar från gångnätet.</p>
 <p>Delningslänken innehåller startplatsens ID, namn och koordinater samt datum, tid och alla filter. Alla som har länken kan läsa dem. Resultat kan förändras när data uppdateras. Själva reseberäkningen sker lokalt; trafikfiler och bakgrundskartan hämtas över nätet.</p>
-<p><a href="https://github.com/marre/sl-isokron">Källkod, tekniska beskrivningar och prestandamätningar på GitHub</a>.</p>
+<p><a href="https://github.com/marre/sliso">Källkod, tekniska beskrivningar och prestandamätningar på GitHub</a>.</p>
 `;

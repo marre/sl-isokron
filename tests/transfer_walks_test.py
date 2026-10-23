@@ -61,4 +61,4 @@ class TransferWalkTests(unittest.TestCase):
             self.assertEqual([r['sha256'] for r in after['footpaths']['index'].values()],[r['sha256'] for r in before['footpaths']['index'].values()])
             for key in ('routes','transfers','trips'):self.assertEqual(after[key]['sha256'],before[key]['sha256'])
             self.assertEqual(after['transferWalking']['addedLinks'],1);self.assertTrue((root/before['version']/'walks.json').exists());validate(root)
-            descriptor=pack(root,Path(temp)/'release.zip',Path(temp)/'release.json','marre/sl-isokron');installed=Path(temp)/'installed';install(Path(temp)/'release.zip',descriptor,installed);self.assertEqual(validate(installed),after)
+            descriptor=pack(root,Path(temp)/'release.zip',Path(temp)/'release.json','marre/sliso');installed=Path(temp)/'installed';install(Path(temp)/'release.zip',descriptor,installed);self.assertEqual(validate(installed),after)

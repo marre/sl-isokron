@@ -67,6 +67,6 @@ class WalkingClosureTests(unittest.TestCase):
             self.assertTrue((folder/'walks.json').is_file())
             self.assertEqual(migrate(root), new)
             archive, descriptor = Path(temp)/'data.zip', Path(temp)/'release.json'
-            release = pack(root, archive, descriptor, 'marre/sl-isokron')
+            release = pack(root, archive, descriptor, 'marre/sliso')
             self.assertTrue(release['features']['walkingClosure'])
             self.assertEqual(install(archive, release, Path(temp)/'installed'), new)

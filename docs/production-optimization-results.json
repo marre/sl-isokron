@@ -49,6 +49,6 @@
     "allCoordinatesRoundTrip": true
   },
   "publishedDataset": "sl-f86213b8fb8e39a9260c",
-  "release": "https://github.com/marre/sl-isokron/releases/tag/data-sl-f86213b8fb8e39a9260c",
+  "release": "https://github.com/marre/sliso/releases/tag/data-sl-f86213b8fb8e39a9260c",
   "note": "Published release reproduces the tested contour shard hashes; immutable version metadata differs from the local two-step migration."
 }

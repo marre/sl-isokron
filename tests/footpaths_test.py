@@ -30,7 +30,7 @@ class FootpathsTests(unittest.TestCase):
             (root/'manifest.json').write_text(json.dumps(manifest));(root/old/'report.json').write_text(json.dumps(dict(generator='sliso-data-v2',version=old)))
             write_tiles({1:(59,18),2:(59.001,18)},[(1,2,111,83.25,False)],{},tiles,'mapped-test')
             new=attach(root,tiles);self.assertNotEqual(new['version'],old);self.assertEqual(new['stops']['sha256'],ref['sha256']);self.assertEqual((root/old/'index.json').read_bytes(),raw)
-            release=pack(root,Path(temp)/'release.zip',Path(temp)/'release.json','marre/sl-isokron');self.assertTrue(release['features']['footpaths'])
+            release=pack(root,Path(temp)/'release.zip',Path(temp)/'release.json','marre/sliso');self.assertTrue(release['features']['footpaths'])
             target=Path(temp)/'installed';install(Path(temp)/'release.zip',release,target);self.assertEqual(validate(target),new)
             asset=next(iter(new['footpaths']['index'].values()));(target/asset['url'].removeprefix('/data/')).write_bytes(b'bad')
             with self.assertRaises(ValueError):validate(target)

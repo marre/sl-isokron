@@ -4,7 +4,7 @@
   "sourceVersion": "2026-10-21",
   "validFrom": "2026-10-21",
   "validTo": "2026-10-28",
-  "url": "https://github.com/marre/sl-isokron/releases/download/data-sl-21ffa7d2caf7a1fcef50/sliso-data.zip",
+  "url": "https://github.com/marre/sliso/releases/download/data-sl-21ffa7d2caf7a1fcef50/sliso-data.zip",
   "sha256": "2ecf449070f2a195c0be867ed517e9359dde03cddb045dfe7b42a67c9945144e",
   "bytes": 831690590,
   "unpackedBytes": 1154801799,
