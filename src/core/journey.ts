@@ -1,13 +1,13 @@
-import type { JourneyLeg, SearchResult } from './types';
+import type { JourneyLeg, SearchResult, Stop } from './types';
 import { stockholmNow } from './time';
 
 /** Recover the witness for this destination, never another stop's best label. */
-export function journeyFor(result: SearchResult, destination: number): JourneyLeg[] {
+export function journeyFor(result: SearchResult, destination: number, stops?:Stop[]): JourneyLeg[] {
   const legs: JourneyLeg[] = [];
   let at = result.values[destination]?.journey ?? null;
   while (at !== null) {
     const { previous, ...leg } = result.journeys[at];
-    legs.push({ ...leg, stops: [...leg.stops] }); at = previous;
+    legs.push({ ...leg, ...(stops&&leg.kind==='walk'?{path:leg.path??leg.stops.map(i=>[stops[i].lat,stops[i].lon] as [number,number])}:{}), stops: [...leg.stops] }); at = previous;
   }
   legs.reverse();
   // Initial waiting is excluded from R. Place access walking immediately before
@@ -21,6 +21,7 @@ export function journeyFor(result: SearchResult, destination: number): JourneyLe
   for (const leg of legs) {
     const last = grouped.at(-1);
     if (last?.kind === 'walk' && leg.kind === 'walk' && last.to === leg.from && last.arrival === leg.departure) {
+      if(last.path&&leg.path)last.path=[...last.path,...leg.path.slice(1)];else delete last.path;
       last.to = leg.to; last.arrival = leg.arrival; last.stops.push(...leg.stops.slice(1));
       last.metres = last.metres === undefined || leg.metres === undefined ? undefined : last.metres + leg.metres;
       last.estimated = last.estimated || leg.estimated || undefined;

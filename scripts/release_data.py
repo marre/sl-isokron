@@ -44,6 +44,10 @@ def validate(root):
         raise ValueError('A real schema-2 dataset is required for publication')
     refs = [manifest[k] for k in ('stops', 'walks', 'routes', 'transfers', 'trips')]
     refs += [ref for entries in manifest['days'].values() for ref in entries]
+    paths=manifest.get('footpaths')
+    if paths:
+        if paths.get('format')!='sliso-footpaths-v1' or paths.get('tileDegrees')!=.05 or not isinstance(paths.get('index'),dict):raise ValueError('Invalid footpath metadata')
+        refs += list(paths['index'].values())
     areas = manifest.get('walkingAreas', {})
     refs += areas.get('files', [])
     refs += areas.get('overview', {}).get('files', [])
@@ -121,7 +125,7 @@ def pack(root, output, descriptor, repository):
     release = dict(schema=1, version=manifest['version'], sourceVersion=manifest.get('sourceVersion'),
                    validFrom=manifest['validFrom'], validTo=manifest['validTo'],
                    url=f"https://github.com/{repository}/releases/download/data-{manifest['version']}/sliso-data.zip",
-                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total, features={'walkingAreas':bool(manifest.get('walkingAreas')), 'walkingClosure':bool(manifest.get('walkingClosure'))})
+                   sha256=digest(output), bytes=output.stat().st_size, unpackedBytes=total, features={'footpaths':bool(manifest.get('footpaths')), 'walkingAreas':bool(manifest.get('walkingAreas')), 'walkingClosure':bool(manifest.get('walkingClosure'))})
     Path(descriptor).parent.mkdir(parents=True, exist_ok=True)
     Path(descriptor).write_text(json.dumps(release, indent=2) + '\n')
     return release

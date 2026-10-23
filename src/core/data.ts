@@ -95,7 +95,7 @@ export async function cacheAvailable(): Promise<boolean> {
 export async function pruneCache(m: Manifest): Promise<void> {
   try {
     const cache = await caches.open('sliso-data-v1');
-    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days).flat(), ...(m.walkingAreas?.files ?? []),...(m.walkingAreas?.overview?.files ?? []),...(m.walkingClosure?[m.walkingClosure]:[])].map(f => new URL(f.url, location.origin).href));
+    const keep = new Set([m.stops, m.walks, m.routes, m.transfers, m.trips, ...Object.values(m.days).flat(), ...(m.walkingAreas?.files ?? []),...(m.walkingAreas?.overview?.files ?? []),...(m.walkingClosure?[m.walkingClosure]:[]),...Object.values(m.footpaths?.index??{})].map(f => new URL(f.url, location.origin).href));
     for (const req of await cache.keys()) if (!keep.has(req.url)) await cache.delete(req);
   } catch { /* Cache access is optional. */ }
 }

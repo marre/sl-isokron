@@ -116,3 +116,13 @@
 #dialog-body .about-tech details p{margin:0 0 14px}
 #dialog-body a{text-underline-offset:3px}
 @media(max-width:480px){#info-dialog{width:calc(100% - 24px);max-width:none}#info-dialog .dialog-head{padding:10px 14px;gap:8px}#info-dialog .dialog-head h2{font-size:21px}#dialog-body{padding:4px 14px 16px}}
+
+.choose-point{display:block;width:100%;margin:-4px 0 16px;padding:10px;border:1px solid #bccbc2;border-radius:8px;background:#f6f8f2;color:#245e49;font:inherit;cursor:pointer}
+.choose-point:disabled{opacity:.45;cursor:default}
+.picking-point,.picking-point .leaflet-interactive{cursor:crosshair!important}
+.point-picker{position:absolute;z-index:650;top:74px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;width:max-content;max-width:calc(100% - 32px);padding:10px 14px;background:#fffdf6;border:1px solid #bccbc2;border-radius:12px;box-shadow:0 3px 15px #183e3622;font-size:13px}
+.point-picker[hidden]{display:none}
+.point-picker button{padding:7px 10px;min-height:36px;border:1px solid #bccbc2;border-radius:7px;background:#f6f8f2;color:#245e49;font:inherit;cursor:pointer}
+@media(max-width:760px){.point-picker{top:108px;width:calc(100% - 32px)}.point-picker span{flex-basis:100%;text-align:center}}
+.picking-point .leaflet-walking-areas-pane{visibility:hidden}
+@media(max-width:760px){.point-picker{left:16px;right:74px;width:auto;max-width:none;transform:none}}

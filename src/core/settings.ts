@@ -2,6 +2,8 @@ import { MODES, type Settings, type Stop } from './types';
 import { stockholmInstant, stockholmNow } from './time';
 export function defaults(stop: Stop): Settings { return { v: 1, stop: stop.id, name: stop.name, lat: stop.lat, lon: stop.lon, ...stockholmNow(), maxMinutes: 60, walkMinutes: 15, modes: [...MODES], maxTransfers: 3, windowMinutes: 30 }; }
 export function validateSettings(s: Settings, walkingMax = 30): void {
+  if (s?.origin!==undefined&&s.origin!=='point')throw new Error('Okänd typ av startpunkt.');
+  if(s?.origin==='point'&&s.stop!=='@point')throw new Error('Ogiltig kartstart.');
   if (!s || s.v !== 1) throw new Error('Delningslänkens formatversion stöds inte.');
   for (const [key, min, max] of [['maxMinutes', 10, 120], ['walkMinutes', 5, Math.min(walkingMax, 30)], ['maxTransfers', 0, 4], ['windowMinutes', 5, 120]] as const) {
     if (!Number.isInteger(s[key]) || s[key] < min || s[key] > max) throw new Error(`${key}: värdet måste vara ${min}–${max}. Inställningarna ändras inte automatiskt.`);

@@ -1,0 +1,62 @@
+name: Publish map-origin footpaths
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore the existing traffic source and verified walking anchors
+        uses: actions/cache/restore@v4
+        with:
+          path: .data-build/
+          key: sliso-data-39672773341-1
+          fail-on-cache-miss: true
+      - name: Install offline walking tools
+        run: |
+          python -m venv /tmp/sliso-walking-venv
+          /tmp/sliso-walking-venv/bin/pip install -r scripts/requirements-walking.txt
+      - name: Install the checksum-pinned published dataset
+        run: python scripts/release_data.py fetch --output .data-build/origin-release/data --force
+      - name: Recreate physical paths without fetching GTFS or rebuilding contours
+        run: |
+          /tmp/sliso-walking-venv/bin/python - <<'PY'
+          import json,sys,subprocess
+          from pathlib import Path
+          sys.path.insert(0,'scripts')
+          from prepare_walking import fetch_osm
+          from prepare_pedestrian_tiles import prepare
+          from footpath_tiles import build
+          root=Path('.data-build/origin-release');root.mkdir(exist_ok=True)
+          source=Path('.data-build/sl.zip')
+          anchors=Path('.data-build/prepared-walking/walks.json.anchors.json')
+          assert source.is_file() and anchors.is_file(), 'Existing source/verified anchors missing; no replacement GTFS request is permitted'
+          pbf=fetch_osm(json.loads(Path('data/walking-index.source.json').read_text())['osm'],Path('.data-build/osm-cache'))
+          graph=root/'graph.json.gz'
+          subprocess.run([sys.executable,'scripts/osm_walks.py','--pbf',str(pbf),'--gtfs',str(source),'--output',str(graph)],check=True)
+          surface=prepare(graph,pbf,root/'surface',pbf_only=True)
+          station=prepare(graph,pbf,root/'station',station_access=True,pbf_only=True)
+          build(station,anchors,root/'footpaths',surface)
+          PY
+      - name: Attach, validate and retain the preceding immutable version
+        run: |
+          python scripts/attach_footpaths.py --root .data-build/origin-release/data --tiles .data-build/origin-release/footpaths
+          python scripts/prune_data.py --root .data-build/origin-release/data --keep 2
+          python scripts/release_data.py pack --root .data-build/origin-release/data --output .data-build/origin-release/sliso-data.zip --descriptor .data-build/origin-release/release.json --repository "$GITHUB_REPOSITORY"
+      - name: Publish static data outside Git
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python -c "import json; print(json.load(open('.data-build/origin-release/release.json'))['version'])")
+          gh release create "data-$version" .data-build/origin-release/sliso-data.zip .data-build/origin-release/release.json --target "$GITHUB_SHA" --latest=false --title "sliso mapped origin walking $version" --notes 'Physical OSM walking tiles and existing verified stop anchors for bounded browser-side map origins. Traffic, closure and contours unchanged. No GTFS request. Complete anchor coverage required; previous immutable data retained. CC0 / ODbL; provenance and limitations in data/README.md.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: origin-release-descriptor
+          path: .data-build/origin-release/release.json
+          retention-days: 7

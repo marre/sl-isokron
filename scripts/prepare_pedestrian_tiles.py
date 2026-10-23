@@ -10,7 +10,7 @@ from itertools import groupby
 from pathlib import Path
 
 
-def prepare(graph_path, original_pbf, directory, station_access=False):
+def prepare(graph_path, original_pbf, directory, station_access=False, pbf_only=False):
     import osmium
     import valhalla
     from valhalla import PYVALHALLA_DIR
@@ -59,6 +59,7 @@ def prepare(graph_path, original_pbf, directory, station_access=False):
                 run.append(b)
             flush(run,key[1],key[0],key[2],key[3])
     finally:writer.close()
+    if pbf_only:return pbf
     tiles=directory/'tiles';tiles.mkdir(exist_ok=True)
     config=valhalla.get_config(tile_extract='',tile_dir=str(tiles))
     config['mjolnir'].update(hierarchy=False,shortcuts=False,include_driving=False,include_bicycle=False,include_pedestrian=True,id_table_size=max(len(ids),way_id)+1000)
@@ -74,4 +75,4 @@ def prepare(graph_path, original_pbf, directory, station_access=False):
     print(json.dumps(report),flush=True)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--graph',required=True);p.add_argument('--pbf',required=True);p.add_argument('--directory',required=True);p.add_argument('--station-access',action='store_true');a=p.parse_args();prepare(a.graph,a.pbf,a.directory,a.station_access)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--graph',required=True);p.add_argument('--pbf',required=True);p.add_argument('--directory',required=True);p.add_argument('--station-access',action='store_true');p.add_argument('--pbf-only',action='store_true');a=p.parse_args();prepare(a.graph,a.pbf,a.directory,a.station_access,a.pbf_only)

@@ -1,0 +1,83 @@
+import {verified} from './data';
+import {isPublicStop} from './stops';
+import type {FileRef,Manifest,OriginAccess,Settings,Stop} from './types';
+
+type Point=[number,number]; // latitude, longitude
+export interface FootpathTile {schema:1;nodes:number[][];edges:number[][];stops:(number|string)[][]}
+export interface FootpathGraph {nodes:Map<number,Point>;edges:Map<number,{to:number;seconds:number;metres:number}[]>;stops:Map<number,{stop:number;seconds:number;metres:number}[]>;segments:{from:number;to:number;seconds:number;metres:number;oneway:boolean}[]}
+const SPEED=80/60, METRES=111195;
+export function project(point:Point,a:Point,b:Point) {
+  const scale=Math.cos(point[0]*Math.PI/180),x=(b[1]-a[1])*scale,y=b[0]-a[0];
+  const t=x*x+y*y?Math.max(0,Math.min(1,((point[1]-a[1])*scale*x+(point[0]-a[0])*y)/(x*x+y*y))):0;
+  const p:Point=[a[0]+t*y,a[1]+t*(b[1]-a[1])];
+  return {t,point:p,metres:Math.hypot((p[1]-point[1])*scale,p[0]-point[0])*METRES};
+}
+export function graphFromTiles(tiles:FootpathTile[],stops:Stop[]):FootpathGraph {
+  const graph:FootpathGraph={nodes:new Map(),edges:new Map(),stops:new Map(),segments:[]};
+  const ids=new Map(stops.map((s,i)=>[s.id,i])),seen=new Set<string>(),bound=new Set<string>();
+  for(const tile of tiles){
+    if(tile.schema!==1)throw new Error('Gångnätets format stöds inte.');
+    for(const [id,lat,lon] of tile.nodes)graph.nodes.set(id,[lat/1e7,lon/1e7]);
+    for(const [from,to,metres,seconds,oneway] of tile.edges){
+      const key=`${from}:${to}:${oneway}`;if(seen.has(key))continue;seen.add(key);
+      if(!Number.isFinite(seconds)||seconds<0||!Number.isFinite(metres)||metres<0)throw new Error('Gångnätet är skadat.');
+      graph.segments.push({from,to,seconds,metres,oneway:!!oneway});
+      const add=(a:number,b:number)=>{const row=graph.edges.get(a)??[];row.push({to:b,seconds,metres});graph.edges.set(a,row);};
+      add(from,to);if(!oneway)add(to,from);
+    }
+    for(const [node,sid,seconds,metres,lat,lon] of tile.stops){
+      const stop=ids.get(String(sid));if(stop===undefined||!isPublicStop(stops[stop])||bound.has(String(sid)))continue;
+      // Refuse stale stop bindings after a timetable changes its coordinates.
+      if(Math.abs(stops[stop].lat-Number(lat))>1e-6||Math.abs(stops[stop].lon-Number(lon))>1e-6)continue;
+      const row=graph.stops.get(Number(node))??[];row.push({stop,seconds:Number(seconds),metres:Number(metres)});graph.stops.set(Number(node),row);bound.add(String(sid));
+    }
+  }
+  for(const edge of graph.segments)if(!graph.nodes.has(edge.from)||!graph.nodes.has(edge.to))throw new Error('Gångnätet saknar en vägpunkt.');
+  return graph;
+}
+
+/** Bounded Dijkstra on mapped edges. Projection chooses a path start, never an off-network link. */
+export function routeOrigin(graph:FootpathGraph,point:Point,maxSeconds:number):OriginAccess {
+  let nearest:{edge:FootpathGraph['segments'][number];t:number;point:Point;metres:number}|undefined;
+  for(const edge of graph.segments){const snap=project(point,graph.nodes.get(edge.from)!,graph.nodes.get(edge.to)!);if(!nearest||snap.metres<nearest.metres)nearest={edge,...snap};}
+  if(!nearest||nearest.metres>25)throw new Error('Ingen kartlagd gångväg inom 25 meter. Välj en punkt på en gångväg eller gata i kartan.');
+  const snap=nearest,dist=new Map<number,number>(),length=new Map<number,number>(),prev=new Map<number,number>(),heap:{node:number;cost:number}[]=[];
+  function push(node:number,cost:number,metres:number,previous?:number){
+    if(cost>maxSeconds||cost>=(dist.get(node)??Infinity))return;
+    dist.set(node,cost);length.set(node,metres);if(previous!==undefined)prev.set(node,previous);
+    const item={node,cost};let i=heap.length;heap.push(item);
+    while(i){const p=(i-1)>>1;if(heap[p].cost<=cost)break;heap[i]=heap[p];i=p;}heap[i]=item;
+  }
+  function pop(){const first=heap[0],last=heap.pop()!;if(heap.length){let i=0;while(i*2+1<heap.length){let c=i*2+1;if(c+1<heap.length&&heap[c+1].cost<heap[c].cost)c++;if(heap[c].cost>=last.cost)break;heap[i]=heap[c];i=c;}heap[i]=last;}return first;}
+  // One-way restrictions still apply when starting midway along an edge.
+  if(!snap.edge.oneway||snap.t===0)push(snap.edge.from,snap.edge.seconds*snap.t,snap.edge.metres*snap.t);
+  push(snap.edge.to,snap.edge.seconds*(1-snap.t),snap.edge.metres*(1-snap.t));
+  while(heap.length){const {node,cost}=pop();if(cost!==dist.get(node))continue;for(const edge of graph.edges.get(node)??[])push(edge.to,cost+edge.seconds,length.get(node)!+edge.metres,node);}
+  const reached=new Map<number,OriginAccess['walks'][number]>();
+  for(const [node,bindings] of graph.stops){
+    const cost=dist.get(node);if(cost===undefined)continue;
+    for(const binding of bindings){
+      const seconds=Math.ceil(cost+binding.seconds);if(seconds>maxSeconds||seconds>=(reached.get(binding.stop)?.seconds??Infinity))continue;
+      const path:Point[]=[];let n:number|undefined=node;while(n!==undefined){path.push(graph.nodes.get(n)!);n=prev.get(n);}path.push(snap.point);path.reverse();
+      reached.set(binding.stop,{to:binding.stop,seconds,metres:length.get(node)!+binding.metres,path});
+    }
+  }
+  if(!reached.size)throw new Error('Inga hållplatser nås längs kartlagda gångvägar inom gånggränsen. Prova längre gångtid eller en annan startpunkt. Saknade gångkopplingar kan påverka resultatet.');
+  return {lat:snap.point[0],lon:snap.point[1],snapMetres:snap.metres,walks:[...reached.values()]};
+}
+export function originTileRefs(m:Manifest,point:Point,minutes:number):FileRef[] {
+  const meta=m.footpaths;
+  if(!meta||meta.format!=='sliso-footpaths-v1'||meta.tileDegrees!==.05)throw new Error('Denna dataversion saknar gångnät för start på kartan. Välj en hållplats tills datan har uppdaterats.');
+  const radius=(minutes*60*SPEED+26)/METRES,longitude=radius/Math.cos(point[0]*Math.PI/180),refs:FileRef[]=[];
+  const minY=Math.floor((point[0]-radius)/meta.tileDegrees),maxY=Math.floor((point[0]+radius)/meta.tileDegrees),minX=Math.floor((point[1]-longitude)/meta.tileDegrees),maxX=Math.floor((point[1]+longitude)/meta.tileDegrees);
+  for(const [key,ref] of Object.entries(meta.index)){const [y,x]=key.split('_').map(Number);if(y>=minY&&y<=maxY&&x>=minX&&x<=maxX)refs.push(ref);}
+  return refs;
+}
+export async function loadOriginAccess(m:Manifest,s:Settings,stops:Stop[],onProgress?:(done:number,total:number)=>void):Promise<OriginAccess>{
+  const refs=originTileRefs(m,[s.lat,s.lon],Math.min(s.walkMinutes,s.maxMinutes));let done=0;onProgress?.(0,refs.length);
+  const tiles:FootpathTile[]=[];
+  // Bound fetch/decompression concurrency and keep raw graph bytes out of the UI thread.
+  let next=0;
+  await Promise.all(Array.from({length:Math.min(4,refs.length)},async()=>{while(next<refs.length){const ref=refs[next++],bytes=await verified(ref);const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));tiles.push(JSON.parse(await new Response(stream).text()) as FootpathTile);onProgress?.(++done,refs.length);}}));
+  return routeOrigin(graphFromTiles(tiles,stops),[s.lat,s.lon],Math.min(s.walkMinutes,s.maxMinutes)*60);
+}

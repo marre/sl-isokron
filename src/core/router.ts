@@ -1,5 +1,5 @@
 import {profileStart,profileEnd} from './profile';
-import type { Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
+import type { OriginAccess, Connection, JourneyNode, Network, Reach, SearchResult, Settings, TransferRule, Walk, WalkSource, StationProgress } from './types';
 import { stockholmInstant } from './time';
 import { validateSettings } from './settings';
 interface TransferContext {
@@ -27,12 +27,13 @@ export function canTransfer(l: Label, c: Connection, network: Network, candidate
  * Each boarding follows the whole trip; staying seated never requires a legal alight/reboard.
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
-export function search(network: Network, settings: Settings, options: { prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
+export function search(network: Network, settings: Settings, options: { access?:OriginAccess; prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
   const indexing=profileStart();
   validateSettings(settings);
   const started = performance.now(), t0 = stockholmInstant(settings.date, settings.time);
   const start = network.stops.findIndex(s => s.id === settings.stop);
-  if (start < 0) throw new Error('Starthållplatsen saknas i datan. Välj en ersättare.');
+  if (settings.origin==='point'&&!options.access)throw new Error('Gånganslutningen från kartpunkten saknas.');
+  if (start < 0&&settings.origin!=='point') throw new Error('Starthållplatsen saknas i datan. Välj en ersättare.');
   const max = settings.maxMinutes * 60, maxWalk = settings.walkMinutes * 60;
   const closure=network.walkingClosure&&network.walkingClosure.maxSeconds>=maxWalk?network.walkingClosure:undefined;
   const windowEnd = t0 + settings.windowMinutes * 60, latest = windowEnd + max;
@@ -119,7 +120,13 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     }), l]); queues[l.boardings].push(l);labels++;
     if (labels > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
-  push({ stop: start, time: t0, anchor: null, walk: 0, boardings: 0, requestStop: false, lastTrip: '', lastRoute: '', alightStop: start, alightTime: t0, previous: null, via: null, alight: null });
+  const root:Label={stop:settings.origin==='point'?network.stops.length:start,time:t0,anchor:null,walk:0,boardings:0,requestStop:false,lastTrip:'',lastRoute:'',alightStop:start,alightTime:t0,previous:null,via:null,alight:null};
+  if(settings.origin==='point'){
+    for(const access of options.access!.walks){
+      if(!network.stops[access.to]||!Number.isFinite(access.seconds)||access.seconds<0)throw new Error('Ogiltig gånganslutning.');
+      push({...root,stop:access.to,time:t0+access.seconds,walk:access.seconds,alightStop:access.to,previous:root,via:{from:root.stop,to:access.to,seconds:access.seconds,metres:access.metres,source:'Mapped origin access',path:access.path}});
+    }
+  }else push(root);
   report(0);
   profileEnd('routing.index',indexing);
   const patternsStarted=profileStart();
@@ -145,7 +152,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       if(options.prune!==false&&!l.active)continue;
       // The complete table expands a whole walking leg from its origin or
       // alighting event. Walking-reached labels still participate in boarding.
-      if(closure&&l.via&&'seconds' in l.via)continue;
+      if(closure&&l.via&&'seconds' in l.via&&!l.via.path)continue;
       const context = l.context!;
       const first=closure?closure.begin(l.stop):0,until=closure?closure.end(l.stop):walking[l.stop].length;
       for(let entry=first;entry<until;entry++){
@@ -203,7 +210,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
       const l = pending.pop()!, via = l.via!, previous = ids.get(l.previous!) ?? null;
       let node: JourneyNode;
       if ('seconds' in via) {
-        if(closure){
+        if(closure&&!via.path){
           let predecessor=previous,time=l.previous!.time;
           for(const edge of closure.path(via.from,via.to)){
             node={previous:predecessor,kind:'walk',from:edge.from,to:edge.to,departure:time,arrival:time+edge.seconds,stops:[edge.from,edge.to],metres:edge.metres,estimated:edge.source.startsWith('Assumed ')||undefined};
@@ -211,7 +218,7 @@ export function search(network: Network, settings: Settings, options: { prune?: 
           }
           ids.set(l,predecessor!);continue;
         }
-        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], metres: via.metres, estimated: via.source.startsWith('Assumed ') || undefined };
+        node = { previous, kind: 'walk', from: via.from, to: via.to, departure: l.previous!.time, arrival: l.time, stops: [via.from, via.to], ...(via.path?{path:via.path}:{}), metres: via.metres, estimated: via.source.startsWith('Assumed ') || undefined };
       } else {
         const path = trips.get(via.trip)!.filter(c => c.sequence >= via.sequence && c.sequence <= l.alight!.sequence);
         node = { previous, kind: 'transit', from: via.from, to: l.stop, departure: via.departure, arrival: l.time, route: via.route, stops: [via.from, ...path.map(c => c.to)], requestStop: !!via.pickupRequest || !!l.alight!.dropoffRequest };
@@ -221,5 +228,5 @@ export function search(network: Network, settings: Settings, options: { prune?: 
     values[stop]!.journey = ids.get(witness)!;
   });
   profileEnd('routing.journeys',serialization,{nodes:journeys.length,labels});
-  return { values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
+  return { ...(options.access?{origin:{lat:options.access.lat,lon:options.access.lon,snapMetres:options.access.snapMetres}}:{}), values, journeys, routes: network.routes, walkSources: finalWalking.flat(), labels, elapsed: performance.now() - started, complete: true };
 }

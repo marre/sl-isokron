@@ -1,6 +1,6 @@
 /** Static explanatory copy shared by the About dialog; no dataset-specific counts. */
 export const aboutHTML = `
-<p>sliso visar hur långt du kan resa med kollektivtrafik och gång från en vald hållplats. Mycket av grundarbetet görs i förväg. När du söker räknar din egen webbläsare ut resorna och bygger kartan.</p>
+<p>sliso visar hur långt du kan resa med kollektivtrafik och gång från en vald startplats. Mycket av grundarbetet görs i förväg. När du söker räknar din egen webbläsare ut resorna och bygger kartan.</p>
 
 <h3>Vad betyder restiden?</h3>
 <p>Vi visar minsta restid till varje hållplatsläge bland tillåtna avgångar i ditt avgångsfönster. Olika destinationer kan därför bygga på olika avgångar. Väntan före första påstigning räknas inte; gång, färd och väntan vid byten ingår.</p>
@@ -15,6 +15,7 @@ export const aboutHTML = `
 </ol>
 
 <div class="about-tech">
+<p>Du kan också välja en startpunkt på kartan. Starten läggs på närmaste kartlagda gångväg inom 25 meter; förflyttningen visas och räknas inte som en påhittad gångsträcka. Saknas en sådan väg får du välja en ny punkt. Webbläsaren hämtar bara närliggande delar av det filtrerade OpenStreetMap-gångnätet och söker kortaste gångvägar till hållplatser med Dijkstras algoritm. Befintliga verifierade hållplatsankare och deras tillträdespåslag används. Gångtid och avstånd räknas med i resan, samma sammanhängande gånggräns gäller, och första påstigning måste fortfarande ske inom avgångsfönstret. Saknade kartkopplingar kan dölja möjliga resor. Koordinaterna skickas inte till någon reseplaneringsserver; gångnätets statiska kartdelar hämtas från webbplatsen.</p>
 <details>
   <summary>Öppen data och förberäkning</summary>
   <p>Trafikuppgifterna kommer från GTFS Regional via Trafiklab. Alla linjer i den importerade SL-feeden ingår, med dina valda trafikslag som filter. Gångunderlaget bygger på OpenStreetMap. Python-skript förbereder data; Valhalla tar fram gångområden längs gångnätet.</p>

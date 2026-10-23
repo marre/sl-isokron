@@ -200,3 +200,45 @@ Compiled releases may include a checksum-bound, bounded walking-closure table.
 It preserves original walking edges and provenance for itinerary reconstruction,
 and is generated offline from the existing directed walking graph. It adds no
 new inferred access links. See [format, caching and compatibility](../docs/walking-precompute.md).
+
+## Start from a map point
+
+`prepare_walking.py` also exports `sliso-footpaths-v1` tiles from its filtered
+pedestrian PBF and verified stop anchors. These are physical walking edges,
+not the stop-to-stop closure. Restrictions/barriers remain excluded; no spatial
+links between components are added. Global node IDs join adjacent tiles, and an
+edge crossing a tile boundary is included in every tile it crosses. Stop anchors
+split their identified OSM way, retain existing endpoint access costs, and are
+accepted by the client only while the GTFS stop coordinates still match.
+
+The browser loads only tiles within the selected walking radius, verifies their
+SHA-256 hashes, decompresses them and runs bounded Dijkstra in the routing worker.
+The chosen origin is projected onto a mapped edge within 25 metres; the displayed
+start pin moves to that path and the UI reports the snap distance. This is a change
+of starting position, not a simulated off-network walking link. A point without a
+nearby mapped path or a reachable bound stop produces an explicit error. Routes
+respect walking direction and retain their physical geometry for the itinerary.
+Initial access counts toward journey time, the continuous walking limit and first
+boarding feasibility. The existing route scanner, transfer closure and stop-based
+contours then operate with those access states. No new contour from the arbitrary
+origin itself is generated; contours still start at reached stops with the walking
+budget reduced by access time. Missing OSM links can still hide possible journeys.
+
+Files have a `.bin` extension and contain deterministic gzip-compressed UTF-8 JSON
+with `schema: 1`, node rows `[id,latE7,lonE7]`, edge rows
+`[from,to,metres,seconds,oneway]`, and stop-binding rows
+`[node,stopId,accessSeconds,offsetMetres,gtfsLat,gtfsLon]`. The manifest indexes
+0.05-degree tiles by `floor(lat / .05)_floor(lon / .05)`. The static host needs no
+routing service and no special HTTP compression configuration for these files.
+
+To attach newly built tiles to an existing data release without downloading GTFS:
+
+```sh
+python scripts/attach_footpaths.py --root public/data --tiles .data-build/prepared-walking/footpaths
+python scripts/prune_data.py --root public/data --keep 2
+```
+
+The migration preserves traffic, closure and contour bytes, publishes a new
+immutable version and retains the preceding version for clients already open.
+Normal data builds accept `--footpaths` and CI refuses to silently drop this feature
+if the prepared walking cache is missing. Regenerate with `prepare_walking=true`.

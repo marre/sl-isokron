@@ -109,6 +109,12 @@ jobs:
           if test -f .data-build/prepared-walking/areas/index.json; then
             area_args=(--walking-areas .data-build/prepared-walking/areas)
           fi
+          if test -f .data-build/prepared-walking/footpaths/index.json; then
+            area_args+=(--footpaths .data-build/prepared-walking/footpaths)
+          elif python -c "import json,sys; sys.exit(0 if json.load(open('data/release.json')).get('features',{}).get('footpaths') else 1)"; then
+            echo '::error::Footpath cache missing. Rebuild with prepare_walking=true; refusing to drop map origins.'
+            exit 1
+          fi
           python scripts/build_data.py --gtfs .data-build/sl.zip --walks .data-build/walks.json --scope data/feed-scope.json --output .data-build/published "${area_args[@]}"
       - name: Audit precomputed walking profiles and outward station access
         if: github.event_name != 'workflow_dispatch' || !inputs.inventory_only

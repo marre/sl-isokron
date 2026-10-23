@@ -387,7 +387,12 @@ if __name__ == '__main__':
     p.add_argument('--walks',required=True)
     p.add_argument('--scope')
     p.add_argument('--walking-areas')
+    p.add_argument('--footpaths')
     p.add_argument('--output',default='public/data')
     p.add_argument('--from-date',type=parse_date)
     a=p.parse_args()
     compile_feed(a.gtfs,a.walks,a.output,a.from_date,a.scope,a.walking_areas)
+
+    if a.footpaths:
+        from attach_footpaths import attach
+        attach(a.output,a.footpaths)

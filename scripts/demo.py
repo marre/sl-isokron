@@ -49,6 +49,15 @@ def generate(output):
             profiles[stop['id']].append({'minutes':minute,'geometry':{'type':'Polygon','coordinates':[[[lon-d,lat-d],[lon+d,lat-d],[lon+d,lat+d],[lon-d,lat+d],[lon-d,lat-d]]]}})
     areas={'files':{'areas-demo.json':json.dumps(profiles,separators=(',',':')).encode()},'index':{sid:0 for sid in profiles}}
     publish(output,stops,routes,walks,[],trips,days,meta,{'stops':len(stops),'walkingEdges':len(walks),'synthetic':True},areas)
+    # Explicitly synthetic physical geometry for map-origin browser tests.
+    import tempfile
+    from footpath_tiles import write_tiles
+    from attach_footpaths import attach
+    with tempfile.TemporaryDirectory(prefix='sliso-demo-footpaths-') as temp:
+        nodes={0:(59.331,18.057),1:(59.331,18.0592),2:(59.332,18.0592)}
+        write_tiles(nodes,[(0,1,125,94,False),(1,2,111,84,False)],{1:[['demo-2',0,0,stops[2]['lat'],stops[2]['lon']]]},temp,'synthetic-fixture')
+        attach(output,temp)
+
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser();p.add_argument('--output',default='public/data');generate(p.parse_args().output)
