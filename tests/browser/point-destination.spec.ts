@@ -16,7 +16,7 @@ test('arbitrary destination shows walk–transit–walk, pins and can become the
  await expect(page.locator('#journey-panel')).toContainText('Vald kartpunkt');await expect(page.locator('#journey-panel')).toContainText('Slutgång på kartlagd väg');
  const labels=await page.locator('.journey-leg-head strong').allTextContents();expect(labels).toHaveLength(3);expect(labels[0]).toBe('Gång');expect(labels[1]).toContain('Tunnelbana');expect(labels[2]).toBe('Gång');
  await expect(page.locator('.journey-walk')).toHaveCount(2);
- if(info.project.name==='desktop')await page.mouse.click(point.x,point.y);
+ if(info.project.name==='desktop'){await page.mouse.click(point.x,point.y);await page.mouse.move(point.x+20,point.y+20);}
  await expect(page.locator('#journey-pin')).toContainText('Fäst ✓');
  if(info.project.name==='mobile')await page.locator('#journey-expand').click();
  await page.screenshot({path:`test-results/${info.project.name}-point-destination.png`,fullPage:true});
@@ -27,4 +27,11 @@ test('unmapped targets do not invent a final walking link and reset clears pendi
  await expect(page.locator('#point-status')).toContainText('Ingen kartlagd gångväg',{timeout:15000});await expect(page.locator('#journey-panel')).toBeHidden();
  const mapped=await position(page);await page.mouse.move(mapped.x,mapped.y);await page.locator('#reset-search').click();await page.waitForTimeout(500);
  await expect(page.locator('#journey-panel')).toBeHidden();await expect(page.locator('#point-status')).toBeHidden();await expect(page.locator('#legend')).toBeHidden();
+});
+
+test('double clicking a result map zooms without pinning a destination',async({page})=>{
+ await init(page);const point=await position(page);const zoom=await page.evaluate(()=>(window as any).slisoMap.getZoom());
+ await page.mouse.dblclick(point.x,point.y,{delay:100});
+ await expect.poll(()=>page.evaluate(()=>(window as any).slisoMap.getZoom())).toBeGreaterThan(zoom);
+ await page.waitForTimeout(550);await expect(page.locator('#journey-pin[aria-pressed=true]')).toHaveCount(0);
 });

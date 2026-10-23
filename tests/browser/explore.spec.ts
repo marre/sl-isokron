@@ -15,13 +15,14 @@ test('legend and cutoff explore cached results without new transport searches or
  const count=await markers.count(),loaded=downloads.length,origin=page.getByRole('button',{name:'T-Centralen · Testläge A',exact:true});
  const color=await origin.getAttribute('fill');
  expect(searches).toBe(1);expect(count).toBeGreaterThan(5);
- await page.locator('.bands button[data-minutes="30"]').click();
+ await expect(page.locator('.bands button, #fit-result, #choose-point')).toHaveCount(0);
+ await expect(page.locator('#legend .legend-top #reset-search')).toBeVisible();
+ await page.locator('#display-time').fill('30');
  await expect(page.locator('#display-time')).toHaveValue('30');
  await expect(page.locator('#result-count')).toContainText('≤30 min');
- await expect(page.locator('.bands button[data-minutes="30"]')).toHaveAttribute('aria-pressed','true');
- await page.locator('.bands button[data-minutes="30"]').click();
+ await page.locator('#show-all-results').click();
  await expect(markers).toHaveCount(count);
- await page.locator('.bands button[data-minutes="30"]').click();
+ await page.locator('#display-time').fill('30');
  await page.locator('#display-time').fill('1');
  await expect(markers).toHaveCount(1);
  await expect(page.locator('#display-output')).toHaveText('1 min');

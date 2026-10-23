@@ -13,13 +13,24 @@ test('mapped origin restores, draws access geometry, shares and resets on deskto
  const shared=JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3)));expect(shared.origin).toBe('point');expect(shared.lon).toBe(point.lon);
  await page.locator('#reset-search').click();await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();expect(errors).toEqual([]);
 });
-test('map picker supports cancel, keyboard center choice and an unobscured mobile map',async({page})=>{
- await page.goto('/');await expect(page.locator('#choose-point')).toBeEnabled();
- await page.locator('#choose-point').click();await expect(page.locator('#point-picker')).toBeVisible();
- const map=await page.locator('#map').boundingBox();expect(map!.height).toBeGreaterThan(300);
- await page.locator('#pick-cancel').click();await expect(page.locator('#point-picker')).toBeHidden();await expect(page.locator('#calculate')).toBeDisabled();
- await page.locator('#choose-point').click();await page.locator('#pick-center').click();await expect(page.locator('#calculate')).toBeEnabled();await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');
- await page.locator('#choose-point').click();await page.keyboard.press('Escape');await expect(page.locator('#point-picker')).toBeHidden();await expect(page.locator('#calculate')).toBeEnabled();
+test('single click chooses an origin, double click zooms without selecting, and Enter chooses map center',async({page},info)=>{
+ await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).testMap=map;return map;};}});});
+ await page.goto('/');await expect(page.locator('#stop-search')).toBeEnabled();
+ await expect(page.locator('#choose-point, #point-picker')).toHaveCount(0);
+ if(info.project.name==='mobile')await page.locator('#mobile-close-search').click();
+ await page.evaluate(()=>{(window as any).testMap.setView([59.3319,18.0592],17,{animate:false});});
+ const position=()=>page.evaluate(()=>{const box=document.querySelector('#map')!.getBoundingClientRect();return {x:box.x+box.width/2,y:box.y+box.height/2};});
+ let p=await position();const zoom=await page.evaluate(()=>(window as any).testMap.getZoom());
+ await page.mouse.dblclick(p.x,p.y,{delay:100});
+ await expect.poll(()=>page.evaluate(()=>(window as any).testMap.getZoom())).toBeGreaterThan(zoom);
+ await page.waitForTimeout(550);await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();
+ p=await position();await page.mouse.click(p.x,p.y);
+ await expect(page.locator('#calculate')).toBeEnabled();await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');
+ await expect(page.locator('#legend')).toBeHidden();
+ if(info.project.name==='mobile')await page.locator('#mobile-close-search').click();
+ const before=await page.locator('#start-data-gap').textContent();p=await position();await page.mouse.dblclick(p.x+45,p.y,{delay:100});await page.waitForTimeout(600);
+ await expect(page.locator('#start-data-gap')).toHaveText(before!);
+ await page.locator('#map').focus();await page.keyboard.press('Enter');await expect(page.locator('#stop-search')).toHaveValue('Vald kartpunkt');
 });
 test('unmapped origins show a useful error and never fall back to straight-line access',async({page})=>{
  await page.goto('/#s='+encodeURIComponent(JSON.stringify({...point,lat:59.34})));

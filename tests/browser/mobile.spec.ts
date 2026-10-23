@@ -54,7 +54,9 @@ test('phone map stays clear while search, legend and journey details open on dem
   expect(bounds!.y+bounds!.height).toBeLessThan(size.height);
   expect(bounds!.height).toBeLessThan(100);
   const zoom=(await page.locator('.leaflet-control-zoom').boundingBox())!,reset=(await page.locator('#reset-search').boundingBox())!;
-  expect(reset.x+reset.width<=zoom.x||reset.y+reset.height<=zoom.y).toBe(true);
+  expect(reset.x+reset.width<=zoom.x||reset.y+reset.height<=zoom.y||reset.y>=zoom.y+zoom.height).toBe(true);
+  expect(reset.y).toBeGreaterThanOrEqual(bounds!.y);
+  expect(reset.x+reset.width).toBeLessThanOrEqual(bounds!.x+bounds!.width);
   const share=(await page.locator('#share').boundingBox())!;
   expect(share.y+share.height).toBeLessThanOrEqual(bounds!.y);
   await page.locator('#mobile-toggle').tap();
