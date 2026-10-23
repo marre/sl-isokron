@@ -43,7 +43,7 @@ $('#app').innerHTML = `
 </main>
 <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
 
-const map = L.map('map', { zoomControl: false, preferCanvas: false }).setView([59.345,18.065],11);
+const map = L.map('map', { zoomControl: false, preferCanvas: false, maxBoundsViscosity: 1 }).setView([59.345,18.065],11);
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.control.scale({ position: 'bottomright', imperial: false }).addTo(map);
 // OSM standard tiles are optional and replaceable. No prefetch, offline tile caching or API key.
@@ -54,6 +54,7 @@ if (tiles) {
   layer.on('tileerror', () => { if (!reported) { reported = true; $('#source-note').textContent = 'Bakgrundskartan kunde inte laddas. Hållplatser och beräkning fungerar ändå.'; } });
 } else map.attributionControl.addAttribution('sliso · Hållplatskarta utan bakgrundskartor');
 const markers: L.CircleMarker[] = [], startLayer = L.layerGroup().addTo(map);
+let coverageBounds:L.LatLngBounds|undefined;
 let stops: Stop[] = [], manifest: Manifest, selected = -1, worker: Worker | undefined, generation = 0;
 let result: SearchResult | undefined, usedSettings: Settings | undefined, dirty = false;
 let settings: Settings, runTimer: ReturnType<typeof setTimeout>;
@@ -273,11 +274,38 @@ $('#stop-search').addEventListener('keydown',e=>{
   if(['ArrowDown','ArrowUp'].includes(e.key)&&choices.length){e.preventDefault();activeOption=(activeOption+(e.key==='ArrowDown'?1:-1)+choices.length)%choices.length;choices.forEach((li,i)=>li.setAttribute('aria-selected',String(i===activeOption)));$('#stop-search').setAttribute('aria-activedescendant',choices[activeOption].id);}
   if(e.key==='Enter'&&choices.length&&!$('#stop-options').hidden){e.preventDefault();choices[Math.max(activeOption,0)].querySelector('button')!.click();}
 });
+function mapFitPadding() {
+  const bottom=result?$('#legend').offsetHeight+(mobileLayout.matches?40:80):40;
+  // A short landscape map must still have space left after reserving controls.
+  const scale=Math.min(1,Math.max(0,map.getSize().y-80)/(130+bottom));
+  return {paddingTopLeft:L.point(30,130*scale),paddingBottomRight:L.point(30,bottom*scale)};
+}
+function updateMapMinZoom() {
+  if(!coverageBounds)return;
+  const padding=mapFitPadding();
+  // Leaflet clamps getBoundsZoom to the current minimum. Ignore that limit
+  // during calculation so a smaller viewport can lower its regional minimum.
+  const previous=map.options.minZoom;map.options.minZoom=0;
+  let minimum:number;
+  try{minimum=map.getBoundsZoom(coverageBounds,false,padding.paddingTopLeft.add(padding.paddingBottomRight));}
+  finally{map.options.minZoom=previous;}
+  map.setMinZoom(Math.max(0,minimum));
+}
+function constrainMapToStops() {
+  const extent=L.latLngBounds(stops.map(stop=>[stop.lat,stop.lon]));
+  // At least ~2.8 km accommodates the supported 30-minute walking areas and
+  // gives even single-stop datasets a non-degenerate navigable extent.
+  const lat=Math.max((extent.getNorth()-extent.getSouth())*.04,.025);
+  const lon=Math.max((extent.getEast()-extent.getWest())*.04,.025/Math.max(.1,Math.cos(extent.getCenter().lat*Math.PI/180)));
+  coverageBounds=L.latLngBounds([extent.getSouth()-lat,extent.getWest()-lon],[extent.getNorth()+lat,extent.getEast()+lon]);
+  map.setMaxBounds(coverageBounds);updateMapMinZoom();
+  map.on('resize',updateMapMinZoom);
+}
 function fitCurrentStops() {
   const visible=stops.filter((_,i)=>previewActive?previewValues[i]:!result||(result.values[i]&&result.values[i]!.seconds<=displayMinutes*60));if(!visible.length)return;
-  map.invalidateSize({pan:false});
+  map.invalidateSize({pan:false});updateMapMinZoom();
   const bounds=L.latLngBounds(visible.map(s=>[s.lat,s.lon]));const walkingBounds=walkingView.bounds();if(walkingBounds)bounds.extend(walkingBounds);
-  map.fitBounds(bounds,{animate:false,maxZoom:14,paddingTopLeft:[30,130],paddingBottomRight:[30,result?$('#legend').offsetHeight+(mobileLayout.matches?40:80):40]});
+  map.fitBounds(bounds,{animate:false,maxZoom:14,...mapFitPadding()});
 }
 $('#fit').onclick=fitCurrentStops;
 function resetSearch() {
@@ -336,6 +364,7 @@ async function init(){
   try{
     manifest=await loadManifest();stops=await loadJSON<Stop[]>(manifest.stops);
     if(!stops.length)throw new Error('Hållplatsdata är tom.');
+    constrainMapToStops();
     settings=defaults(stops[0]);applySettings(settings);
     const [min,max]=dateBounds(manifest.validFrom,manifest.validTo);$<HTMLInputElement>('#date').min=min;$<HTMLInputElement>('#date').max=max;
     $<HTMLSelectElement>('#walk').querySelectorAll('option').forEach(o=>{if(Number(o.value)>manifest.walkingMaxMinutes)o.remove();});
