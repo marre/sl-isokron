@@ -1,3 +1,4 @@
+import {isPublicStop} from './core/stops';
 import { mobileLayout } from './layout';
 import L from 'leaflet';
 import { journeyFor, journeyTime } from './core/journey';
@@ -20,7 +21,7 @@ export class JourneyView {
   private timer?: ReturnType<typeof setTimeout>;
   private panel = document.querySelector<HTMLElement>('#journey-panel')!;
 
-  constructor(private map: L.Map, private markers: L.CircleMarker[], private onStart: (index: number) => void) {
+  constructor(private map: L.Map, private markers: (L.CircleMarker|undefined)[], private onStart: (index: number) => void) {
     const pane = map.createPane('journey'); pane.style.zIndex = '450'; pane.style.pointerEvents = 'none';
     this.layer = L.layerGroup().addTo(map);
     this.panel.addEventListener('mouseenter', () => clearTimeout(this.timer));
@@ -65,7 +66,7 @@ export class JourneyView {
   private hide() {
     if (this.active !== null && this.result && this.settings) {
       const value = this.result.values[this.active];
-      if (value) this.markers[this.active].setStyle({ color: '#fff', fillColor: colorFor(value.seconds, this.settings.maxMinutes), weight: 2, radius: 7 });
+      if (value) this.markers[this.active]?.setStyle({ color: '#fff', fillColor: colorFor(value.seconds, this.settings.maxMinutes), weight: 2, radius: 7 });
     }
     this.active = null; this.layer.clearLayers(); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
     this.panel.closest('.map-section')!.classList.remove('journey-open');
@@ -73,7 +74,7 @@ export class JourneyView {
 
   private show(index: number) {
     const result = this.result, settings = this.settings, value = result?.values[index];
-    if (!result || !settings || !value || value.seconds>this.cutoff*60) { this.hide(); return; }
+    if (!result || !settings || !value || !isPublicStop(this.stops[index]) || value.seconds>this.cutoff*60) { this.hide(); return; }
     if (this.active === index && !this.panel.hidden) {
       const button = this.panel.querySelector<HTMLButtonElement>('#journey-pin')!;
       button.textContent = this.pinned === index ? 'Fäst ✓' : 'Fäst resan';
@@ -86,9 +87,9 @@ export class JourneyView {
       const coords = leg.stops.map(point), color = leg.kind === 'walk' ? '#55645f' : COLORS[result.routes[leg.route!].mode];
       L.polyline(coords, { pane: 'journey', interactive: false, color: '#fff', weight: 9, opacity: .95, className: 'journey-halo' }).addTo(this.layer);
       L.polyline(coords, { pane: 'journey', interactive: false, color, weight: 4, opacity: 1, dashArray: leg.kind === 'walk' ? '5 7' : undefined, className: `journey-line journey-${leg.kind}` }).addTo(this.layer);
-      for (const stop of leg.stops) L.circleMarker(point(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
+      for (const stop of leg.stops.filter(i=>isPublicStop(this.stops[i]))) L.circleMarker(point(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
     }
-    this.markers[index].setStyle({ radius: 10, weight: 3, color: '#183e36' });
+    this.markers[index]?.setStyle({ radius: 10, weight: 3, color: '#183e36' });
     L.circleMarker(point(index), { pane: 'journey', interactive: false, radius: 10, weight: 3, color: '#183e36', fillColor: colorFor(value.seconds, settings.maxMinutes), fillOpacity: 1 }).addTo(this.layer);
     const walkingGap = value.seconds > 0 && destination.walking === 'missing' && !destination.walkingArea;
     const time = (epoch: number) => `<time datetime="${new Date(epoch * 1000).toISOString()}">${journeyTime(epoch, settings.date)}</time>`;

@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import struct
 import tempfile
@@ -357,6 +358,13 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
                     idx = len(trip_keys);trip_keys.append(day.isoformat()+':'+tid)
                     for bucket,record in legs:
                         days[bucket].append((*record[:4],idx,*record[5:]))
+    # Keep every routing node and edge. Retirement affects presentation only,
+    # and an OLD code with service in the published interval remains selectable.
+    scheduled_stops={index for records in days.values() for record in records for index in record[:2]}
+    platform_codes={s['stop_id']:s.get('platform_code','').strip() for s in raw_stops}
+    for i,stop in enumerate(stops):
+        if re.fullmatch(r'OLD\S*',platform_codes[stop['id']],re.IGNORECASE):
+            stop['retired']=i not in scheduled_stops
     boarding_by_route=Counter(r[5] for records in days.values() for r in records if r[7]&1)
     unsupported_routes=[r['id'] for i,r in enumerate(routes) if not boarding_by_route[i]]
     gaps = len(stops)-len({w['from'] for w in walks})
@@ -370,7 +378,7 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
     try: source_updated=parse_date(source_version).isoformat()
     except ValueError: source_updated=None
     meta = dict(demo=False,sourceVersion=source_version,sourceUpdated=source_updated,updated=datetime.now(timezone.utc).isoformat(),validFrom=begin.isoformat(),validTo=(end-timedelta(days=1)).isoformat(),walkingMaxMinutes=walk_meta['maxMinutes'],walkingSpeedKmh=4.8,walkingVersion=walk_meta['version'],walkingCoverage={'totalStops':len(stops),'boundStops':len({s['id'] for s in walk_meta['stops'] if s['id'] in stop_ids and not s.get('binding','').startswith('assumed-')}),'pairs':len(walks),'reviewed':walk_meta.get('reviewed',False)},warnings=warnings,attribution=['Planerad trafik: Trafiklab / Samtrafiken / SL']+walk_meta.get('attribution',[]))
-    report = dict(stops=len(stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
+    report = dict(stops=len(stops),retiredPlatforms=sum(s.get('retired',False) for s in stops),routes=len(routes),routeInventory=routes,scope=scope_report,modes=dict(Counter(r['mode'] for r in routes)),transferRows=len(rules),expandedRules=len(expanded),walkingEdges=len(walks),excludedRestricted=excluded,stopsWithoutOutgoingWalk=gaps,stopTimeRows=time_rows,routesWithoutSupportedBoarding=unsupported_routes,review='Not manually verified. Complete docs/review-cases.csv before pilot.')
     publish(output,stops,routes,walks,expanded,trip_keys,days,meta,report,areas)
 
 if __name__ == '__main__':

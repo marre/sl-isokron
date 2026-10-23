@@ -87,6 +87,29 @@ class DataTests(unittest.TestCase):
             m=json.loads((out/'manifest.json').read_text())
             walks=json.loads((out/m['walks']['url'].removeprefix('/data/')).read_text())
             self.assertEqual(walks,[])
+    def test_old_platform_metadata_uses_published_service_without_deleting_nodes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);feed,w=self.fixture(root);out=root/'out'
+            with zipfile.ZipFile(feed) as z:
+                contents={name:z.read(name) for name in z.namelist()}
+            table=list(csv.reader(io.StringIO(contents['stops.txt'].decode())))
+            table[0].append('platform_code');table[1].append('OLD');table[2].append('A')
+            table.extend([['c','Utgången','59.0003','18','0','','OLD2'],['d','Koldalsvägen','59.0005','18','0','','A']])
+            text=io.StringIO();csv.writer(text).writerows(table);contents['stops.txt']=text.getvalue().encode()
+            with zipfile.ZipFile(feed,'w') as z:
+                for name,raw in contents.items():z.writestr(name,raw)
+            compile_feed(feed,w,out,date(2026,10,19))
+            manifest=json.loads((out/'manifest.json').read_text())
+            stops=json.loads((out/manifest['stops']['url'].removeprefix('/data/')).read_bytes())
+            self.assertEqual([s['id'] for s in stops],['a','b','c','d'])
+            self.assertIs(stops[0]['retired'],False)  # OLD platform has actual published service.
+            self.assertIs(stops[2]['retired'],True)
+            self.assertNotIn('retired',stops[3])  # A real name containing "old".
+            walks=json.loads((out/manifest['walks']['url'].removeprefix('/data/')).read_bytes())
+            self.assertEqual((walks[0]['from'],walks[0]['to']),(0,1))
+            report=json.loads((out/manifest['version']/'report.json').read_text())
+            self.assertEqual(report['retiredPlatforms'],1)
+
     def test_sl_metro_401_compiles_as_metro(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);feed,w=self.fixture(root,route_type='401');out=root/'out'

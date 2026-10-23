@@ -1,7 +1,7 @@
 export const MODES = ['bus', 'metro', 'rail', 'tram', 'boat'] as const;
 export type Mode = typeof MODES[number];
 export const MODE_NAMES: Record<Mode, string> = { bus: 'Buss', metro: 'Tunnelbana', rail: 'Pendeltåg', tram: 'Spårvagn / lokalbana', boat: 'Båt' };
-export interface Stop { id: string; name: string; lat: number; lon: number; station: string; platform: string; walking?: 'available' | 'estimated' | 'missing'; walkingArea?: boolean }
+export interface Stop { id: string; name: string; lat: number; lon: number; station: string; platform: string; retired?: boolean; walking?: 'available' | 'estimated' | 'missing'; walkingArea?: boolean }
 export interface Route { id: string; name: string; mode: Mode }
 export interface Connection { from: number; to: number; departure: number; arrival: number; trip: string; route: number; sequence: number; pickup: boolean; dropoff: boolean; pickupRequest?: boolean; dropoffRequest?: boolean }
 export interface Walk { from: number; to: number; seconds: number; source: string; metres?: number }
