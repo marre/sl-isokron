@@ -116,3 +116,7 @@
 .legend .reset-search{position:static;flex-shrink:0;border:1px solid #c6d3b7;border-radius:18px;background:#f3f6ec;padding:8px 10px;min-height:36px;font-size:11px;font-weight:600;white-space:nowrap}
 .legend .reset-search:hover{background:#e5edd7}
 @media(max-width:760px),(max-width:1000px) and (max-height:500px) and (pointer:coarse){.legend .reset-search{min-height:44px;padding:8px;font-size:11px}.legend-top>div{min-width:70px}.legend-top{flex-wrap:nowrap}.legend h2{font-size:12px}.mobile-toggle{max-width:calc(100% - 90px)}}
+
+.transport-icon{display:block;width:22px;height:22px;flex-shrink:0}
+.mode-symbol{display:inline-flex;align-items:center;justify-content:center}.mode-chip{gap:7px}.mode-chip .transport-icon{width:20px;height:20px}
+.journey-step{width:32px;height:32px;border-radius:9px}.journey-step .transport-icon{width:23px;height:23px}

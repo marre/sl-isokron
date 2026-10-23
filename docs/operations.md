@@ -145,3 +145,29 @@ After the job succeeds, download its `contour-release-descriptor` artifact (or t
 release's `release.json` asset), verify the source version and release, then commit
 the descriptor to `data/release.json`. Deploy the compatible frontend first. The
 workflow does not change the pin automatically.
+
+### Stops without scheduled service and route symbols
+
+`npm run build` runs `scripts/stop_service.py` after installing the pinned release.
+It checks every published timetable shard by SHA-256 and records only actual
+pickup/dropoff flags (including driver-coordinated stops), across the full data
+period and all modes. The version-bound `stop-service.json` bitset lives alongside
+the immutable dataset and is generated locally during deployment; no GTFS request,
+data archive migration or browser timetable scan is needed. In the current
+14,195-stop release it is 2,528 bytes: 11,615 served stops and 2,580 unserved stops,
+of which 1,612 were already hidden by the legacy OLD-platform rule.
+
+The UI uses this index for marker visibility, origin suggestions and public counts.
+It never removes/reindexes routing nodes, walking edges or physical path tiles.
+A missing or mismatched index preserves the previous visibility rules. New GTFS
+builds additionally write an explicit `scheduled` flag using the same criteria.
+This is independent of the selected search date, time, mode or walk-only arrival.
+
+New builds preserve `route_short_name`, `route_desc`, `agency_id`, `route_color`
+and `route_text_color`. Journey symbols and polylines use valid published colours
+first, then route classifications. Legacy SL route IDs use a scoped fallback:
+blue bus numbers/variants are taken from the pinned feed's explicit blåbuss rows;
+metro 10/11, 13/14 and 17/18/19 are blue, red and green. This fallback never uses a
+foreign operator's line number as evidence of an SL bus class. Other operators'
+buses remain neutral when no classification/colour is provided. The icons are
+inline SVGs, with no icon font or image fetch; the time-colour scale is unchanged.

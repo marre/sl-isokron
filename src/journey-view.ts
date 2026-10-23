@@ -1,12 +1,12 @@
-import {isPublicStop} from './core/stops';
+import {routeColor,routeTextColor,transportIcon} from './core/transport';
+import {isMapStop} from './core/stops';
 import { mobileLayout } from './layout';
 import L from 'leaflet';
 import { journeyFor, journeyTime } from './core/journey';
 import { distanceText } from './core/walking';
 import { colorFor } from './core/settings';
-import { MODE_NAMES, type PointJourney, type JourneyLeg, type Mode, type SearchResult, type Settings, type Stop } from './core/types';
+import { MODE_NAMES, type PointJourney, type JourneyLeg, type SearchResult, type Settings, type Stop } from './core/types';
 
-const COLORS: Record<Mode, string> = { bus: '#245e49', metro: '#15516d', rail: '#724f8a', tram: '#946013', boat: '#156b72' };
 const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const minutes = (seconds: number) => `${Math.ceil(seconds / 60)} min`;
 
@@ -84,7 +84,7 @@ export class JourneyView {
   private show(index: number, point:PointJourney|undefined=index===this.stops.length?this.point:undefined) {
     const stops=point?[...this.stops,{id:'@destination',name:'Vald målpunkt',station:'Vald målpunkt',platform:`Slutgång på kartlagd väg${point.destination.snapMetres>=1?` · ${Math.round(point.destination.snapMetres)} m från vald punkt`:''}`,lat:point.destination.lat,lon:point.destination.lon}]:this.stops;
     const result = this.result, settings = this.settings, value = point?.value??result?.values[index];
-    if (!result || !settings || !value || !isPublicStop(stops[index]) || value.seconds>this.cutoff*60) { this.hide(); return; }
+    if (!result || !settings || !value || !isMapStop(stops[index]) || value.seconds>this.cutoff*60) { this.hide(); return; }
     if (!point && this.active === index && !this.panel.hidden) {
       const button = this.panel.querySelector<HTMLButtonElement>('#journey-pin')!;
       button.textContent = this.pinned === index ? 'Fäst ✓' : 'Fäst resan';
@@ -94,10 +94,10 @@ export class JourneyView {
     const legs = point?.legs??journeyFor(result,index,stops), destination = stops[index];
     const position = (i: number): L.LatLngTuple => [stops[i].lat, stops[i].lon];
     for (const leg of legs) {
-      const coords = leg.path??leg.stops.map(position), color = leg.kind === 'walk' ? '#55645f' : COLORS[result.routes[leg.route!].mode];
+      const coords = leg.path??leg.stops.map(position), color = leg.kind === 'walk' ? '#55645f' : routeColor(result.routes[leg.route!]);
       L.polyline(coords, { pane: 'journey', interactive: false, color: '#fff', weight: 9, opacity: .95, className: 'journey-halo' }).addTo(this.layer);
       L.polyline(coords, { pane: 'journey', interactive: false, color, weight: 4, opacity: 1, dashArray: leg.kind === 'walk' ? '5 7' : undefined, className: `journey-line journey-${leg.kind}` }).addTo(this.layer);
-      for (const stop of leg.stops.filter(i=>isPublicStop(stops[i]))) L.circleMarker(position(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
+      for (const stop of leg.stops.filter(i=>isMapStop(stops[i]))) L.circleMarker(position(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
     }
     this.markers[index]?.setStyle({ radius: 10, weight: 3, color: '#183e36' });
     L.circleMarker(position(index), { pane: 'journey', interactive: false, radius: 10, weight: 3, color: '#183e36', fillColor: colorFor(value.seconds, settings.maxMinutes), fillOpacity: 1 }).addTo(this.layer);
@@ -106,9 +106,9 @@ export class JourneyView {
     const stopRow = (at: number, epoch: number) => `<div class="journey-stop">${time(epoch)}<div><strong>${escape(stops[at].name)}</strong><small>${escape(stops[at].platform)}</small></div></div>`;
     const rows = legs.map((leg, i) => {
       const route = leg.kind === 'transit' ? result.routes[leg.route!] : undefined;
-      const color = route ? COLORS[route.mode] : '#55645f';
+      const color = route ? routeColor(route) : '#55645f';
       const previous = legs[i - 1], wait = previous ? leg.departure - previous.arrival : 0;
-      return `${wait > 0 ? `<li class="journey-wait">Väntan vid byte · ${minutes(wait)}</li>` : ''}<li class="journey-leg" style="--leg-color:${color}"><div class="journey-leg-head"><span class="journey-step">${i + 1}</span><div><strong>${route ? escape(MODE_NAMES[route.mode]) + ' · ' + escape(route.name) : leg.estimated ? 'Gång · uppskattad' : 'Gång'}</strong><span>${minutes(leg.arrival - leg.departure)}${leg.kind === 'walk' ? ' · '+distanceText(leg.metres) : ''}${leg.kind === 'transit' && leg.stops.length > 2 ? ` · via ${leg.stops.length - 2} hållplatser` : ''}</span></div></div>${stopRow(leg.from, leg.departure)}${stopRow(leg.to, leg.arrival)}${leg.requestStop ? '<p class="journey-request">Stopp på signal – meddela föraren.</p>' : ''}</li>`;
+      return `${wait > 0 ? `<li class="journey-wait">Väntan vid byte · ${minutes(wait)}</li>` : ''}<li class="journey-leg" style="--leg-color:${color}"><div class="journey-leg-head"><span class="journey-step" style="color:${route?routeTextColor(route):'#ffffff'}" aria-label="Steg ${i+1}">${transportIcon(route?.mode??'walk')}</span><div><strong>${route ? escape(MODE_NAMES[route.mode]) + ' · ' + escape(route.name) : leg.estimated ? 'Gång · uppskattad' : 'Gång'}</strong><span>${minutes(leg.arrival - leg.departure)}${leg.kind === 'walk' ? ' · '+distanceText(leg.metres) : ''}${leg.kind === 'transit' && leg.stops.length > 2 ? ` · via ${leg.stops.length - 2} hållplatser` : ''}</span></div></div>${stopRow(leg.from, leg.departure)}${stopRow(leg.to, leg.arrival)}${leg.requestStop ? '<p class="journey-request">Stopp på signal – meddela föraren.</p>' : ''}</li>`;
     }).join('');
     const walks=legs.filter(l=>l.kind==='walk'),walkingSeconds=walks.reduce((sum,l)=>sum+l.arrival-l.departure,0);
     const walkingMetres=walks.every(l=>l.metres!==undefined)?walks.reduce((sum,l)=>sum+l.metres!,0):undefined;

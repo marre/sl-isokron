@@ -19,7 +19,7 @@ def generate(output):
     today = datetime.now(TZ).date()
     stops = [dict(id='demo-' + str(i), name=n, station=n, platform='Testläge A', lat=lat, lon=lon) for i,(n,lat,lon) in enumerate(PLACES)]
     stops.append(dict(id='demo-24',name='Slussen',station='Slussen',platform='Testläge B',lat=59.3188,lon=18.0730))
-    routes = [dict(id='red',name='14',mode='metro'),dict(id='green',name='19',mode='metro'),dict(id='commuter',name='40',mode='rail'),dict(id='local',name='27',mode='tram'),dict(id='boat',name='80',mode='boat'),dict(id='bus',name='474',mode='bus')]
+    routes = [dict(id='red',name='14',mode='metro',color='#d71d24'),dict(id='green',name='19',mode='metro',color='#008b43'),dict(id='commuter',name='40',mode='rail'),dict(id='local',name='27',mode='tram'),dict(id='boat',name='80',mode='boat'),dict(id='bus',name='474',mode='bus',color='#007db8')]
     paths = [(0,[0,1,2,3,4,5,6,7],[3,3,3,4,4,6,3]), (1,[13,0,1,2,8,14],[6,3,3,4,10]), (2,[12,9,8,10,11,23],[34,4,6,7,18]),(3,[4,20,21],[15,25]),(4,[16,15,17,18],[14,12,20]),(5,[24,15],[16]),(2,[22,12],[37])]
     walks = []
     for a,b,sec in [(0,24,180),(0,19,120),(2,9,240),(3,16,300),(6,20,600)]:

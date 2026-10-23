@@ -243,7 +243,10 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
         if rt not in MODE_TYPES:
             raise ValueError('Unmapped route_type ' + str(rt) + '; audit before import')
         short, long = r.get('route_short_name',''), r.get('route_long_name','')
-        routes.append(dict(id=r['route_id'], name=(short+' · '+long if short and long else long or short or r['route_id']), mode=MODE_TYPES[rt]))
+        route=dict(id=r['route_id'], name=(short+' · '+long if short and long else long or short or r['route_id']), mode=MODE_TYPES[rt],shortName=short,description=r.get('route_desc',''),agencyId=r.get('agency_id',''))
+        for source,target in [('route_color','color'),('route_text_color','textColor')]:
+            if re.fullmatch('[0-9A-Fa-f]{6}',r.get(source,'')):route[target]='#'+r[source].lower()
+        routes.append(route)
     trip_times = {}
     for tid, tt in raw_times.items():
         tt.sort(key=lambda s:s[3])
@@ -357,9 +360,10 @@ def compile_feed(feed, walking, output, start=None, scope=None, walking_areas=No
                         days[bucket].append((*record[:4],idx,*record[5:]))
     # Keep every routing node and edge. Retirement affects presentation only,
     # and an OLD code with service in the published interval remains selectable.
-    scheduled_stops={index for records in days.values() for record in records for index in record[:2]}
+    scheduled_stops={index for records in days.values() for record in records for index,flags in [(record[0],record[7]),(record[1],record[8])] if flags&1}
     platform_codes={s['stop_id']:s.get('platform_code','').strip() for s in raw_stops}
     for i,stop in enumerate(stops):
+        stop['scheduled']=i in scheduled_stops
         if re.fullmatch(r'OLD\S*',platform_codes[stop['id']],re.IGNORECASE):
             stop['retired']=i not in scheduled_stops
     from transfer_walks import add_transfer_walks,update_walking_status,WARNING as TRANSFER_WARNING,POLICY as TRANSFER_POLICY
