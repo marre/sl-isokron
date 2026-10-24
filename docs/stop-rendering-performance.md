@@ -1,5 +1,9 @@
 # Dense stop rendering
 
+Update: numbered overview groups have since been removed from the UI. Worker
+clustering still suppresses dense stops until zooming in; sparse individual stops
+can remain visible. The measurements below describe the original optimization.
+
 The renderer created 11,615 invisible keyboard buttons and their listeners.
 Changing one stop's hover emphasis scheduled a complete GeoJSON rebuild and
 worker reindex. Zoomed-out views also drew every overlapping platform circle.

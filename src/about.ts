@@ -7,7 +7,7 @@ export const aboutHTML = `
 <p>Vi visar minsta restid till varje hållplatsläge bland tillåtna avgångar i ditt avgångsfönster. Olika destinationer kan därför bygga på olika avgångar. Väntan före första påstigning räknas inte; gång, färd och väntan vid byten ingår.</p>
 <p>Gång 5 min + färd 20 min + byte 7 min + färd 10 min = <strong>42 minuter</strong>. Gånggränsen gäller sammanhängande gång, även när den passerar flera hållplatser. Den börjar om efter en färd med kollektivtrafik.</p>
 
-<p>När många hållplatser visas grupperas de i utzoomade vyer. Siffran i en mörk cirkel är antalet hållplatslägen, inte en restid. Tryck på gruppen för att zooma in. Enskilda lägen och deras restidsfärger visas när du zoomar närmare; gångområden och reseberäkning behåller samma precision.</p>
+<p>Täta hållplatslägen döljs i utzoomade vyer för att hålla kartan snabb och lättläst. Zooma in för att se de enskilda lägena och deras restidsfärger. Glesa, enskilda lägen kan fortfarande visas i översikten. Gångområden och reseberäkning behåller samma precision.</p>
 <h3>Från tidtabell till färdig karta</h3>
 <ol class="about-flow">
   <li><strong>Förbered data.</strong> Tidtabeller och gångnät omvandlas till kompakta filer. Gångkopplingar och gångområden förberäknas.</li>

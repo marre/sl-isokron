@@ -240,8 +240,10 @@ walking, data checksums and client-side execution are unchanged.
 
 Overview stop grouping is local to MapLibre's worker and needs no new data
 release, API or server. A displayed set of at least 500 stops groups through zoom
-10; zoom 11+ shows individual stop positions. Group counts are neutral, while
-walking areas keep their time colours. Keyboard targets are limited to 128 in
+10; zoom 11+ shows individual stop positions. Aggregated groups are hidden,
+with no circles, counts, keyboard targets or invisible click interception. Sparse
+unclustered stops can remain visible in overview views. Walking areas keep their
+time colours. Keyboard targets are limited to 128 in
 view and use delegated focus/keyboard handlers. Highlighting updates feature state;
 only actual visibility/colour changes rebuild the GeoJSON source. See
 [the measured rendering comparison](stop-rendering-performance.md).

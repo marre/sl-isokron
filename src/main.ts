@@ -3,7 +3,7 @@ import { mobileLayout } from './layout';
 import { aboutHTML } from './about';
 import {Marker,Popup,LngLatBounds,type MapMouseEvent} from 'maplibre-gl';
 import {createMap,lngLat,boundsOf,size,worldProject,worldUnproject} from './map';
-import {MapStops,hitStop,hitCluster,type StopMarker} from './map-stops';
+import {MapStops,hitStop,type StopMarker} from './map-stops';
 import {loadStopService} from './core/stop-service';
 import {MODE_COLORS,transportIcon} from './core/transport';
 import {PointDestinations} from './point-destinations';
@@ -227,7 +227,6 @@ function setPointStart(point:{lat:number;lon:number},recalculate=true){
 map.on('click',(event:MapMouseEvent)=>{
   cancelOriginClick();
   if(event.originalEvent?.detail>1||pointDestinations.consumesOriginClick())return;
-  const cluster=hitCluster(map,event.point);if(cluster){void stopLayer.expandCluster(cluster);return;}
   const target=(event.originalEvent?.target as Element|null)?.closest?.('[data-stop-index]');
   const index=target?Number(target.getAttribute('data-stop-index')):hitStop(map,event.point);
   if(!manifest||(index===undefined&&!manifest.footpaths))return;
@@ -235,7 +234,6 @@ map.on('click',(event:MapMouseEvent)=>{
 });
 map.on('mousemove','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(Number.isInteger(index)){pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(index);}});
 map.on('mouseleave','stops',()=>journeyView.leave());
-map.on('mouseenter','stop-clusters',()=>journeyView.leave());
 map.on('contextmenu','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(result?.values[index]){closePopup();journeyView.pin(index);}});
 for(const type of ['dblclick','movestart','contextmenu'] as const)map.on(type,cancelOriginClick);
 const keyboardStop=(event:Event)=>{
