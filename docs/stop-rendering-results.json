@@ -1,0 +1,304 @@
+{
+  "baselineCommit": "72a4b22",
+  "method": "Real SL stops; isolated renderer, blank basemap, software WebGL. Pan wall time includes a 500 ms animation. Viewport emulation, not physical phone hardware.",
+  "before": [
+    {
+      "mobile": true,
+      "dataset": "sl-8098fb68e0a1e00b0234",
+      "count": 11615,
+      "phases": [
+        {
+          "phase": "overview",
+          "ms": 399.79999999701977,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 11615,
+          "zoom": 6.844153636199871,
+          "scriptMs": 18.153,
+          "layoutMs": 0.24899999999999997,
+          "styleMs": 126.62899999999999
+        },
+        {
+          "phase": "pan",
+          "ms": 654.4000000059605,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 11488,
+          "zoom": 6.844153636199871,
+          "scriptMs": 165.618,
+          "layoutMs": 2.0829999999999997,
+          "styleMs": 147.67400000000004
+        },
+        {
+          "phase": "hover",
+          "ms": 8795.5,
+          "sourceUpdates": 24,
+          "domStops": 11615,
+          "rendered": 11488,
+          "zoom": 6.844153636199871,
+          "scriptMs": 2091.535,
+          "layoutMs": 603.482,
+          "styleMs": 6.75199999999998
+        },
+        {
+          "phase": "results",
+          "ms": 459.09999999403954,
+          "sourceUpdates": 1,
+          "domStops": 11615,
+          "rendered": 7670,
+          "zoom": 6.844153636199871,
+          "scriptMs": 54.76900000000029,
+          "layoutMs": 29.685000000000073,
+          "styleMs": 112.39100000000002
+        },
+        {
+          "phase": "pan",
+          "ms": 607.1999999880791,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 5869,
+          "zoom": 6.844153636199871,
+          "scriptMs": 87.67099999999984,
+          "layoutMs": 2.4959999999999427,
+          "styleMs": 92.20099999999998
+        },
+        {
+          "phase": "hover",
+          "ms": 6083.79999999702,
+          "sourceUpdates": 24,
+          "domStops": 11615,
+          "rendered": 5869,
+          "zoom": 6.844153636199871,
+          "scriptMs": 1496.1069999999997,
+          "layoutMs": 297.312,
+          "styleMs": 5.408999999999997
+        }
+      ],
+      "errors": []
+    },
+    {
+      "mobile": false,
+      "dataset": "sl-8098fb68e0a1e00b0234",
+      "count": 11615,
+      "phases": [
+        {
+          "phase": "overview",
+          "ms": 701.5,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 11615,
+          "zoom": 7.811115106723375,
+          "scriptMs": 19.442,
+          "layoutMs": 0.23299999999999998,
+          "styleMs": 141.97199999999998
+        },
+        {
+          "phase": "pan",
+          "ms": 761.5999999940395,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 11615,
+          "zoom": 7.811115106723375,
+          "scriptMs": 193.378,
+          "layoutMs": 1.688,
+          "styleMs": 130.45299999999997
+        },
+        {
+          "phase": "hover",
+          "ms": 10696.09999999404,
+          "sourceUpdates": 24,
+          "domStops": 11615,
+          "rendered": 11615,
+          "zoom": 7.811115106723375,
+          "scriptMs": 2660.23,
+          "layoutMs": 678.7180000000001,
+          "styleMs": 6.5390000000000175
+        },
+        {
+          "phase": "results",
+          "ms": 574,
+          "sourceUpdates": 1,
+          "domStops": 11615,
+          "rendered": 7743,
+          "zoom": 7.811115106723375,
+          "scriptMs": 55.64100000000005,
+          "layoutMs": 32.03200000000006,
+          "styleMs": 129.87300000000002
+        },
+        {
+          "phase": "pan",
+          "ms": 563.5999999940395,
+          "sourceUpdates": 0,
+          "domStops": 11615,
+          "rendered": 7743,
+          "zoom": 7.811115106723375,
+          "scriptMs": 61.802000000000135,
+          "layoutMs": 1.45099999999998,
+          "styleMs": 87.366
+        },
+        {
+          "phase": "hover",
+          "ms": 9412.20000000298,
+          "sourceUpdates": 24,
+          "domStops": 11615,
+          "rendered": 7743,
+          "zoom": 7.811115106723375,
+          "scriptMs": 2566.5399999999995,
+          "layoutMs": 532.225,
+          "styleMs": 7.76899999999997
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "after": [
+    {
+      "mobile": true,
+      "dataset": "sl-8098fb68e0a1e00b0234",
+      "count": 11615,
+      "phases": [
+        {
+          "phase": "overview",
+          "ms": 678.1000000089407,
+          "sourceUpdates": 0,
+          "domStops": 12,
+          "rendered": 23,
+          "zoom": 6.844153636199871,
+          "scriptMs": 136.846,
+          "layoutMs": 1.367,
+          "styleMs": 2.186
+        },
+        {
+          "phase": "pan",
+          "ms": 518.7999999970198,
+          "sourceUpdates": 0,
+          "domStops": 12,
+          "rendered": 23,
+          "zoom": 6.844153636199871,
+          "scriptMs": 29.221999999999998,
+          "layoutMs": 2.9769999999999994,
+          "styleMs": 1.672
+        },
+        {
+          "phase": "hover",
+          "ms": 384.79999999701977,
+          "sourceUpdates": 0,
+          "domStops": 12,
+          "rendered": 23,
+          "zoom": 6.844153636199871,
+          "scriptMs": 16.316999999999997,
+          "layoutMs": 0,
+          "styleMs": 0.29200000000000015
+        },
+        {
+          "phase": "results",
+          "ms": 486.79999999701977,
+          "sourceUpdates": 1,
+          "domStops": 11,
+          "rendered": 21,
+          "zoom": 6.844153636199871,
+          "scriptMs": 45.32,
+          "layoutMs": 0.24000000000000063,
+          "styleMs": 0.575
+        },
+        {
+          "phase": "pan",
+          "ms": 510.8999999910593,
+          "sourceUpdates": 0,
+          "domStops": 11,
+          "rendered": 16,
+          "zoom": 6.844153636199871,
+          "scriptMs": 33.92000000000001,
+          "layoutMs": 3.0529999999999995,
+          "styleMs": 1.687
+        },
+        {
+          "phase": "hover",
+          "ms": 395.1000000089407,
+          "sourceUpdates": 0,
+          "domStops": 8,
+          "rendered": 16,
+          "zoom": 6.844153636199871,
+          "scriptMs": 13.166000000000011,
+          "layoutMs": 0.12300000000000072,
+          "styleMs": 0.26300000000000023
+        }
+      ],
+      "errors": []
+    },
+    {
+      "mobile": false,
+      "dataset": "sl-8098fb68e0a1e00b0234",
+      "count": 11615,
+      "phases": [
+        {
+          "phase": "overview",
+          "ms": 812.0999999940395,
+          "sourceUpdates": 0,
+          "domStops": 39,
+          "rendered": 76,
+          "zoom": 7.811115106723375,
+          "scriptMs": 160.59799999999998,
+          "layoutMs": 6.125,
+          "styleMs": 27.698
+        },
+        {
+          "phase": "pan",
+          "ms": 504.6000000089407,
+          "sourceUpdates": 0,
+          "domStops": 39,
+          "rendered": 76,
+          "zoom": 7.811115106723375,
+          "scriptMs": 27.638999999999996,
+          "layoutMs": 5.526999999999999,
+          "styleMs": 6.593000000000002
+        },
+        {
+          "phase": "hover",
+          "ms": 1242.5,
+          "sourceUpdates": 0,
+          "domStops": 39,
+          "rendered": 76,
+          "zoom": 7.811115106723375,
+          "scriptMs": 58.77500000000002,
+          "layoutMs": 0,
+          "styleMs": 0.8709999999999968
+        },
+        {
+          "phase": "results",
+          "ms": 692.7000000029802,
+          "sourceUpdates": 1,
+          "domStops": 37,
+          "rendered": 72,
+          "zoom": 7.811115106723375,
+          "scriptMs": 111.68099999999997,
+          "layoutMs": 0.4320000000000001,
+          "styleMs": 6.585000000000001
+        },
+        {
+          "phase": "pan",
+          "ms": 555,
+          "sourceUpdates": 0,
+          "domStops": 37,
+          "rendered": 72,
+          "zoom": 7.811115106723375,
+          "scriptMs": 14.734000000000025,
+          "layoutMs": 9.507,
+          "styleMs": 1.02
+        },
+        {
+          "phase": "hover",
+          "ms": 1452.9000000059605,
+          "sourceUpdates": 0,
+          "domStops": 37,
+          "rendered": 72,
+          "zoom": 7.811115106723375,
+          "scriptMs": 28.779,
+          "layoutMs": 0,
+          "styleMs": 4.811000000000003
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

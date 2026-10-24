@@ -3,7 +3,7 @@ import { mobileLayout } from './layout';
 import { aboutHTML } from './about';
 import {Marker,Popup,LngLatBounds,type MapMouseEvent} from 'maplibre-gl';
 import {createMap,lngLat,boundsOf,size,worldProject,worldUnproject} from './map';
-import {MapStops,hitStop,type StopMarker} from './map-stops';
+import {MapStops,hitStop,hitCluster,type StopMarker} from './map-stops';
 import {loadStopService} from './core/stop-service';
 import {MODE_COLORS,transportIcon} from './core/transport';
 import {PointDestinations} from './point-destinations';
@@ -227,6 +227,7 @@ function setPointStart(point:{lat:number;lon:number},recalculate=true){
 map.on('click',(event:MapMouseEvent)=>{
   cancelOriginClick();
   if(event.originalEvent?.detail>1||pointDestinations.consumesOriginClick())return;
+  const cluster=hitCluster(map,event.point);if(cluster){void stopLayer.expandCluster(cluster);return;}
   const target=(event.originalEvent?.target as Element|null)?.closest?.('[data-stop-index]');
   const index=target?Number(target.getAttribute('data-stop-index')):hitStop(map,event.point);
   if(!manifest||(index===undefined&&!manifest.footpaths))return;
@@ -234,8 +235,21 @@ map.on('click',(event:MapMouseEvent)=>{
 });
 map.on('mousemove','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(Number.isInteger(index)){pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(index);}});
 map.on('mouseleave','stops',()=>journeyView.leave());
+map.on('mouseenter','stop-clusters',()=>journeyView.leave());
 map.on('contextmenu','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(result?.values[index]){closePopup();journeyView.pin(index);}});
 for(const type of ['dblclick','movestart','contextmenu'] as const)map.on(type,cancelOriginClick);
+const keyboardStop=(event:Event)=>{
+ const element=(event.target as Element|null)?.closest<HTMLElement>('.map-stop[data-stop-index]');
+ return element?Number(element.dataset.stopIndex):undefined;
+};
+map.getCanvasContainer().addEventListener('focusin',event=>{const index=keyboardStop(event);if(index!==undefined){pointDestinations.pause();journeyView.hover(index);}});
+map.getCanvasContainer().addEventListener('focusout',event=>{if(keyboardStop(event)!==undefined)journeyView.leave();});
+map.getCanvasContainer().addEventListener('keydown',event=>{
+ const index=keyboardStop(event);if(index===undefined||!['Enter',' '].includes(event.key))return;
+ event.preventDefault();pointDestinations.pause();
+ if(result?.values[index]){closePopup();journeyView.pin(index,true);}
+ else{journeyView.close();if(!result&&!previewActive)setStart(index,true);else popup(index);}
+});
 map.getContainer().addEventListener('keydown',event=>{
   if(event.key==='Escape')cancelOriginClick();
   if(event.key==='Enter'&&event.target===map.getContainer()&&manifest?.footpaths){const p=map.getCenter();setPointStart({lat:p.lat,lon:p.lng});}
@@ -368,7 +382,7 @@ async function init(){
     if(manifest.warnings.length&&!manifest.demo)banner.textContent+=' · Databegränsningar finns, se Om datan.';
     if(!manifest.demo&&!manifest.walkingCoverage?.reviewed){banner.classList.add('demo');banner.textContent=`UTVECKLINGSLÄGE · Tidtabell ${manifest.sourceUpdated||manifest.updated.slice(0,10)}. Ofullständigt gångunderlag kan underskatta nåbarheten.`;$('#map-demo').hidden=false;$('#map-demo').textContent='UTVECKLING · Gångdata ofullständiga';}
     markers.length=stops.length;
-    stops.forEach((s,i)=>{if(!isMapStop(s))return;const m=stopLayer.add(s,i);m.on('mouseover',()=>{pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('contextmenu',()=>{if(result?.values[i]){closePopup();journeyView.pin(i);}});const el=m.getElement();if(el){el.setAttribute('data-stop-index',String(i));el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>{pointDestinations.pause();journeyView.hover(i);});el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();pointDestinations.pause();if(result?.values[i]){closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i,true);return;}popup(i);}}});}markers[i]=m;});
+    stops.forEach((s,i)=>{if(isMapStop(s))markers[i]=stopLayer.add(s,i);});
     $('#stop-search').removeAttribute('disabled');
     if(!await cacheAvailable()){const p=document.createElement('p');p.className='hint';p.textContent='Lokal lagring är inte tillgänglig. Data hämtas på nytt vid behov.';banner.after(p);}
     void pruneCache(manifest);

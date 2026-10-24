@@ -235,3 +235,13 @@ sources repaint only when pixels change. Panning and zooming transform the
 texture on the GPU while new viewport data arrives. Bearing and pitch are locked
 to keep the 2D contour/interaction model consistent. Traffic routing, mapped
 walking, data checksums and client-side execution are unchanged.
+
+### Dense stop views
+
+Overview stop grouping is local to MapLibre's worker and needs no new data
+release, API or server. A displayed set of at least 500 stops groups through zoom
+10; zoom 11+ shows individual stop positions. Group counts are neutral, while
+walking areas keep their time colours. Keyboard targets are limited to 128 in
+view and use delegated focus/keyboard handlers. Highlighting updates feature state;
+only actual visibility/colour changes rebuild the GeoJSON source. See
+[the measured rendering comparison](stop-rendering-performance.md).

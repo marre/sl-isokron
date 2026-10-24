@@ -1,5 +1,5 @@
 import type {Map,MapMouseEvent,LngLat} from 'maplibre-gl';
-import {hitStop} from './map-stops';
+import {hitStop,hitCluster} from './map-stops';
 import type {JourneyView} from './journey-view';
 import type {Manifest,SearchResult,Settings,Stop} from './core/types';
 
@@ -36,7 +36,7 @@ export class PointDestinations {
   map.on('mouseout',e=>{const target=(e.originalEvent as MouseEvent)?.relatedTarget;if(target instanceof Node&&map.getContainer().contains(target))return;this.cancel();this.view.leave();});
  }
  private available(){return !!this.worker;}
- private onStop(e:MapMouseEvent){return !!(e.originalEvent?.target as Element|null)?.closest?.('.map-stop')||hitStop(this.map,e.point)!==undefined;}
+ private onStop(e:MapMouseEvent){return !!(e.originalEvent?.target as Element|null)?.closest?.('.map-stop')||hitStop(this.map,e.point)!==undefined||!!hitCluster(this.map,e.point);}
  private move(e:MapMouseEvent){
   if(this.pinPending||!this.available()||this.view.isPinned||!matchMedia('(hover: hover)').matches)return;
   if(this.onStop(e)){this.cancel();return;}
