@@ -1,31 +1,17 @@
+import {BandCanvas} from './band-canvas';
+import {ReverseWalkingView} from './reverse-walking-view';
 import {profiling,profileStart,profileEnd,acceptProfile,type ProfileEvent} from './core/profile';
-import {LngLatBounds,type Map as GLMap,type CanvasSource} from 'maplibre-gl';
+import {LngLatBounds,type Map as GLMap} from 'maplibre-gl';
 import {padBounds,containsBounds,worldProject,worldUnproject,distance,lngLat} from './map';
 import {useContourOverview} from './core/contour-view';
 import { walkingMinutes } from './core/walking';
 import { bandLimits, type RasterGrid } from './core/bands';
 import type { Manifest, SearchResult, Settings, Stop } from './core/types';
 
-class BandCanvas {
-  readonly canvas=document.createElement('canvas');
-  coverage?:LngLatBounds;
-  constructor(private map:GLMap,private area:LngLatBounds){this.canvas.className='walking-raster';this.canvas.hidden=true;map.getContainer().append(this.canvas);}
-  remove(){if(this.map.getLayer('walking-areas'))this.map.removeLayer('walking-areas');if(this.map.getSource('walking-areas'))this.map.removeSource('walking-areas');this.canvas.remove();}
-  image(width:number,height:number,pixels:Uint8ClampedArray,cutoff:number){
-    this.canvas.width=width;this.canvas.height=height;this.canvas.dataset.cutoff=String(cutoff);
-    this.canvas.getContext('2d')!.putImageData(new ImageData(pixels as Uint8ClampedArray<ArrayBuffer>,width,height),0,0);
-    if(!this.map.getSource('walking-areas')){
-      const b=this.area;
-      this.map.addSource('walking-areas',{type:'canvas',canvas:this.canvas,animate:false,coordinates:[b.getNorthWest().toArray(),b.getNorthEast().toArray(),b.getSouthEast().toArray(),b.getSouthWest().toArray()]});
-      this.map.addLayer({id:'walking-areas',type:'raster',source:'walking-areas',paint:{'raster-opacity':.48,'raster-resampling':'nearest','raster-fade-duration':0}},this.map.getLayer('stops')?'stops':undefined);
-    }
-    const source=this.map.getSource('walking-areas') as CanvasSource;
-    source.play();this.map.triggerRepaint();this.map.once('render',()=>{if(this.map.getSource('walking-areas')===source)source.pause();});
-  }
-}
 
 export class WalkingView {
   enabled = true;
+  private reverse?:ReverseWalkingView;
   private controller?: AbortController;
   private data?: {result:SearchResult;settings:Settings;manifest:Manifest;stops:Stop[]};
   private merger?:Worker;
@@ -43,6 +29,7 @@ export class WalkingView {
   }
   private removeLayers(){this.image?.remove();this.image=undefined;}
   private clear() {
+    this.reverse?.reset();this.reverse=undefined;
     this.controller?.abort();this.merger?.terminate();this.merger=undefined;clearTimeout(this.timer);this.timer=undefined;
     this.profiles.clear();this.removeLayers();this.overviewNote?.remove();this.overviewNote=undefined;this.workerVersion='';this.workerCutoffs.clear();this.schedule=undefined;
   }
@@ -61,6 +48,10 @@ export class WalkingView {
   private draw(){
     if(!this.data||!this.enabled){this.progress?.(0,0,0);this.status('Gångområden är dolda.');return;}
     const {result,settings,manifest,stops}=this.data,areas=manifest.walkingAreas;
+    if(settings.direction==='arrive'){
+      this.reverse=new ReverseWalkingView(this.map,this.status,this.progress);
+      this.reverse.setData(result,settings,manifest,stops);return;
+    }
     if(!areas){this.status('Gångområden saknas i detta dataset.');return;}
     const preparation=profileStart();
     const available=walkingMinutes(result.walkSources,settings.maxMinutes*60,settings.walkMinutes*60);

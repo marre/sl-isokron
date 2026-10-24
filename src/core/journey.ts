@@ -15,11 +15,19 @@ export function journeyFromNode(result:SearchResult,at:number|null,tail?:Journey
   }
   legs.reverse();
   // Initial waiting is excluded from R. Place access walking immediately before
-  // the first boarding so the displayed clock times also span exactly R.
+  // the first boarding. For reverse searches this moves final walking next to
+  // the last alighting; remaining slack is a margin at the destination.
   const firstTransit = legs.findIndex(l => l.kind === 'transit');
   if (firstTransit > 0) {
     const shift = legs[firstTransit].departure - legs[firstTransit - 1].arrival;
     for (let i = 0; i < firstTransit; i++) { legs[i].departure += shift; legs[i].arrival += shift; }
+  }
+  if(result.reverseEpoch!==undefined){
+    const epoch=result.reverseEpoch;legs.reverse();
+    for(const leg of legs){
+      [leg.from,leg.to]=[leg.to,leg.from];[leg.departure,leg.arrival]=[epoch-leg.arrival,epoch-leg.departure];
+      leg.stops.reverse();if(leg.path)leg.path=[...leg.path].reverse();
+    }
   }
   const grouped: JourneyLeg[] = [];
   for (const leg of legs) {

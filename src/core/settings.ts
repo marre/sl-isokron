@@ -2,6 +2,7 @@ import { MODES, type Settings, type Stop } from './types';
 import { stockholmInstant, stockholmNow } from './time';
 export function defaults(stop: Stop): Settings { return { v: 1, stop: stop.id, name: stop.name, lat: stop.lat, lon: stop.lon, ...stockholmNow(), maxMinutes: 60, walkMinutes: 15, modes: [...MODES], maxTransfers: 3, windowMinutes: 30 }; }
 export function validateSettings(s: Settings, walkingMax = 30): void {
+  if(s?.direction!==undefined&&s.direction!=='arrive')throw new Error('Okänd sökriktning.');
   if (s?.origin!==undefined&&s.origin!=='point')throw new Error('Okänd typ av startpunkt.');
   if(s?.origin==='point'&&s.stop!=='@point')throw new Error('Ogiltig kartstart.');
   if (!s || s.v !== 1) throw new Error('Delningslänkens formatversion stöds inte.');

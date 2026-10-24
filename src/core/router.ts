@@ -28,7 +28,7 @@ export function canTransfer(l: Label, c: Connection, network: Network, candidate
  * Each boarding follows the whole trip; staying seated never requires a legal alight/reboard.
  * Distinct GTFS trips count as distinct vehicles (conservative; block_id is not continuity proof).
  */
-export function search(network: Network, settings: Settings, options: { destinationJourneys?:boolean; access?:OriginAccess; prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
+export function search(network: Network, settings: Settings, options: { fixedAnchor?:boolean; destinationJourneys?:boolean; access?:OriginAccess; prune?: boolean; maxLabels?: number; onProgress?: (progress: StationProgress) => void } = {}): SearchResult {
   const indexing=profileStart();
   validateSettings(settings);
   const started = performance.now(), t0 = stockholmInstant(settings.date, settings.time);
@@ -121,7 +121,7 @@ export function search(network: Network, settings: Settings, options: { destinat
     }), l]); queues[l.boardings].push(l);labels++;
     if (labels > (options.maxLabels ?? 2_000_000)) throw new Error('Beräkningen överskred minnesbudgeten. Resultatet är ofärdigt; begränsa sökningen.');
   }
-  const root:Label={stop:settings.origin==='point'?network.stops.length:start,time:t0,anchor:null,walk:0,boardings:0,requestStop:false,lastTrip:'',lastRoute:'',alightStop:start,alightTime:t0,previous:null,via:null,alight:null};
+  const root:Label={stop:settings.origin==='point'?network.stops.length:start,time:t0,anchor:options.fixedAnchor?t0:null,walk:0,boardings:0,requestStop:false,lastTrip:'',lastRoute:'',alightStop:start,alightTime:t0,previous:null,via:null,alight:null};
   if(settings.origin==='point'){
     for(const access of options.access!.walks){
       if(!network.stops[access.to]||!Number.isFinite(access.seconds)||access.seconds<0)throw new Error('Ogiltig gånganslutning.');

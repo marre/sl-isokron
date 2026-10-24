@@ -2,6 +2,7 @@
 import {configureProfile,profileStart,profileEnd,drainProfile} from './core/profile';
 import { loadNetwork } from './core/data';
 import {loadOriginAccess} from './core/origin-access';
+import {searchArriveBy} from './core/reverse';
 import { search } from './core/router';
 import { stockholmInstant } from './core/time';
 import type { Manifest, Settings } from './core/types';
@@ -12,12 +13,12 @@ self.onmessage = async (event: MessageEvent<{ id: number; manifest: Manifest; se
     self.postMessage({ id, type: 'status', message: 'Laddar tidtabell och gånganslutningar…' });
     const t0 = stockholmInstant(settings.date, settings.time);
     let stage=profileStart();
-    const network = await loadNetwork(manifest, t0, t0 + (settings.windowMinutes + settings.maxMinutes) * 60, undefined, progress=>self.postMessage({id,type:'progress',phase:'data',...progress}));
+    const network = await loadNetwork(manifest, settings.direction==='arrive'?t0-settings.maxMinutes*60:t0, settings.direction==='arrive'?t0:t0 + (settings.windowMinutes + settings.maxMinutes) * 60, undefined, progress=>self.postMessage({id,type:'progress',phase:'data',...progress}));
     profileEnd('routing.loadNetwork',stage);stage=profileStart();
     const access=settings.origin==='point'?await loadOriginAccess(manifest,settings,network.stops,(completed,total)=>self.postMessage({id,type:'access-progress',completed,total})):undefined;
     profileEnd('routing.originAccess',stage);stage=profileStart();
-    self.postMessage({ id, type: 'status', message: 'Beräknar bästa restid utan initial väntan…' });
-    const result = search(network, settings, {destinationJourneys:!!manifest.footpaths,access,onProgress:progress=>self.postMessage({id,type:'stations',...progress})});
+    self.postMessage({ id, type: 'status', message: settings.direction==='arrive'?'Beräknar senaste möjliga avgång till ditt mål…':'Beräknar bästa restid utan initial väntan…' });
+    const result = (settings.direction==='arrive'?searchArriveBy:search)(network, settings, {destinationJourneys:!!manifest.footpaths,access,onProgress:progress=>self.postMessage({id,type:'stations',...progress})});
     profileEnd('routing.search',stage,{labels:result.labels,connections:network.connections.length,walks:network.walks.length});
     self.postMessage({ id, type: 'result', result,profileEvents:drainProfile() });
   } catch (error) { self.postMessage({ id, type: 'error', message: error instanceof Error ? error.message : 'Beräkningen misslyckades.' }); }

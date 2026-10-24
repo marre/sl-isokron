@@ -39,6 +39,7 @@ export function graphFromTiles(tiles:FootpathTile[],stops:Stop[]):FootpathGraph 
 /** Bounded Dijkstra on mapped edges. Projection chooses a path start, never an off-network link. */
 export function routeOrigin(graph:FootpathGraph,point:Point,maxSeconds:number):OriginAccess {return routeAccess(graph,point,maxSeconds,false);}
 export function routeDestinationAccess(graph:FootpathGraph,point:Point,maxSeconds:number,origin?:{stop:number;lat:number;lon:number;anchor?:OriginAccess['anchor']}):OriginAccess {return routeAccess(graph,point,maxSeconds,true,origin);}
+export function routeSourceAccess(graph:FootpathGraph,point:Point,maxSeconds:number,destination?:{stop:number;lat:number;lon:number;anchor?:OriginAccess['anchor']}):OriginAccess {return routeAccess(graph,point,maxSeconds,false,destination);}
 function routeAccess(graph:FootpathGraph,point:Point,maxSeconds:number,reverse:boolean,origin?:{stop:number;lat:number;lon:number;anchor?:OriginAccess['anchor']}):OriginAccess {
   let nearest:{edge:FootpathGraph['segments'][number];t:number;point:Point;metres:number}|undefined;
   for(const edge of graph.segments){const snap=project(point,graph.nodes.get(edge.from)!,graph.nodes.get(edge.to)!);if(!nearest||snap.metres<nearest.metres)nearest={edge,...snap};}
@@ -66,7 +67,7 @@ function routeAccess(graph:FootpathGraph,point:Point,maxSeconds:number,reverse:b
       reached.set(binding.stop,{to:binding.stop,seconds,metres:length.get(node)!+binding.metres,path});
     }
   }
-  if(reverse&&origin){
+  if(origin){
     const edge=origin.anchor?graph.segments.find(e=>e.from===origin.anchor!.from&&e.to===origin.anchor!.to):undefined;
     if(edge){
       const start=project([origin.lat,origin.lon],graph.nodes.get(edge.from)!,graph.nodes.get(edge.to)!);
@@ -75,13 +76,14 @@ function routeAccess(graph:FootpathGraph,point:Point,maxSeconds:number,reverse:b
         const candidate=(node:number,fraction:number)=>{
           const d=dist.get(node);if(d===undefined)return;
           const seconds=Math.ceil(d+edge.seconds*fraction);if(seconds>maxSeconds||seconds>=(direct?.seconds??Infinity))return;
-          const path:Point[]=[start.point];let n:number|undefined=node;while(n!==undefined){path.push(graph.nodes.get(n)!);n=prev.get(n);}path.push(snap.point);
+          const path:Point[]=[start.point];let n:number|undefined=node;while(n!==undefined){path.push(graph.nodes.get(n)!);n=prev.get(n);}path.push(snap.point);if(!reverse)path.reverse();
           direct={seconds,metres:length.get(node)!+edge.metres*fraction,path};
         };
-        candidate(edge.to,1-start.t);if(!edge.oneway||start.t===0)candidate(edge.from,start.t);
-        if(edge.from===snap.edge.from&&edge.to===snap.edge.to&&(!edge.oneway||snap.t>=start.t)){
+        if(reverse){candidate(edge.to,1-start.t);if(!edge.oneway||start.t===0)candidate(edge.from,start.t);}
+        else {candidate(edge.from,start.t);if(!edge.oneway||start.t===1)candidate(edge.to,1-start.t);}
+        if(edge.from===snap.edge.from&&edge.to===snap.edge.to&&(!edge.oneway||(reverse?snap.t>=start.t:snap.t<=start.t))){
           const fraction=Math.abs(snap.t-start.t),seconds=Math.ceil(edge.seconds*fraction);
-          if(seconds<=maxSeconds&&seconds<=(direct?.seconds??Infinity))direct={seconds,metres:edge.metres*fraction,path:[start.point,snap.point]};
+          if(seconds<=maxSeconds&&seconds<=(direct?.seconds??Infinity))direct={seconds,metres:edge.metres*fraction,path:reverse?[start.point,snap.point]:[snap.point,start.point]};
         }
         if(direct)reached.set(origin.stop,{to:origin.stop,...direct});
       }
@@ -107,5 +109,7 @@ export async function loadFootpathGraph(m:Manifest,point:Point,minutes:number,st
 }
 export async function loadOriginAccess(m:Manifest,s:Settings,stops:Stop[],onProgress?:(done:number,total:number)=>void):Promise<OriginAccess>{
   const graph=await loadFootpathGraph(m,[s.lat,s.lon],Math.min(s.walkMinutes,s.maxMinutes),stops,onProgress);
-  return routeOrigin(graph,[s.lat,s.lon],Math.min(s.walkMinutes,s.maxMinutes)*60);
+  const access=(s.direction==='arrive'?routeDestinationAccess:routeOrigin)(graph,[s.lat,s.lon],Math.min(s.walkMinutes,s.maxMinutes)*60);
+  // The reverse scanner expands outward in mirrored time.
+  return s.direction==='arrive'?{...access,walks:access.walks.map(w=>({...w,path:[...w.path].reverse()}))}:access;
 }

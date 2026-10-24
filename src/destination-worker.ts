@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import {loadFootpathGraph,originTileRefs,routeDestinationAccess,type FootpathGraph} from './core/origin-access';
+import {loadFootpathGraph,originTileRefs,routeDestinationAccess,routeSourceAccess,type FootpathGraph} from './core/origin-access';
 import {choosePointJourney} from './core/point-journey';
 import type {Manifest,SearchResult,Settings,Stop} from './core/types';
 let context:{manifest:Manifest;result:SearchResult;settings:Settings;stops:Stop[]}|undefined;
@@ -16,7 +16,7 @@ self.onmessage=async({data})=>{
   const graph=cached?.key===key?cached.graph:await loadFootpathGraph(manifest,point,minutes,stops,undefined,abort.signal);
   if(own!==generation)return;
   cached={key,graph};
-  const access=routeDestinationAccess(graph,point,minutes*60,settings.origin==='point'&&result.origin?{stop:stops.length,...result.origin}:undefined),journey=choosePointJourney(result,settings,stops,access,data.cutoff);
+  const access=(settings.direction==='arrive'?routeSourceAccess:routeDestinationAccess)(graph,point,minutes*60,settings.origin==='point'&&result.origin?{stop:stops.length,...result.origin}:undefined),journey=choosePointJourney(result,settings,stops,access,data.cutoff);
   if(own!==generation)return;
   self.postMessage({id,type:'point',journey,message:journey?'':'Ingen känd resa till punkten inom restids- och gånggränsen.'});
  }catch(error){if(own===generation)self.postMessage({id,type:'point',journey:null,message:error instanceof Error?error.message:'Gångvägen till punkten kunde inte beräknas.'});}

@@ -32,12 +32,13 @@ $('#app').innerHTML = `
 <p class="intro">En startplats. En stund på vägen.<br>Upptäck vad som finns inom räckhåll.</p>
 <div id="data-banner" class="notice">Laddar hållplatser…</div>
 <form id="search-form">
-<div class="field search-field"><label for="stop-search"><span class="field-icon" aria-hidden="true">◎</span> Var börjar resan?</label><input id="stop-search" placeholder="Sök hållplats eller station" autocomplete="off" role="combobox" aria-controls="stop-options" aria-autocomplete="list" aria-expanded="false" disabled><ul id="stop-options" role="listbox" hidden></ul></div>
+<div class="field"><label for="direction">Sökriktning</label><select id="direction"><option value="depart">Res från en plats</option><option value="arrive">Varifrån når jag målet?</option></select></div>
+<div class="field search-field"><label for="stop-search"><span class="field-icon" aria-hidden="true">◎</span> <span id="place-label">Var börjar resan?</span></label><input id="stop-search" placeholder="Sök hållplats eller station" autocomplete="off" role="combobox" aria-controls="stop-options" aria-autocomplete="list" aria-expanded="false" disabled><ul id="stop-options" role="listbox" hidden></ul></div>
 <p id="start-data-gap" class="notice demo" hidden></p>
-<div class="date-row"><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label for="time">Avresetid <span class="label-note">Stockholm</span></label><input id="time" type="time" required></div></div>
+<div class="date-row"><div class="field"><label for="date">Datum</label><input id="date" type="date" required></div><div class="field"><label for="time"><span id="time-label">Avresetid</span> <span class="label-note">Stockholm</span></label><input id="time" type="time" required></div></div>
 <p class="time-note">Initial väntan räknas inte. Vi visar den kortaste restiden bland avgångar i ditt avgångsfönster.</p>
 <div class="field range-field"><label for="max-time">Hur länge vill du resa? <output id="max-output" for="max-time">60 <small>min</small></output></label><input id="max-time" type="range" min="10" max="120" step="1" value="60"><div class="range-ends"><span>10 min</span><span>120 min</span></div></div>
-<details id="options"><summary><span aria-hidden="true">☷</span> Fler alternativ <span class="summary-meta">Gång, byten & trafikslag</span></summary><div class="options-body"><div class="field"><label for="walk">Max gång per sträcka</label><select id="walk">${[5,10,15,20,25,30].map(n=>`<option value="${n}" ${n===15?'selected':''}>${n} minuter</option>`).join('')}</select><p class="hint">Sammanhängande gång, även via flera hållplatser. 4,8 km/h.</p></div><div class="date-row"><div class="field"><label for="transfers">Max byten</label><select id="transfers">${[0,1,2,3,4].map(n=>`<option value="${n}" ${n===3?'selected':''}>${n} byten</option>`).join('')}</select></div><div class="field"><label for="window">Avgångsfönster</label><input id="window" type="number" min="5" max="120" value="30" required><p class="hint">5–120 minuter</p></div></div><p class="hint">Första påstigning måste ske inom fönstret från vald tid. Väntan vid byten ingår alltid.</p><fieldset><legend>Trafikslag</legend><div class="mode-grid">${MODES.map(m=>`<label class="mode-chip"><input type="checkbox" name="mode" value="${m}" checked><span class="mode-symbol" style="color:${MODE_COLORS[m]}">${transportIcon(m)}</span><span>${MODE_NAMES[m]}</span></label>`).join('')}</div></fieldset></div></details>
+<details id="options"><summary><span aria-hidden="true">☷</span> Fler alternativ <span class="summary-meta">Gång, byten & trafikslag</span></summary><div class="options-body"><div class="field"><label for="walk">Max gång per sträcka</label><select id="walk">${[5,10,15,20,25,30].map(n=>`<option value="${n}" ${n===15?'selected':''}>${n} minuter</option>`).join('')}</select><p class="hint">Sammanhängande gång, även via flera hållplatser. 4,8 km/h.</p></div><div class="date-row"><div class="field"><label for="transfers">Max byten</label><select id="transfers">${[0,1,2,3,4].map(n=>`<option value="${n}" ${n===3?'selected':''}>${n} byten</option>`).join('')}</select></div><div class="field"><label for="window" id="window-label">Avgångsfönster</label><input id="window" type="number" min="5" max="120" value="30" required><p class="hint">5–120 minuter</p></div></div><p class="hint" id="window-note">Första påstigning måste ske inom fönstret från vald tid. Väntan vid byten ingår alltid.</p><fieldset><legend>Trafikslag</legend><div class="mode-grid">${MODES.map(m=>`<label class="mode-chip"><input type="checkbox" name="mode" value="${m}" checked><span class="mode-symbol" style="color:${MODE_COLORS[m]}">${transportIcon(m)}</span><span>${MODE_NAMES[m]}</span></label>`).join('')}</div></fieldset></div></details>
 <div id="form-error" class="error" role="alert" hidden></div>
 <div class="search-actions"><button id="calculate" class="primary" type="submit" disabled>Visa restidskarta <span aria-hidden="true">${arrow}</span></button><button id="reset-search" class="reset-search" type="button" title="Välj ny startpunkt och behåll restidsinställningarna" disabled>Nollställ</button></div><button type="button" id="cancel" class="cancel" hidden>Avbryt beräkning</button>
 <div id="status" role="status" aria-live="polite">Välj en hållplats för att börja.</div><p id="walking-status" class="hint" role="status"></p>
@@ -67,7 +68,7 @@ const mapProgress=new MapProgress($('#map-progress'));
 let previewValues: (Reach|null)[] = [], previewActive=false;
 const walkingView = new WalkingView(map, text=>{const el=document.querySelector('#walking-status');if(el)el.textContent=text;}, ()=>{}, (completed,total,failed)=>{
   if(!total){mapProgress.reset();return;}
-  mapProgress.update(`3/3 · Gångområden i kartvyn: ${completed} av ${total}${failed?` · ${failed} misslyckades`:''}`,completed,total);
+  mapProgress.update(`3/3 · Gånglagret i kartvyn: ${completed} av ${total}${failed?` · ${failed} misslyckades`:''}`,completed,total);
 });
 const modeInputs = () => [...document.querySelectorAll<HTMLInputElement>('input[name=mode]')];
 function showError(message: string) { $('#form-error').textContent = message; $('#form-error').hidden = false; if(mobileLayout.matches)setMobileSearch(true); }
@@ -102,12 +103,12 @@ function setStart(index: number, recalculate = false) {
   $('#stop-search').setAttribute('aria-expanded','false'); $('#stop-options').hidden = true;
   $<HTMLInputElement>('#stop-search').value = stop.station;
   clearStart();
-  addPointPin(stop,false,`Start: ${stop.name} · ${stop.platform}`);
+  addPointPin(stop,false,`${$<HTMLSelectElement>('#direction').value==='arrive'?'Mål':'Start'}: ${stop.name} · ${stop.platform}`);
   $('#start-data-gap').textContent=stop.walking==='estimated'?'Gång härifrån kan innehålla uppskattade stationsbyten: publicerade bytestider, granskade passager eller hållplatser med samma namn inom 250 meter. Se resedetaljerna för den valda resan.':'Gånganslutningar saknas från detta läge. Resultatet kan därför missa möjliga resor.';
   $('#start-data-gap').hidden=manifest.demo||stop.walking==='available'||!!stop.walkingArea;
-  $('#map-label').textContent = `FRÅN ${stop.name.toLocaleUpperCase('sv')}`;
+  $('#map-label').textContent = `${$<HTMLSelectElement>('#direction').value==='arrive'?'TILL':'FRÅN'} ${stop.name.toLocaleUpperCase('sv')}`;
   $('#calculate').removeAttribute('disabled'); $('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');map.panTo(lngLat(stop),{duration:0});
-  status(`Start: ${stop.name}, ${stop.platform}. Redo att beräkna.`);
+  status(`${$<HTMLSelectElement>('#direction').value==='arrive'?'Mål':'Start'}: ${stop.name}, ${stop.platform}. Redo att beräkna.`);
   if (recalculate) void calculate();
 }
 function stationChoice(station: string) {
@@ -117,13 +118,26 @@ function stationChoice(station: string) {
 function readSettings(): Settings {
   if(!pointOrigin&&(selected<0||!isMapStop(stops[selected]))) throw new Error('Välj en hållplats eller en punkt på kartan.');
   const stop=pointOrigin?{id:'@point',name:'Vald kartpunkt',...pointOrigin}:stops[selected];
-  return { ...(pointOrigin?{origin:'point' as const}:{}),v:1, stop:stop.id,name:stop.name,lat:stop.lat,lon:stop.lon, date:$<HTMLInputElement>('#date').value,time:$<HTMLInputElement>('#time').value,maxMinutes:Number($<HTMLInputElement>('#max-time').value),walkMinutes:Number($<HTMLSelectElement>('#walk').value),maxTransfers:Number($<HTMLSelectElement>('#transfers').value),windowMinutes:Number($<HTMLInputElement>('#window').value),modes:modeInputs().filter(i=>i.checked).map(i=>i.value as Settings['modes'][number]) };
+  return { ...($<HTMLSelectElement>('#direction').value==='arrive'?{direction:'arrive' as const}:{}),...(pointOrigin?{origin:'point' as const}:{}),v:1, stop:stop.id,name:stop.name,lat:stop.lat,lon:stop.lon, date:$<HTMLInputElement>('#date').value,time:$<HTMLInputElement>('#time').value,maxMinutes:Number($<HTMLInputElement>('#max-time').value),walkMinutes:Number($<HTMLSelectElement>('#walk').value),maxTransfers:Number($<HTMLSelectElement>('#transfers').value),windowMinutes:$<HTMLSelectElement>('#direction').value==='arrive'?30:Number($<HTMLInputElement>('#window').value),modes:modeInputs().filter(i=>i.checked).map(i=>i.value as Settings['modes'][number]) };
 }
 function applySettings(s: Settings) {
+  $<HTMLSelectElement>('#direction').value=s.direction??'depart';updateDirection();
   $<HTMLInputElement>('#date').value=s.date;$<HTMLInputElement>('#time').value=s.time;
   $<HTMLInputElement>('#max-time').value=String(s.maxMinutes);$('#max-output').innerHTML=`${s.maxMinutes} <small>min</small>`;
   $<HTMLSelectElement>('#walk').value=String(s.walkMinutes);$<HTMLSelectElement>('#transfers').value=String(s.maxTransfers);$<HTMLInputElement>('#window').value=String(s.windowMinutes);
   modeInputs().forEach(i=>i.checked=s.modes.includes(i.value as Settings['modes'][number]));
+}
+function updateDirection() {
+  const arrive=$<HTMLSelectElement>('#direction').value==='arrive';
+  $('h1').innerHTML=arrive?'Varifrån<br>hinner <em>du?</em>':'Hur långt<br>når <em>du?</em>';
+  $('.intro').innerHTML=arrive?'Ett mål. En tid att passa.<br>Upptäck var du kan börja resan.':'En startplats. En stund på vägen.<br>Upptäck vad som finns inom räckhåll.';
+  $('#place-label').textContent=arrive?'Vart vill du komma?':'Var börjar resan?';
+  $('#time-label').textContent=arrive?'Senast framme':'Avresetid';
+  $('.time-note').textContent=arrive?'Visar senaste möjliga start före din ankomsttid. Färgerna inkluderar eventuell tidsmarginal vid målet.':'Initial väntan räknas inte. Vi visar den kortaste restiden bland avgångar i ditt avgångsfönster.';
+  $<HTMLInputElement>('#window').disabled=arrive;$('#window').parentElement!.hidden=arrive;$('#window-note').hidden=arrive;
+  $('#source-note').textContent=arrive?'Senaste start före ankomstgränsen · gångvägar vid inzoomning':'Hållplatser och ungefärliga gångområden';
+  $('#map-label').textContent=pointOrigin?`${arrive?'TILL':'FRÅN'} VALD KARTPUNKT`:selected>=0?`${arrive?'TILL':'FRÅN'} ${stops[selected].name.toLocaleUpperCase('sv')}`:'STOCKHOLM & OMKRING';
+  if(startPin)startPin.getElement().title=arrive?'Valt mål':'Vald startpunkt';
 }
 function renderPreview(p: StationProgress) {
   if(!previewActive)return;
@@ -140,13 +154,13 @@ function renderPreview(p: StationProgress) {
 function renderResults(r: SearchResult,s: Settings) {
   previewActive=false;previewValues=[];
   const origin=r.origin;
-  const journeyStops=origin?[...stops,{id:'@point',name:'Vald kartpunkt',lat:origin.lat,lon:origin.lon,station:'Vald kartpunkt',platform:'Start på kartlagd gångväg'}]:stops;
+  const journeyStops=origin?[...stops,{id:'@point',name:'Vald kartpunkt',lat:origin.lat,lon:origin.lon,station:'Vald kartpunkt',platform:s.direction==='arrive'?'Mål på kartlagd gångväg':'Start på kartlagd gångväg'}]:stops;
   journeyView.setData(r,s,journeyStops);
   pointDestinations.setData(r,s,manifest,stops);
   if(origin){
     clearStart();addPointPin(origin,true);
     $('#start-data-gap').hidden=false;
-    $('#start-data-gap').textContent=`Gångstart på kartlagd väg${origin.snapMetres>=1?`, ${Math.round(origin.snapMetres)} m från vald punkt`:''}. Gången till hållplats räknas in i restid och gånggräns.`;
+    $('#start-data-gap').textContent=`${s.direction==='arrive'?'Gångmål':'Gångstart'} på kartlagd väg${origin.snapMetres>=1?`, ${Math.round(origin.snapMetres)} m från vald punkt`:''}. Gånganslutningen räknas in i restid och gånggräns.`;
   }
   result=r; usedSettings=s;$('#map-empty').hidden=true;
   const exitGap=walkingExitGap(r,s,stops);
@@ -159,7 +173,7 @@ function renderResults(r: SearchResult,s: Settings) {
     if(value)marker.setStyle({color:'#fff',fillColor:colorFor(value.seconds,s.maxMinutes),fillOpacity:1,weight:2,radius:7});
   });
   const count=r.values.filter((value,i)=>value&&i!==selected&&isMapStop(stops[i])).length;
-  status(exitGap ? exitWarning : count ? `Färdigt. ${count} hållplatslägen nås på högst ${s.maxMinutes} minuter. Beräkning: ${Math.round(r.elapsed)} ms.` : 'Inga andra hållplatslägen nås inom gränserna. Det kan saknas gånganslutningar i underlaget.');
+  status(exitGap ? exitWarning : count ? `Färdigt. ${count} hållplatslägen ${s.direction==='arrive'?'kan nå målet om du startar högst':'nås på högst'} ${s.maxMinutes} minuter${s.direction==='arrive'?' före din ankomsttid':''}. Beräkning: ${Math.round(r.elapsed)} ms.` : 'Inga andra hållplatslägen nås inom gränserna. Det kan saknas gånganslutningar i underlaget.');
   if (mobileLayout.matches) setMobileSearch(exitGap);
   $('#fit').setAttribute('title','Visa hela resultatet');$('#fit').setAttribute('aria-label','Visa hela resultatet');
 }
@@ -200,8 +214,8 @@ function popup(index: number) {
   const detail=document.createElement('p');
   detail.textContent = previewActive ? value ? `Preliminärt ${Math.ceil(value.seconds/60)} min · Beräkningen pågår` : 'Beräkningen pågår. Nåbarheten är ännu okänd.' : result ? value ? `${Math.ceil(value.seconds/60)} min · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} byten`}${value.requestStop?' · Stopp på signal – meddela föraren':''} · Färdig beräkning` : (!manifest.demo&&!manifest.walkingCoverage?.reviewed?'Ingen känd resa. Gångunderlaget är ofullständigt, så nåbarheten är osäker.':'Ej nåbar inom valda gränser i tillgänglig data.') : 'Restid okänd – ingen färdig beräkning.';
   box.append(detail);
-  if(value){const note=document.createElement('small');note.textContent='Utan initial väntan. Restiden gäller detta hållplatsläge.';box.append(note);}
-  const button=document.createElement('button');button.textContent='Res härifrån ↗';button.className='popup-start';button.onclick=()=>{closePopup();setStart(index,true);};box.append(button);
+  if(value){const note=document.createElement('small');note.textContent=usedSettings?.direction==='arrive'?'Tid före ankomstgränsen, inklusive marginal vid målet.':'Utan initial väntan. Restiden gäller detta hållplatsläge.';box.append(note);}
+  const button=document.createElement('button');button.textContent=$<HTMLSelectElement>('#direction').value==='arrive'?'Res hit ↗':'Res härifrån ↗';button.className='popup-start';button.onclick=()=>{closePopup();setStart(index,true);};box.append(button);
   closePopup();currentPopup=new Popup().setLngLat(lngLat(stop)).setDOMContent(box).addTo(map);
 }
 
@@ -218,9 +232,9 @@ function setPointStart(point:{lat:number;lon:number},recalculate=true){
   pointOrigin={lat:Math.round(point.lat*1e7)/1e7,lon:Math.round(point.lon*1e7)/1e7};
   $('#stop-options').hidden=true;$('#stop-search').setAttribute('aria-expanded','false');
   $<HTMLInputElement>('#stop-search').value='Vald kartpunkt';
-  $('#start-data-gap').hidden=false;$('#start-data-gap').textContent='Gång följer kartlagda vägar. Starten läggs på närmaste gångväg inom 25 m och visas på kartan. Saknas väg får du välja en ny punkt. Gången ingår i restid och gånggräns.';
+  $('#start-data-gap').hidden=false;$('#start-data-gap').textContent='Gång följer kartlagda vägar. Punkten läggs på närmaste gångväg inom 25 m och visas på kartan. Saknas väg får du välja en ny punkt. Gången ingår i restid och gånggräns.';
   clearStart();addPointPin(pointOrigin);$('#calculate').removeAttribute('disabled');$('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');
-  $('#map-label').textContent='FRÅN VALD KARTPUNKT';$('#form-error').hidden=true;status('Kartpunkt vald. Redo att beräkna gångvägar och resor.');
+  updateDirection();$('#form-error').hidden=true;status('Kartpunkt vald. Redo att beräkna gångvägar och resor.');
   if(recalculate)void calculate();
 }
 // Delay selection until a double-click has had a chance to zoom instead.
@@ -259,7 +273,7 @@ $('#map-cancel').onclick=()=>$('#cancel').click();
 $('#max-time').addEventListener('input',()=>{$('#max-output').innerHTML=`${$<HTMLInputElement>('#max-time').value} <small>min</small>`;invalidate();});
 
 $('#search-form').addEventListener('input',e=>{const target=e.target as HTMLInputElement;if(['date','time','window'].includes(target.id))invalidate();});
-$('#search-form').addEventListener('change',e=>{const target=e.target as HTMLInputElement;if(['date','time','walk','transfers','window'].includes(target.id)||target.name==='mode'){invalidate();if(target.id==='window'&&(selected>=0||pointOrigin)&&$<HTMLInputElement>('#window').checkValidity())void calculate();}});
+$('#search-form').addEventListener('change',e=>{const target=e.target as HTMLInputElement;if(['date','time','walk','transfers','window','direction'].includes(target.id)||target.name==='mode'){invalidate();if(target.id==='direction'){updateDirection();if(selected>=0||pointOrigin)void calculate();}if(target.id==='window'&&(selected>=0||pointOrigin)&&$<HTMLInputElement>('#window').checkValidity())void calculate();}});
 $('#stop-search').addEventListener('input',()=>{
   cancelOriginClick();pointOrigin=undefined;invalidate();selected=-1;clearStart();$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');$('#start-data-gap').hidden=true;
   const query=$<HTMLInputElement>('#stop-search').value.trim().toLocaleLowerCase('sv');

@@ -5,7 +5,7 @@ import type {Manifest,SearchResult,Settings,Stop} from './core/types';
 
 /** One persistent worker per search; pointer changes invalidate stale previews. */
 export class PointDestinations {
- private worker?:Worker;private id=0;private timer?:ReturnType<typeof setTimeout>;private cutoff=0;private inspected=false;private pinPending=false;private holdTimer?:ReturnType<typeof setTimeout>;
+ private arrive=false;private worker?:Worker;private id=0;private timer?:ReturnType<typeof setTimeout>;private cutoff=0;private inspected=false;private pinPending=false;private holdTimer?:ReturnType<typeof setTimeout>;
  constructor(private map:Map,private view:JourneyView,private status:HTMLElement){
   document.querySelector('#journey-panel')!.addEventListener('journeyclose',()=>this.cancel());
   map.on('mousemove',e=>this.move(e));
@@ -48,7 +48,7 @@ export class PointDestinations {
   if(pin)this.view.close();
   this.pinPending=pin;
   const id=++this.id;
-  this.status.textContent='Beräknar sista gångvägen…';this.status.hidden=false;
+  this.status.textContent=this.arrive?'Beräknar första gångvägen…':'Beräknar sista gångvägen…';this.status.hidden=false;
   this.worker!.onmessage=({data})=>{
    if(data.id!==this.id||!this.available())return;
    this.pinPending=false;
@@ -59,7 +59,7 @@ export class PointDestinations {
  }
  private cancel(){this.pinPending=false;clearTimeout(this.timer);this.id++;this.worker?.postMessage({type:'cancel'});this.status.hidden=true;}
  setData(result:SearchResult,settings:Settings,manifest:Manifest,stops:Stop[]){
-  this.reset();this.cutoff=settings.maxMinutes;
+  this.reset();this.arrive=settings.direction==='arrive';this.cutoff=settings.maxMinutes;
   if(!manifest.footpaths||!result.destinationSources)return;
   this.worker=new Worker(new URL('./destination-worker.ts',import.meta.url),{type:'module'});
   this.worker.onerror=()=>{this.pinPending=false;this.status.textContent='Gångvägen till punkten kunde inte beräknas. Sök igen för att försöka på nytt.';this.status.hidden=false;this.worker?.terminate();this.worker=undefined;};

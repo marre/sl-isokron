@@ -4,6 +4,8 @@ Svensk restidskarta för SL-hållplatslägen. Statisk TypeScript-app med MapLibr
 
 **Status: körbar utvecklingsversion med riktig GTFS-import och ett partiellt OSM-gångindex.** Trafikurvalet omfattar enligt beställarens val samtliga linjer i SL-feeden, även UL, Waxholmsbolaget och närtrafiken. Gångindexet kopplar 1 041 av 14 219 hållplatslägen; stationers entréer/plattformar och de 30 verkliga referensresorna behöver fortsatt granskning. Appen märker därför realdata som utvecklingsläge och visar osäker nåbarhet där gångunderlaget saknas. Webbversionen är publicerad av beställaren via Cloudflare; den är fortfarande en utvecklingsversion.
 
+Ankomstkartor finns via **Varifrån når jag målet?**: välj mål och ”Senast framme” för att se senaste möjliga start från andra platser. [Semantik, algoritm och inkommande gånglager](docs/arrive-by.md).
+
 ## Kör lokalt
 
 Node 24 (se `.node-version`) och Python 3.12+ med systemets tidszonsdatabas behövs. Tidtabellsbygget använder Pythons standardbibliotek. Den separata OSM-förberedelsen har extra beroenden enligt `scripts/requirements-walking.txt`.
