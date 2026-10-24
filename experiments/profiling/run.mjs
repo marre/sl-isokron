@@ -5,7 +5,7 @@ const manifest=JSON.parse(await readFile(root+'/manifest.json','utf8'));
 async function json(ref){const raw=await readFile(root+ref.url.replace(/^\/data\//,'/'));assert.equal(raw.length,ref.bytes);assert.equal(createHash('sha256').update(raw).digest('hex'),ref.sha256);return JSON.parse(raw)}
 const fixture=JSON.parse(await readFile('.data-build/profiling/fixture.json','utf8'));assert.equal(fixture.dataset,manifest.version,'Run prepare.ts for this dataset');
 const stops=await json(manifest.stops),snapshot=fixture.result,settings=fixture.settings;
-const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']}),rootCDP=await browser.newBrowserCDPSession();let wireId=0;
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']}),rootCDP=await browser.newBrowserCDPSession();let wireId=0;
 const pending=new Map();rootCDP.on('Target.receivedMessageFromTarget',({message})=>{const data=JSON.parse(message),p=pending.get(data.id);if(p){pending.delete(data.id);data.error?p.reject(new Error(data.error.message)):p.resolve(data.result)}});
 async function workerSession(url){
  for(let i=0;i<50;i++){
@@ -38,7 +38,7 @@ try{
  }else for(const test of cases){
   console.log('Starting',test.name);const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,extraHTTPHeaders:{'x-profile-latency':String(test.latency)}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   let bytes=0,requests=0,cpuWorker,pendingWorker;
-  page.on('worker',worker=>{if(test.cpu)pendingWorker=workerSession(worker.url()).then(async session=>{await session.send('Profiler.enable');await session.send('Profiler.setSamplingInterval',{interval:1000});await session.send('Profiler.start');cpuWorker=session})});
+  page.on('worker',worker=>{if(test.cpu&&worker.url().includes('bands-worker'))pendingWorker=workerSession(worker.url()).then(async session=>{await session.send('Profiler.enable');await session.send('Profiler.setSamplingInterval',{interval:1000});await session.send('Profiler.start');cpuWorker=session})});
   if(test.paintEvery||test.finalOnly)await page.addInitScript(({paintEvery,finalOnly})=>{
    const Native=window.Worker;
    window.Worker=class extends Native{
@@ -69,8 +69,8 @@ try{
    if(test.cpu){await mainCDP.send('Profiler.enable');await mainCDP.send('Profiler.start')}
    const before={requests,bytes};const start=await page.evaluate(()=>{window.__slisoProfile?.clear();return performance.timeOrigin+performance.now()});
    await page.evaluate(async phase=>{await Promise.race([phase==='decoded-cutoff'?window.bench.cutoff(91):window.bench.run(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Overlay timeout')),240000))])},phase);
-   const result=await page.evaluate(()=>({end:performance.timeOrigin+performance.now(),events:window.__slisoProfile?.snapshot()??[],painted:[...document.querySelectorAll('.leaflet-walking-areas-pane canvas')].some(c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data.some((v,i)=>i%4===3&&v>0)),status:document.querySelector('#status').textContent}));
-   const pixelHash=await page.evaluate(async()=>{const c=document.querySelector('.leaflet-walking-areas-pane canvas'),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;return [...new Uint8Array(await crypto.subtle.digest('SHA-256',pixels))].map(v=>v.toString(16).padStart(2,'0')).join('')});
+   const result=await page.evaluate(()=>({end:performance.timeOrigin+performance.now(),events:window.__slisoProfile?.snapshot()??[],painted:[...document.querySelectorAll('canvas.walking-raster')].some(c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data.some((v,i)=>i%4===3&&v>0)),status:document.querySelector('#status').textContent}));
+   const pixelHash=await page.evaluate(async()=>{const c=document.querySelector('canvas.walking-raster'),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;return [...new Uint8Array(await crypto.subtle.digest('SHA-256',pixels))].map(v=>v.toString(16).padStart(2,'0')).join('')});
    assert.ok(result.painted);assert.match(result.status,/Ungefärliga/);const summary={phase,pixelHash,wallMs:result.end-start,requests:requests-before.requests,bytes:bytes-before.bytes,...summarize(result.events,start,result.end)};
    if(test.cpu){await pendingWorker;const {profile}=await cpuWorker.send('Profiler.stop');summary.workerCPU=cpuSummary(profile);await writeFile(`${out}/${test.name}-${phase}-worker.cpuprofile`,JSON.stringify(profile));const {profile:main}=await mainCDP.send('Profiler.stop');summary.mainCPU=cpuSummary(main);await writeFile(`${out}/${test.name}-${phase}-main.cpuprofile`,JSON.stringify(main));if(phase!=='decoded-cutoff')await cpuWorker.send('Profiler.start')}
    await writeFile(`${out}/${test.name}-${phase}-events.json`,JSON.stringify(result.events));record.phases.push(summary);console.log(test.name,phase,Math.round(summary.wallMs),'ms',summary.requests,'requests');

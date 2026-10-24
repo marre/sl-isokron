@@ -1,6 +1,6 @@
 # sliso
 
-Svensk restidskarta för SL-hållplatslägen. Statisk TypeScript-app med Leaflet och sökning i en Web Worker. Ingen backend, inloggning, adressökning eller betald reservtjänst.
+Svensk restidskarta för SL-hållplatslägen. Statisk TypeScript-app med MapLibre GL JS och sökning i en Web Worker. Ingen backend, inloggning, adressökning eller betald reservtjänst.
 
 **Status: körbar utvecklingsversion med riktig GTFS-import och ett partiellt OSM-gångindex.** Trafikurvalet omfattar enligt beställarens val samtliga linjer i SL-feeden, även UL, Waxholmsbolaget och närtrafiken. Gångindexet kopplar 1 041 av 14 219 hållplatslägen; stationers entréer/plattformar och de 30 verkliga referensresorna behöver fortsatt granskning. Appen märker därför realdata som utvecklingsläge och visar osäker nåbarhet där gångunderlaget saknas. Webbversionen är publicerad av beställaren via Cloudflare; den är fortfarande en utvecklingsversion.
 
@@ -64,7 +64,7 @@ Se [dataflöde och filformat](docs/data.md), [drift och kvoter](docs/operations.
 
 Cloudflare Workers Git-integration: bygg `npm run build`, deploy `npx wrangler deploy`. `prebuild` hämtar den verifierade datareleasen när `public/data/manifest.json` saknas. Bara `data/release.json` ligger i Git; det stora arkivet ligger i GitHub Releases. Se [driftinstruktionerna](docs/operations.md). Cloudflare Pages kan också publicera samma `dist`. Kontrollworkflow bygger demo enbart för tester; det publicerar inget. Automatiska datakörningar är avstängda tills driftansvarig konfigurerar data, kvotledger och CI-variabler. Ett manuellt inventeringsläge kan köras med Trafiklab-hemligheten och kvotinitiering; se driftinstruktionerna. Repots synlighet har inte ändrats.
 
-Bakgrundskartan använder OSM standardtiles som utbytbar pilotinställning. Granska aktuell användningspolicy innan pilot. `.env.example` visar konfigurationen; `VITE_TILE_URL=none` stänger av externa tiles utan att påverka sökningen. Typsnitt levereras med appen. Inga hemligheter får ligga i `VITE_`-variabler, delningslänkar eller apppaketet.
+Bakgrundskartan använder Maptoolkit.orgs fria vektorkarta: `https://styles.maptoolkit.org/summer.json`, utan API-nyckel. Maptoolkits logotyp och kartans upphovsrättslänkar visas på alla skärmstorlekar. `.env.example` visar den valfria inställningen `VITE_MAP_STYLE_URL`; värdet `none` stänger av externa kartanrop utan att påverka sökningen. MapLibre och dess worker samt appens typsnitt levereras med appen. Inga hemligheter får ligga i `VITE_`-variabler, delningslänkar eller apppaketet.
 
 Mätning på verklig feed med det partiella gångindexet finns i [benchmark-real-partial-walk.json](docs/benchmark-real-partial-walk.json). Mätning och reproduktion av den inkrementella gångrenderingen finns i [walking-render-performance.md](docs/walking-render-performance.md). Det är containerdata, inte fysisk mobilprestanda. [Datakällor och byggmetod](data/README.md) beskriver gångluckor, licenser och reproduktion. Bakgrundstiles är avsiktligt blockerade i automatiska webbläsartester.
 

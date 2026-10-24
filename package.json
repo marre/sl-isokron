@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Restidskartor f\u00f6r SL \u2013 utan initial v\u00e4ntan",
+  "description": "Restidskartor för SL – utan initial väntan",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build && python scripts/check_dist.py",
@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
-    "@types/leaflet": "^1.9.22",
     "@types/node": "^26.6.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
@@ -28,6 +27,7 @@
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/manrope": "^5.3.0",
-    "leaflet": "^1.9.4"
+    "@maptoolkit/maplibre-logo-control": "^1.1.2",
+    "maplibre-gl": "^6.15.0"
   }
 }

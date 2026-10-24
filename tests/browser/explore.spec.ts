@@ -10,8 +10,8 @@ test('compact results always include walking areas and reset retains search sett
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(s)));
  await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
  await expect(page.locator('#legend, #display-time, #walking-toggle, #platform, #choose-point, #fit-result')).toHaveCount(0);
- await expect(page.locator('.leaflet-walking-areas-pane canvas[data-cutoff="120"]')).toBeVisible({timeout:20000});
- const shown=()=>page.locator('#map path[role=button]').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
+ await expect(page.locator('canvas.walking-raster[data-cutoff="120"]')).toBeAttached({timeout:20000});
+ const shown=()=>page.locator('#map .map-stop').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
  expect(await shown()).toBeGreaterThan(5);expect(searches).toBe(1);
  await page.locator('#share').click();
  expect(JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3))).displayMinutes).toBeUndefined();
@@ -22,7 +22,7 @@ test('compact results always include walking areas and reset retains search sett
  await expect(page.locator('#stop-search')).toHaveValue('');
  await expect(page.locator('#calculate')).toBeDisabled();await expect(page.locator('#reset-search')).toBeDisabled();
  await expect(page.locator('#max-time')).toHaveValue('120');await expect(page.locator('#time')).toHaveValue('08:00');
- await expect(page.locator('.leaflet-walking-areas-pane canvas')).toHaveCount(0);
+ await expect(page.locator('canvas.walking-raster')).toHaveCount(0);
  expect(new URL(page.url()).hash).toBe('');expect(searches).toBe(1);
  await page.screenshot({path:`test-results/${test.info().project.name}-compact-ui.png`});
 });

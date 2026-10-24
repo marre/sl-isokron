@@ -1,24 +1,25 @@
-import L from 'leaflet';
+import type {Map,MapMouseEvent,LngLat} from 'maplibre-gl';
+import {hitStop} from './map-stops';
 import type {JourneyView} from './journey-view';
 import type {Manifest,SearchResult,Settings,Stop} from './core/types';
 
 /** One persistent worker per search; pointer changes invalidate stale previews. */
 export class PointDestinations {
  private worker?:Worker;private id=0;private timer?:ReturnType<typeof setTimeout>;private cutoff=0;private inspected=false;private pinPending=false;private holdTimer?:ReturnType<typeof setTimeout>;
- constructor(private map:L.Map,private view:JourneyView,private status:HTMLElement){
+ constructor(private map:Map,private view:JourneyView,private status:HTMLElement){
   document.querySelector('#journey-panel')!.addEventListener('journeyclose',()=>this.cancel());
   map.on('mousemove',e=>this.move(e));
   const container=map.getContainer();let down:{x:number;y:number}|undefined;
   const cancelHold=()=>{clearTimeout(this.holdTimer);down=undefined;};
   container.addEventListener('pointerdown',e=>{
    this.inspected=false;cancelHold();
-   if(!e.isPrimary||(e.pointerType!=='touch'&&e.pointerType!=='pen')||(e.target as Element)?.closest?.('.leaflet-control'))return;
+   if(!e.isPrimary||(e.pointerType!=='touch'&&e.pointerType!=='pen')||(e.target as Element)?.closest?.('.maplibregl-ctrl'))return;
    down={x:e.clientX,y:e.clientY};const target=e.target;
    this.holdTimer=setTimeout(()=>{
     if(target instanceof Element)target.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:e.clientX,clientY:e.clientY,button:2}));
    },600);
   },true);
-  // Consume a hold's compatibility clicks before Leaflet can interpret them
+  // Consume a hold's compatibility clicks before MapLibre can interpret them
   // as a second tap and start an unwanted zoom animation.
   const consumeInspectionClick=(e:MouseEvent)=>{if(this.inspected){e.preventDefault();e.stopImmediatePropagation();}};
   container.addEventListener('click',consumeInspectionClick,true);container.addEventListener('dblclick',consumeInspectionClick,true);
@@ -28,21 +29,21 @@ export class PointDestinations {
    cancelHold();e.originalEvent?.preventDefault();
    if(this.inspected)return;
    this.inspected=true;this.cancel();
-   if(this.available()&&!this.onStop(e))this.query(e.latlng,true);
+   if(this.available()&&!this.onStop(e))this.query(e.lngLat,true);
   });
   map.on('dblclick',()=>this.cancel());
   map.on('movestart',()=>{cancelHold();this.cancel();this.view.leave();});
   map.on('mouseout',e=>{const target=(e.originalEvent as MouseEvent)?.relatedTarget;if(target instanceof Node&&map.getContainer().contains(target))return;this.cancel();this.view.leave();});
  }
  private available(){return !!this.worker;}
- private onStop(e:L.LeafletMouseEvent){return !!(e.originalEvent?.target as Element|null)?.closest?.('.leaflet-interactive');}
- private move(e:L.LeafletMouseEvent){
+ private onStop(e:MapMouseEvent){return !!(e.originalEvent?.target as Element|null)?.closest?.('.map-stop')||hitStop(this.map,e.point)!==undefined;}
+ private move(e:MapMouseEvent){
   if(this.pinPending||!this.available()||this.view.isPinned||!matchMedia('(hover: hover)').matches)return;
   if(this.onStop(e)){this.cancel();return;}
   this.cancel();this.view.leave();
-  this.timer=setTimeout(()=>this.query(e.latlng,false),220);
+  this.timer=setTimeout(()=>this.query(e.lngLat,false),220);
  }
- private query(point:L.LatLng,pin:boolean){
+ private query(point:LngLat,pin:boolean){
   this.cancel();if(!this.available())return;
   if(pin)this.view.close();
   this.pinPending=pin;

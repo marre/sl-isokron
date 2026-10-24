@@ -124,3 +124,21 @@ best platform. Other platforms still require the existing valid walking links;
 there are no free platform jumps. Map clicks and shared stop IDs retain their
 specific origins. Missing walking exits remain explained in the search status;
 on mobile that warning reopens the search panel.
+
+### MapLibre / Maptoolkit migration (2026-10-24)
+
+Replaced Leaflet with MapLibre GL JS and the no-key Maptoolkit summer style.
+The full browser suite passes 77 checks (plus one desktop skip of the touch-only
+case); 90 unit checks and the production build pass. Additional gesture checks
+pass after moving keyboard-target updates from every pan frame to moveend.
+The walking regression checks now read an actual rendered WebGL pixel as well as
+the worker's CPU raster. Provider tests check the logo's minimum height and the
+always-expanded copyright line after drag and phone/landscape resizing.
+
+A production-bundle preview with real SL data and live Maptoolkit responses was
+verified on desktop and mobile: map tiles, GPU stop circles, mapped point-origin
+routing, walking textures and complete journeys render without page errors or
+failed requests. Native source inspection found both base-map features and the
+walking raster, and journey panels leave the provider attribution unobscured.
+Historical Leaflet comparison prototypes remain documented as archived; current
+production contour and stage-profiling harnesses use MapLibre.

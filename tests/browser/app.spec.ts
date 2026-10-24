@@ -1,3 +1,4 @@
+import {journeyLines} from './map-data';
 import { test, expect } from '@playwright/test';
 import { stockholmNow } from '../../src/core/time';
 async function init(page: import('@playwright/test').Page) {
@@ -30,7 +31,7 @@ test('local stop search, worker result, filters, share and marker detail',async(
  await marker.press('Enter');
  await expect(page.locator('#journey-panel')).toContainText('Avgång');
  await expect(page.locator('#journey-panel')).toContainText('Ankomst');
- await expect(page.locator('.journey-line').first()).toBeAttached();
+ await expect.poll(async()=>(await journeyLines(page)).length).toBeGreaterThan(0);
  await page.getByRole('button',{name:'Stäng resedetaljer'}).click();
  // Restore mobile panel to modify filters.
  if(await page.locator('#mobile-toggle').isVisible())await page.locator('#mobile-toggle').click();
@@ -39,7 +40,7 @@ test('local stop search, worker result, filters, share and marker detail',async(
  await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');
  await page.locator('#calculate').click();
  await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
- await expect(page.locator('#map path[role=button]:not([style*="display: none"])').first()).toBeAttached();
+ await expect(page.locator('#map .map-stop:not([style*="display: none"])').first()).toBeAttached();
  await share(page);
  await expect(page).toHaveURL(/#s=/);
  const shared=page.url();
@@ -120,7 +121,7 @@ test('destination route previews on hover, pins with keyboard, and recalculates 
   await marker.hover({force:true});
   await expect(page.locator('#journey-panel')).toBeVisible();
   await expect(page.locator('#journey-panel')).toContainText('Tunnelbana');
-  await expect(page.locator('.journey-line').first()).toBeAttached();
+  await expect.poll(async()=>(await journeyLines(page)).length).toBeGreaterThan(0);
   await page.mouse.move(20,10);
   await expect(page.locator('#journey-panel')).toBeHidden();
   await marker.hover({force:true});
@@ -132,19 +133,19 @@ test('destination route previews on hover, pins with keyboard, and recalculates 
  await expect(page.locator('#journey-panel')).toContainText('Schematisk resväg');
  await page.locator('#journey-fit').click();
  await expect(page.locator('#journey-panel')).toBeVisible();
- const routeBox=await page.locator('.journey-line').first().boundingBox(),mapBox=await page.locator('#map').boundingBox();
- expect(routeBox!.y).toBeGreaterThanOrEqual(mapBox!.y);expect(routeBox!.y+routeBox!.height).toBeLessThanOrEqual(mapBox!.y+mapBox!.height);
+ const visible=await page.evaluate(async()=>{const {map}=await import('/src/main.ts' as string),data=map.getSource('journey').serialize().data;return data.features.filter((f:any)=>f.geometry.type==='LineString').flatMap((f:any)=>f.geometry.coordinates).every((p:any)=>map.getBounds().contains(p));});
+ expect(visible).toBe(true);
  await page.screenshot({path:`test-results/${info.project.name}-journey.png`,fullPage:true});
  await page.locator('#journey-start').click();
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
  await expect(page.locator('#journey-panel')).toBeHidden();
- await expect(page.locator('.journey-line')).toHaveCount(0);
+ expect(await journeyLines(page)).toHaveLength(0);
  await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
 });
 
 test('only known destinations remain after search; new search restores the map and retains filters',async({page})=>{
  await init(page);await select(page);
- const enabledMarkers=()=>page.locator('path.leaflet-interactive[role=button]').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
+ const enabledMarkers=()=>page.locator('.map-stop').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
  const before=await enabledMarkers();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  await page.locator('#walk').selectOption('5');
@@ -153,7 +154,7 @@ test('only known destinations remain after search; new search restores the map a
  expect(await enabledMarkers()).toBeLessThan(before);
  await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
- await expect(page.locator('.leaflet-walking-areas-pane canvas').first()).toBeVisible();
+ await expect(page.locator('canvas.walking-raster').first()).toBeAttached();
  await share(page);await expect(page).toHaveURL(/#s=/);
  if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();
  await expect(page.locator('#map')).not.toHaveAttribute('data-search-state','complete');await expect(page.locator('#journey-panel')).toBeHidden();
@@ -214,9 +215,10 @@ test('compact walking payload is verified and used by the worker',async({page})=
 
 test('map progress shows provisional stations before completion and cancel rejects late batches',async({page})=>{
  await page.addInitScript(()=>{
+  const NativeWorker=window.Worker;
   class StreamWorker {
    onmessage:any;onerror:any;id=0;
-   constructor(){(window as any).streamWorker=this;}
+   constructor(url:string,options?:WorkerOptions){if(!String(url).includes('/worker.ts'))return new NativeWorker(url,options) as any;(window as any).streamWorker=this;}
    postMessage(message:any){this.id=message.id;}
    terminate(){}
    emit(message:any){this.onmessage?.({data:{id:this.id,...message}});}

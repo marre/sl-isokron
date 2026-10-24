@@ -1,3 +1,4 @@
+import {journeyLines} from './map-data';
 import {test,expect} from '@playwright/test';
 import {stockholmNow} from '../../src/core/time';
 const point={v:1,origin:'point',stop:'@point',name:'Vald kartpunkt',lat:59.331,lon:18.058,date:stockholmNow().date,time:'08:00',maxMinutes:60,walkMinutes:15,maxTransfers:3,windowMinutes:30,modes:['bus','metro','rail','tram','boat']};
@@ -8,7 +9,7 @@ test('mapped origin restores, draws access geometry, shares and resets on deskto
  await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');await expect(page.locator('#status')).toContainText('Färdigt.');
  await expect(page.locator('#start-data-gap')).toContainText('Gångstart på kartlagd väg');
  const target=page.getByRole('button',{name:'T-Centralen · Testläge A',exact:true});await target.press('Enter');
- await expect(page.locator('#journey-panel')).toContainText('Vald kartpunkt');await expect(page.locator('.journey-walk')).toBeAttached();
+ await expect(page.locator('#journey-panel')).toContainText('Vald kartpunkt');expect((await journeyLines(page,'walk')).length).toBeGreaterThan(0);
  await page.getByRole('button',{name:'Stäng resedetaljer'}).click();await page.locator('#share').click();
  const shared=JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(3)));expect(shared.origin).toBe('point');expect(shared.lon).toBe(point.lon);
  if(await page.locator('#mobile-toggle').isVisible()&&await page.locator('#mobile-toggle').getAttribute('aria-expanded')==='false')await page.locator('#mobile-toggle').click();await page.locator('#reset-search').click();await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();expect(errors).toEqual([]);
@@ -17,13 +18,13 @@ async function mapSetup(page:import('@playwright/test').Page){
  await page.addInitScript(()=>{
   const Original=window.Worker;(window as any).searches=[];
   window.Worker=class extends Original{postMessage(data:any,options?:any){if(data.settings)(window as any).searches.push(data.settings);super.postMessage(data,options);}};
-  let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).testMap=map;return map;};}});
+  document.addEventListener('sliso:map-ready',event=>{if((event.target as HTMLElement).id==='map')(window as any).testMap=(event as CustomEvent).detail;});
  });
  await page.goto('/');await expect(page.locator('#stop-search')).toBeEnabled();await page.locator('#time').fill('08:00');
 }
 async function position(page:import('@playwright/test').Page,lat=59.331,lon=18.058){
- await page.evaluate(p=>{(window as any).testMap.setView([p.lat,p.lon],17,{animate:false});},{lat,lon});
- return page.evaluate(p=>{const map=(window as any).testMap,c=map.latLngToContainerPoint([p.lat,p.lon]),b=map.getContainer().getBoundingClientRect();return{x:b.x+c.x,y:b.y+c.y};},{lat,lon});
+ await page.evaluate(p=>{(window as any).testMap.jumpTo({center:[p.lon,p.lat],zoom:16});},{lat,lon});
+ return page.evaluate(p=>{const map=(window as any).testMap,c=map.project([p.lon,p.lat]),b=map.getContainer().getBoundingClientRect();return{x:b.x+c.x,y:b.y+c.y};},{lat,lon});
 }
 async function drag(page:import('@playwright/test').Page,p:{x:number;y:number},mobile:boolean){
  if(!mobile){await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+65,p.y+25,{steps:8});await page.mouse.up();return;}

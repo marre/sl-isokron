@@ -1,34 +1,33 @@
 import {profiling,profileStart,profileEnd,acceptProfile,type ProfileEvent} from './core/profile';
-import L from 'leaflet';
+import {LngLatBounds,type Map as GLMap,type CanvasSource} from 'maplibre-gl';
+import {padBounds,containsBounds,worldProject,worldUnproject,distance,lngLat} from './map';
 import {useContourOverview} from './core/contour-view';
 import { walkingMinutes } from './core/walking';
 import { bandLimits, type RasterGrid } from './core/bands';
 import type { Manifest, SearchResult, Settings, Stop } from './core/types';
 
-class BandCanvas extends L.Layer {
+class BandCanvas {
   readonly canvas=document.createElement('canvas');
-  coverage?:L.LatLngBounds;
-  private map?:L.Map;
-  constructor(private pane:HTMLElement,private area:L.LatLngBounds){super();this.canvas.className='leaflet-layer leaflet-zoom-hide';}
-  onAdd(map:L.Map){this.map=map;this.pane.append(this.canvas);this.position();return this;}
-  onRemove(){this.canvas.remove();this.map=undefined;return this;}
-  getEvents(){return {zoomend:this.position,viewreset:this.position};}
+  coverage?:LngLatBounds;
+  constructor(private map:GLMap,private area:LngLatBounds){this.canvas.className='walking-raster';this.canvas.hidden=true;map.getContainer().append(this.canvas);}
+  remove(){if(this.map.getLayer('walking-areas'))this.map.removeLayer('walking-areas');if(this.map.getSource('walking-areas'))this.map.removeSource('walking-areas');this.canvas.remove();}
   image(width:number,height:number,pixels:Uint8ClampedArray,cutoff:number){
     this.canvas.width=width;this.canvas.height=height;this.canvas.dataset.cutoff=String(cutoff);
-    this.canvas.getContext('2d')!.putImageData(new ImageData(pixels as Uint8ClampedArray<ArrayBuffer>,width,height),0,0);this.position();
+    this.canvas.getContext('2d')!.putImageData(new ImageData(pixels as Uint8ClampedArray<ArrayBuffer>,width,height),0,0);
+    if(!this.map.getSource('walking-areas')){
+      const b=this.area;
+      this.map.addSource('walking-areas',{type:'canvas',canvas:this.canvas,animate:false,coordinates:[b.getNorthWest().toArray(),b.getNorthEast().toArray(),b.getSouthEast().toArray(),b.getSouthWest().toArray()]});
+      this.map.addLayer({id:'walking-areas',type:'raster',source:'walking-areas',paint:{'raster-opacity':.48,'raster-resampling':'nearest','raster-fade-duration':0}},this.map.getLayer('stops')?'stops':undefined);
+    }
+    const source=this.map.getSource('walking-areas') as CanvasSource;
+    source.play();this.map.triggerRepaint();this.map.once('render',()=>{if(this.map.getSource('walking-areas')===source)source.pause();});
   }
-  private position=()=>{
-    if(!this.map)return;
-    const nw=this.map.latLngToLayerPoint(this.area.getNorthWest()),se=this.map.latLngToLayerPoint(this.area.getSouthEast());
-    L.DomUtil.setPosition(this.canvas,nw);this.canvas.style.width=`${se.x-nw.x}px`;this.canvas.style.height=`${se.y-nw.y}px`;
-  };
 }
 
 export class WalkingView {
   enabled = true;
   private controller?: AbortController;
   private data?: {result:SearchResult;settings:Settings;manifest:Manifest;stops:Stop[]};
-  private pane:HTMLElement;
   private merger?:Worker;
   private image?:BandCanvas;
   private overviewNote?:HTMLElement;
@@ -39,8 +38,8 @@ export class WalkingView {
   private schedule?:()=>void;
   private timer?:ReturnType<typeof setTimeout>;
 
-  constructor(private map:L.Map,private status:(text:string)=>void,private ready:()=>void,private progress?:(completed:number,total:number,failed:number)=>void) {
-    this.pane=map.createPane('walking-areas');this.pane.style.zIndex='250';this.pane.style.opacity='.48';this.pane.style.pointerEvents='none';
+  constructor(private map:GLMap,private status:(text:string)=>void,private ready:()=>void,private progress?:(completed:number,total:number,failed:number)=>void) {
+
   }
   private removeLayers(){this.image?.remove();this.image=undefined;}
   private clear() {
@@ -76,12 +75,12 @@ export class WalkingView {
     const selection=()=>{
       const bounds=this.map.getBounds(),d=(settings.walkMinutes*80+50)/111320;
       const lon=d/Math.max(.1,Math.cos(this.map.getCenter().lat*Math.PI/180));
-      const expanded=L.latLngBounds([bounds.getSouth()-d,bounds.getWest()-lon],[bounds.getNorth()+d,bounds.getEast()+lon]);
-      return new Set([...positions.keys()].filter(source=>positions.get(source)!.some(i=>expanded.contains([stops[i].lat,stops[i].lon]))));
+      const expanded=new LngLatBounds([bounds.getWest()-lon,bounds.getSouth()-d],[bounds.getEast()+lon,bounds.getNorth()+d]);
+      return new Set([...positions.keys()].filter(source=>positions.get(source)!.some(i=>expanded.contains(lngLat(stops[i])))));
     };
     const needsOverview=(selected:Set<number>)=>{
       const files=new Set([...selected].map(source=>fullDeliveries.get(source)!));
-      return !!areas.overview&&useContourOverview(this.map.getZoom(),files.size,[...files].reduce((n,file)=>n+areas.files[file].bytes,0));
+      return !!areas.overview&&useContourOverview(this.map.getZoom()+1,files.size,[...files].reduce((n,file)=>n+areas.files[file].bytes,0));
     };
     const overview=needsOverview(selection()),delivery=overview?areas.overview!:areas;
     if(overview){
@@ -112,7 +111,7 @@ export class WalkingView {
       signal.addEventListener('abort',abort,{once:true});
       merger.postMessage({type:'load',token,file,ref:delivery.files[file],format:delivery.format});
     });
-    let clip=this.map.getBounds().pad(.25),clipZoom=this.map.getZoom();
+    let clip=padBounds(this.map.getBounds(),.25),clipZoom=this.map.getZoom();
     const budgets=new Map<number,Map<number,number>>();
     const standard=bandLimits(settings.maxMinutes);
     const budget=(minutes:number)=>{
@@ -126,11 +125,11 @@ export class WalkingView {
       const done=[...wanted].filter(file=>this.profiles.has(file)||failed.has(file)).length;
       this.progress?.(done,wanted.size+((busy||pending)&&!mergeError?1:0),failed.size+(mergeError?1:0));
       if(done<wanted.size)this.status(`${overview?'Översikt · ':''}Laddar och visar gångområden: ${done} av ${wanted.size} (${Math.floor(done/wanted.size*100)} %) i kartvyn${failed.size?` · ${failed.size} kunde inte laddas`:''}…`);
-      else if(mergeError)this.status('Gångområden kunde inte sammanfogas. Hållplatsernas restider visas fortfarande. Slå av och på gångområden för att försöka igen.');
+      else if(mergeError)this.status('Gångområden kunde inte sammanfogas. Hållplatsernas restider visas fortfarande. Sök igen för att försöka på nytt.');
       else if(!wanted.size)this.status('Inga gångområden i denna kartvy. Flytta kartan till nådda hållplatser.');
       else if(busy||pending)this.status(overview?'Sammanfogar översikt över gångområden…':'Sammanfogar restidsband i kartvyn…');
       else {
-        this.status(failed.size?`Gångområden visas delvis · ${failed.size} underlag kunde inte laddas. Slå av och på gångområden för att försöka igen.`:overview?'Översiktliga gångområden · avrundade gångtider i femminuterssteg. Zooma in för fullständig detalj. Täckningen är ofullständig.':'Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.');
+        this.status(failed.size?`Gångområden visas delvis · ${failed.size} underlag kunde inte laddas. Sök igen för att försöka på nytt.`:overview?'Översiktliga gångområden · avrundade gångtider i femminuterssteg. Zooma in för fullständig detalj. Täckningen är ofullständig.':'Ungefärliga gångområden · ofullständig täckning. En färgad yta garanterar inte tillträde överallt.');
         this.ready();
       }
     };
@@ -147,7 +146,7 @@ export class WalkingView {
       })}));
       // Profile deliveries may arrive during an animated zoom, before zoomend
       // advances the viewport generation. Keep its raster grid at its own zoom.
-      const nw=this.map.project(clip.getNorthWest(),clipZoom),se=this.map.project(clip.getSouthEast(),clipZoom),w=se.x-nw.x,h=se.y-nw.y;
+      const nw=worldProject(clip.getNorthWest(),clipZoom),se=worldProject(clip.getSouthEast(),clipZoom),w=se.x-nw.x,h=se.y-nw.y;
       const scale=Math.min(1,Math.sqrt(1_000_000/(w*h)),2048/Math.max(w,h));
       const grid:RasterGrid={width:Math.max(1,Math.ceil(w*scale)),height:Math.max(1,Math.ceil(h*scale)),bounds:[clip.getWest(),clip.getSouth(),clip.getEast(),clip.getNorth()]};
       profileEnd('main.budgets',started,{files:this.profiles.size,wanted:wanted.size});
@@ -171,7 +170,7 @@ export class WalkingView {
           this.workerVersion=data.version;this.workerCutoffs=new Set(data.cachedCutoffs??[]);
           if(data.cutoff===this.cutoff&&(data.extent||this.image)){
             if(!this.image){
-              this.image=new BandCanvas(this.pane,clip).addTo(this.map);
+              this.image=new BandCanvas(this.map,clip);
               this.image.canvas.dataset.layer=overview?'overview':'detail';
               this.image.canvas.setAttribute('role','img');
               this.image.canvas.setAttribute('aria-label',overview?'Översiktliga gångområden. Zooma in för fullständig detalj.':'Gångområden med detaljerade restidsband.');
@@ -179,9 +178,9 @@ export class WalkingView {
             const start=profileStart();
             this.image.image(data.width,data.height,data.pixels,data.cutoff);profileEnd('main.canvas',start,{pixels:data.width*data.height});
             if(data.extent){
-              const nw=this.map.project(clip.getNorthWest()),se=this.map.project(clip.getSouthEast());
-              const point=(x:number,y:number)=>this.map.unproject(L.point(nw.x+(se.x-nw.x)*x/data.width,nw.y+(se.y-nw.y)*y/data.height));
-              this.image.coverage=L.latLngBounds(point(data.extent[0],data.extent[1]),point(data.extent[2],data.extent[3]));
+              const nw=worldProject(clip.getNorthWest(),clipZoom),se=worldProject(clip.getSouthEast(),clipZoom);
+              const point=(x:number,y:number)=>worldUnproject({x:nw.x+(se.x-nw.x)*x/data.width,y:nw.y+(se.y-nw.y)*y/data.height},clipZoom);
+              this.image.coverage=new LngLatBounds().extend(point(data.extent[0],data.extent[1])).extend(point(data.extent[2],data.extent[3]));
             }else this.image.coverage=undefined;
           }
         }
@@ -225,19 +224,19 @@ export class WalkingView {
       // Decoded profiles live only in the worker; verified files remain on disk.
       for(const file of this.profiles.keys())if(!wanted.has(file))this.profiles.delete(file);
       for(const file of failed)if(!wanted.has(file))failed.delete(file);
-      const moved=!clip.contains(bounds)||clipZoom!==this.map.getZoom(),changed=previousSelected.size!==selected.size||[...selected].some(source=>!previousSelected.has(source))||previous.size!==wanted.size||[...wanted].some(file=>!previous.has(file));
-      if(moved){clip=bounds.pad(.25);clipZoom=this.map.getZoom();view++;this.removeLayers();}
+      const moved=!containsBounds(clip,bounds)||clipZoom!==this.map.getZoom(),changed=previousSelected.size!==selected.size||[...selected].some(source=>!previousSelected.has(source))||previous.size!==wanted.size||[...wanted].some(file=>!previous.has(file));
+      if(moved){clip=padBounds(bounds,.25);clipZoom=this.map.getZoom();view++;this.removeLayers();}
       if(moved||changed){generation++;}
       if(changed)profileVersion++;
       queue=[...wanted].filter(file=>!this.profiles.has(file)&&!requests.has(file)).sort((a,b)=>{
-        const score=(file:number)=>Math.min(...deliveryPositions.get(file)!.map(i=>this.map.distance(this.map.getCenter(),[stops[i].lat,stops[i].lon])));
+        const score=(file:number)=>Math.min(...deliveryPositions.get(file)!.map(i=>distance(this.map.getCenter(),lngLat(stops[i]))));
         return score(a)-score(b);
       });
       profileEnd('main.viewport',start,{wanted:wanted.size,moved,changed});
       if(moved||changed)this.schedule?.();progress();pump();
     };
-    this.map.on('moveend zoomend resize',updateView);
-    controller.signal.addEventListener('abort',()=>{this.map.off('moveend zoomend resize',updateView);for(const request of requests.values())request.abort();},{once:true});
+    for(const type of ['moveend','zoomend','resize'] as const)this.map.on(type,updateView);
+    controller.signal.addEventListener('abort',()=>{for(const type of ['moveend','zoomend','resize'] as const)this.map.off(type,updateView);for(const request of requests.values())request.abort();},{once:true});
     updateView();
   }
 }

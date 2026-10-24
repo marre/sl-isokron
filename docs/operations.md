@@ -209,3 +209,29 @@ Existing checkouts should run:
 ```sh
 git remote set-url origin https://github.com/marre/sliso.git
 ```
+
+### MapLibre and Maptoolkit.org basemap
+
+The default vector style is `https://styles.maptoolkit.org/summer.json`.
+Maptoolkit.org's community service requires no account or API key. Its
+[attribution requirements](https://docs.maptoolkit.org/attribution/) require the
+logo (at least 24 px high) and an always expanded copyright line. The official
+logo control is bundled; MapLibre's AttributionControl uses `compact: false`
+and reads the copyright text from the provider's TileJSON. Mobile overlays leave
+space below them for the logo and copyright, including in landscape.
+
+`VITE_MAP_STYLE_URL` optionally overrides the public style URL at build time.
+Use `none` for tests or a map with no external basemap requests. The former
+`VITE_TILE_URL` / `VITE_TILE_ATTRIBUTION` raster settings are no longer used.
+No Maptoolkit key is needed or read. Style/tile/font/sprite requests go directly
+to the provider; no map images are prefetched or saved in the app's data cache.
+MapLibre's module worker is served from the app's own versioned assets.
+
+Stops and journey lines use native GeoJSON/WebGL layers. Stops retain labelled
+keyboard hit targets. The existing contour worker still merges precomputed
+contours with its bounded, exact Mercator grid; MapLibre draws that canvas as a
+geographically anchored raster texture with nearest-neighbour sampling. Canvas
+sources repaint only when pixels change. Panning and zooming transform the
+texture on the GPU while new viewport data arrives. Bearing and pitch are locked
+to keep the 2D contour/interaction model consistent. Traffic routing, mapped
+walking, data checksums and client-side execution are unchanged.

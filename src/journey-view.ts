@@ -1,7 +1,10 @@
 import {routeColor,routeTextColor,transportIcon} from './core/transport';
 import {isMapStop} from './core/stops';
 import { mobileLayout } from './layout';
-import L from 'leaflet';
+import type {Map,GeoJSONSource} from 'maplibre-gl';
+import type {FeatureCollection,Feature} from 'geojson';
+import {boundsOf,lngLat,size} from './map';
+import type {StopMarker} from './map-stops';
 import { journeyFor, journeyTime } from './core/journey';
 import { distanceText } from './core/walking';
 import { colorFor } from './core/settings';
@@ -11,7 +14,7 @@ const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '
 const minutes = (seconds: number) => `${Math.ceil(seconds / 60)} min`;
 
 export class JourneyView {
-  private layer: L.LayerGroup;
+  private routeData:FeatureCollection={type:'FeatureCollection',features:[]};
   private result?: SearchResult;
   private settings?: Settings;
   private stops: Stop[] = [];
@@ -23,9 +26,11 @@ export class JourneyView {
   private timer?: ReturnType<typeof setTimeout>;
   private panel = document.querySelector<HTMLElement>('#journey-panel')!;
 
-  constructor(private map: L.Map, private markers: (L.CircleMarker|undefined)[], private onStart: (index: number) => void, private onPointStart?: (point:{lat:number;lon:number})=>void) {
-    const pane = map.createPane('journey'); pane.style.zIndex = '450'; pane.style.pointerEvents = 'none';
-    this.layer = L.layerGroup().addTo(map);
+  constructor(private map: Map, private markers: (StopMarker|undefined)[], private onStart: (index: number) => void, private onPointStart?: (point:{lat:number;lon:number})=>void) {
+    map.addSource('journey',{type:'geojson',data:this.routeData});
+    map.addLayer({id:'journey-halo',type:'line',source:'journey',filter:['==',['geometry-type'],'LineString'],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':9,'line-opacity':.95}});
+    for(const kind of ['transit','walk'])map.addLayer({id:'journey-'+kind,type:'line',source:'journey',filter:['all',['==',['geometry-type'],'LineString'],['==',['get','kind'],kind]],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':['get','color'],'line-width':4,...(kind==='walk'?{'line-dasharray':[1.25,1.75]}:{})}});
+    map.addLayer({id:'journey-stops',type:'circle',source:'journey',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':['get','radius'],'circle-color':['get','fill'],'circle-stroke-color':['get','color'],'circle-stroke-width':['get','weight']}});
     this.panel.addEventListener('mouseenter', () => clearTimeout(this.timer));
     this.panel.addEventListener('mouseleave', () => this.leave());
     document.addEventListener('keydown', e => {
@@ -77,7 +82,7 @@ export class JourneyView {
       const value = this.result.values[this.active];
       if (value) this.markers[this.active]?.setStyle({ color: '#fff', fillColor: colorFor(value.seconds, this.settings.maxMinutes), weight: 2, radius: 7 });
     }
-    this.active = null; this.point=undefined; this.layer.clearLayers(); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
+    this.active = null; this.point=undefined; this.routeData.features=[];(this.map.getSource('journey') as GeoJSONSource).setData(this.routeData); this.panel.hidden = true; this.panel.classList.remove('journey-expanded');
     this.panel.closest('.map-section')!.classList.remove('journey-open');
   }
 
@@ -92,15 +97,16 @@ export class JourneyView {
     }
     this.hide(); this.active = index;this.point=point;
     const legs = point?.legs??journeyFor(result,index,stops), destination = stops[index];
-    const position = (i: number): L.LatLngTuple => [stops[i].lat, stops[i].lon];
-    for (const leg of legs) {
-      const coords = leg.path??leg.stops.map(position), color = leg.kind === 'walk' ? '#55645f' : routeColor(result.routes[leg.route!]);
-      L.polyline(coords, { pane: 'journey', interactive: false, color: '#fff', weight: 9, opacity: .95, className: 'journey-halo' }).addTo(this.layer);
-      L.polyline(coords, { pane: 'journey', interactive: false, color, weight: 4, opacity: 1, dashArray: leg.kind === 'walk' ? '5 7' : undefined, className: `journey-line journey-${leg.kind}` }).addTo(this.layer);
-      for (const stop of leg.stops.filter(i=>isMapStop(stops[i]))) L.circleMarker(position(stop), { pane: 'journey', interactive: false, radius: 3, color, fillColor: '#fff', fillOpacity: 1, weight: 1.5 }).addTo(this.layer);
+    const position = (i:number):[number,number]=>[stops[i].lat,stops[i].lon];
+    const features:Feature[]=[];
+    for(const leg of legs){
+      const coords=(leg.path??leg.stops.map(position)).map(lngLat),color=leg.kind==='walk'?'#55645f':routeColor(result.routes[leg.route!]);
+      if(coords.length>=2)features.push({type:'Feature',geometry:{type:'LineString',coordinates:coords},properties:{kind:leg.kind,color}});
+      for(const stop of leg.stops.filter(i=>isMapStop(stops[i])))features.push({type:'Feature',geometry:{type:'Point',coordinates:lngLat(position(stop))},properties:{radius:3,color,fill:'#fff',weight:1.5}});
     }
-    this.markers[index]?.setStyle({ radius: 10, weight: 3, color: '#183e36' });
-    L.circleMarker(position(index), { pane: 'journey', interactive: false, radius: 10, weight: 3, color: '#183e36', fillColor: colorFor(value.seconds, settings.maxMinutes), fillOpacity: 1 }).addTo(this.layer);
+    this.markers[index]?.setStyle({radius:10,weight:3,color:'#183e36'});
+    features.push({type:'Feature',geometry:{type:'Point',coordinates:lngLat(position(index))},properties:{radius:10,color:'#183e36',fill:colorFor(value.seconds,settings.maxMinutes),weight:3}});
+    this.routeData={type:'FeatureCollection',features};(this.map.getSource('journey') as GeoJSONSource).setData(this.routeData);
     const walkingGap = !point && value.seconds > 0 && destination.walking === 'missing' && !destination.walkingArea;
     const time = (epoch: number) => `<time datetime="${new Date(epoch * 1000).toISOString()}">${journeyTime(epoch, settings.date)}</time>`;
     const stopRow = (at: number, epoch: number) => `<div class="journey-stop">${time(epoch)}<div><strong>${escape(stops[at].name)}</strong><small>${escape(stops[at].platform)}</small></div></div>`;
@@ -128,11 +134,11 @@ export class JourneyView {
   }
 
   private fit(legs: JourneyLeg[]) {
-    const coords = legs.flatMap(leg => leg.path??leg.stops.map(i => [this.stops[i].lat, this.stops[i].lon] as L.LatLngTuple));
+    const coords = legs.flatMap(leg => leg.path??leg.stops.map(i => [this.stops[i].lat, this.stops[i].lon] as [number,number]));
     if (!coords.length) return;
     const mobile = mobileLayout.matches;
     // Mobile search-panel collapse changes the map size before its delayed resize.
-    this.map.invalidateSize({ pan: false });
-    this.map.fitBounds(L.latLngBounds(coords), { animate: false, maxZoom: 15, paddingTopLeft: [24, 110], paddingBottomRight: mobile ? [24, this.panel.offsetHeight + 45] : [Math.min(this.map.getSize().x * .45, this.panel.offsetWidth + 100), 40] });
+    this.map.resize();
+    this.map.fitBounds(boundsOf(coords),{duration:0,maxZoom:14,padding:{top:110,left:24,right:mobile?24:Math.min(size(this.map).x*.45,this.panel.offsetWidth+100),bottom:mobile?this.panel.offsetHeight+65:65}});
   }
 }

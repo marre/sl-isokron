@@ -21,7 +21,7 @@ async function fixture(page:Page,scheduled?:number[]){
  const refs=Object.fromEntries(Object.entries(payloads).map(([key,body])=>[key,{url:`/data/retired-fixture/${key}.json`,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]));
  const manifest={schema:2,version:'retired-fixture',demo:true,updated:date,validFrom:date,validTo:addDays(date,7),walkingMaxMinutes:30,walkingSpeedKmh:4.8,walkingVersion:'fixture',days:{[date]:[]},warnings:[],attribution:[],...refs};
  if(scheduled){const bits=Buffer.alloc(Math.ceil(stops.length/8));for(const i of scheduled)bits[i>>3]|=1<<(i&7);payloads['stop-service']=JSON.stringify({schema:1,dataset:manifest.version,stopsSHA256:refs.stops.sha256,count:stops.length,serviceBits:bits.toString('base64')});}
- await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{configurable:true,get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).retiredMap=map;return map;};}});});
+ await page.addInitScript(()=>{document.addEventListener('sliso:map-ready',event=>{if((event.target as HTMLElement).id==='map')(window as any).retiredMap=(event as CustomEvent).detail;});});
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
  await page.route('**/data/**',route=>{const path=new URL(route.request().url()).pathname;const body=path==='/data/manifest.json'?JSON.stringify(manifest):payloads[path.split('/').at(-1)!.replace('.json','')];return body===undefined?route.abort():route.fulfill({contentType:'application/json',body});});
  return {date,stops};
@@ -33,7 +33,7 @@ test('retired stops stay hidden through results and reset while their walking br
  await expect(page.getByRole('button',{name:'Start · Läge OLD',exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Koldalsvägen · Läge C',exact:true})).toHaveCount(1);
  await expect(page.getByRole('button',{name:'Driftläge · Läge OLD',exact:true})).toHaveCount(1);
- expect(await page.evaluate(()=>{const b=(window as any).retiredMap.options.maxBounds;return !b.contains([80,90])&&!b.contains([-60,110]);})).toBe(true);
+ expect(await page.evaluate(()=>{const b=(window as any).retiredMap.getMaxBounds();return !b.contains([90,80])&&!b.contains([110,-60]);})).toBe(true);
  await page.locator('#stop-search').fill('Utgången');await expect(page.locator('#stop-options [role=option]')).toHaveCount(0);
  await page.locator('#stop-search').fill('Start');await page.locator('#stop-search').press('Enter');
  await expect(page.locator('#platform-field, #platform')).toHaveCount(0);

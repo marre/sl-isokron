@@ -1,13 +1,14 @@
+import {journeyLines} from './map-data';
 import {test,expect} from '@playwright/test';import {stockholmNow} from '../../src/core/time';
 const settings={origin:'point',v:1,stop:'@point',name:'Vald kartpunkt',lat:59.319,lon:18.0725,date:stockholmNow().date,time:'08:00',maxMinutes:60,walkMinutes:15,maxTransfers:3,windowMinutes:30,modes:['bus','metro','rail','tram','boat']};
 async function init(page:import('@playwright/test').Page){
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
- await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).slisoMap=map;return map;};}});});
+ await page.addInitScript(()=>{document.addEventListener('sliso:map-ready',event=>{if((event.target as HTMLElement).id==='map')(window as any).slisoMap=(event as CustomEvent).detail;});});
  await page.goto('/#s='+encodeURIComponent(JSON.stringify(settings)));await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
 }
 async function position(page:import('@playwright/test').Page,lat=59.3319,lon=18.0592){
- await page.evaluate(({lat,lon})=>{(window as any).slisoMap.setView([lat,lon],17,{animate:false});},{lat,lon});
- return page.evaluate(({lat,lon})=>{const map=(window as any).slisoMap,p=map.latLngToContainerPoint([lat,lon]),box=map.getContainer().getBoundingClientRect();return {x:box.x+p.x,y:box.y+p.y};},{lat,lon});
+ await page.evaluate(({lat,lon})=>{(window as any).slisoMap.jumpTo({center:[lon,lat],zoom:16});},{lat,lon});
+ return page.evaluate(({lat,lon})=>{const map=(window as any).slisoMap,p=map.project([lon,lat]),box=map.getContainer().getBoundingClientRect();return {x:box.x+p.x,y:box.y+p.y};},{lat,lon});
 }
 async function inspect(page:import('@playwright/test').Page,point:{x:number;y:number},mobile:boolean){
  if(!mobile){await page.mouse.click(point.x,point.y,{button:'right'});return;}
@@ -22,7 +23,7 @@ test('arbitrary destination shows walk–transit–walk, pins and can become the
  await expect(page.locator('#journey-title')).toHaveText('Vald målpunkt',{timeout:15000});
  await expect(page.locator('#journey-panel')).toContainText('Vald kartpunkt');await expect(page.locator('#journey-panel')).toContainText('Slutgång på kartlagd väg');
  const labels=await page.locator('.journey-leg-head strong').allTextContents();expect(labels).toHaveLength(3);expect(labels[0]).toBe('Gång');expect(labels[1]).toContain('Tunnelbana');expect(labels[2]).toBe('Gång');
- await expect(page.locator('.journey-walk')).toHaveCount(2);
+ expect(await journeyLines(page,'walk')).toHaveLength(2);
  if(info.project.name==='desktop'){await inspect(page,point,false);await page.mouse.move(point.x+20,point.y+20);}
  await expect(page.locator('#journey-pin')).toContainText('Fäst ✓');
  if(info.project.name==='mobile')await page.locator('#journey-expand').click();

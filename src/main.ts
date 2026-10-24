@@ -1,7 +1,9 @@
 import {profiling,acceptProfile,profileStart,profileEnd} from './core/profile';
 import { mobileLayout } from './layout';
 import { aboutHTML } from './about';
-import L from 'leaflet';
+import {Marker,Popup,LngLatBounds,type MapMouseEvent} from 'maplibre-gl';
+import {createMap,lngLat,boundsOf,size,worldProject,worldUnproject} from './map';
+import {MapStops,hitStop,type StopMarker} from './map-stops';
 import {loadStopService} from './core/stop-service';
 import {MODE_COLORS,transportIcon} from './core/transport';
 import {PointDestinations} from './point-destinations';
@@ -10,7 +12,6 @@ import { MapProgress } from './map-progress';
 import { WalkingView } from './walking-view';
 import { isMapStop, searchStations, stationOrigin } from './core/stops';
 import { walkingExitGap } from './core/result-notice';
-import 'leaflet/dist/leaflet.css';
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/dm-sans';
 import './style.css';
@@ -46,25 +47,21 @@ $('#app').innerHTML = `
 </main>
 <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Stäng">×</button></div><div id="dialog-body"></div></dialog>`;
 
-const map = L.map('map', { zoomControl: false, preferCanvas: false, maxBoundsViscosity: 1 }).setView([59.345,18.065],11);
-L.control.zoom({ position: 'topright' }).addTo(map);
-L.control.scale({ position: 'bottomright', imperial: false }).addTo(map);
-// OSM standard tiles are optional and replaceable. No prefetch, offline tile caching or API key.
-const tiles = import.meta.env.VITE_TILE_URL === 'none' ? '' : (import.meta.env.VITE_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
-if (tiles) {
-  const layer = L.tileLayer(tiles, { maxZoom: 19, attribution: import.meta.env.VITE_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
-  let reported = false;
-  layer.on('tileerror', () => { if (!reported) { reported = true; $('#source-note').textContent = 'Bakgrundskartan kunde inte laddas. Hållplatser och beräkning fungerar ändå.'; } });
-} else map.attributionControl.addAttribution('sliso · Hållplatskarta utan bakgrundskartor');
-const markers: (L.CircleMarker|undefined)[] = [], startLayer = L.layerGroup().addTo(map);
+export const map = await createMap('map');
+let currentPopup:Popup|undefined,startPin:Marker|undefined;
+function closePopup(){currentPopup?.remove();currentPopup=undefined;}
+const baseError=()=>{$('#source-note').textContent='Bakgrundskartan kunde inte laddas. Hållplatser och beräkning fungerar ändå.';};
+map.on('error',baseError);if(map.getContainer().dataset.basemap==='unavailable')baseError();map.getContainer().addEventListener('basemaperror',baseError);
+const markers:(StopMarker|undefined)[]=[],stopLayer=new MapStops(map);
+function clearStart(){startPin?.remove();startPin=undefined;}
 let pointOrigin:{lat:number;lon:number}|undefined, originClick:ReturnType<typeof setTimeout>|undefined;
-let coverageBounds:L.LatLngBounds|undefined;
+let coverageBounds:LngLatBounds|undefined;
 let publicStops:Stop[]=[];
 let stops: Stop[] = [], manifest: Manifest, selected = -1, worker: Worker | undefined, generation = 0;
 let result: SearchResult | undefined, usedSettings: Settings | undefined;
 let settings: Settings, runTimer: ReturnType<typeof setTimeout>;
 let activeOption = -1;
-const journeyView = new JourneyView(map, markers, index => { map.closePopup(); setStart(index,true); },point=>setPointStart(point));
+const journeyView = new JourneyView(map, markers, index => { closePopup(); setStart(index,true); },point=>setPointStart(point));
 const pointDestinations=new PointDestinations(map,journeyView,$('#point-status'));
 const mapProgress=new MapProgress($('#map-progress'));
 let previewValues: (Reach|null)[] = [], previewActive=false;
@@ -82,11 +79,11 @@ function terminate(message?: string) {
   if (message) status(message);
 }
 function clearResults() {
-  pointDestinations.reset();journeyView.reset();walkingView.reset();map.closePopup();mapProgress.reset();previewValues=[];previewActive=false;
+  pointDestinations.reset();journeyView.reset();walkingView.reset();closePopup();mapProgress.reset();previewValues=[];previewActive=false;
   result = undefined; usedSettings = undefined; $('#map').dataset.searchState='idle';$('#map').setAttribute('aria-busy','false');$('#walking-status').textContent=''; $('#map-empty').hidden = false;
   for (const marker of markers) {
     if(!marker)continue;
-    (marker.getElement() as SVGElement).style.display = '';
+    marker.setVisible(true);
     marker.setStyle({ color: '#52766e', fillColor: '#f5f6f0', fillOpacity: .9, weight: 1.5, radius: 5 });
   }
   $('#fit').setAttribute('title','Visa hela trafiknätet');$('#fit').setAttribute('aria-label','Visa hela trafiknätet');
@@ -104,12 +101,12 @@ function setStart(index: number, recalculate = false) {
   const stop = stops[index];
   $('#stop-search').setAttribute('aria-expanded','false'); $('#stop-options').hidden = true;
   $<HTMLInputElement>('#stop-search').value = stop.station;
-  startLayer.clearLayers();
-  L.marker([stop.lat,stop.lon], { bubblingMouseEvents:true,icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]}) }).addTo(startLayer).bindTooltip('Start: '+escape(stop.name)+' · '+escape(stop.platform));
+  clearStart();
+  addPointPin(stop,false,`Start: ${stop.name} · ${stop.platform}`);
   $('#start-data-gap').textContent=stop.walking==='estimated'?'Gång härifrån kan innehålla uppskattade stationsbyten: publicerade bytestider, granskade passager eller hållplatser med samma namn inom 250 meter. Se resedetaljerna för den valda resan.':'Gånganslutningar saknas från detta läge. Resultatet kan därför missa möjliga resor.';
   $('#start-data-gap').hidden=manifest.demo||stop.walking==='available'||!!stop.walkingArea;
   $('#map-label').textContent = `FRÅN ${stop.name.toLocaleUpperCase('sv')}`;
-  $('#calculate').removeAttribute('disabled'); $('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');map.panTo([stop.lat,stop.lon]);
+  $('#calculate').removeAttribute('disabled'); $('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');map.panTo(lngLat(stop),{duration:0});
   status(`Start: ${stop.name}, ${stop.platform}. Redo att beräkna.`);
   if (recalculate) void calculate();
 }
@@ -133,7 +130,7 @@ function renderPreview(p: StationProgress) {
   for(const {stop,value} of p.changes){
     previewValues[stop]=value;
     const marker=markers[stop];if(!marker)continue;
-    (marker.getElement() as SVGElement).style.display='';
+    marker.setVisible(true);
     marker.setStyle({color:'#fff',fillColor:colorFor(value.seconds,settings.maxMinutes),fillOpacity:1,weight:2,radius:7});
   }
   const found=previewValues.filter((value,index)=>value&&isMapStop(stops[index])).length;
@@ -147,7 +144,7 @@ function renderResults(r: SearchResult,s: Settings) {
   journeyView.setData(r,s,journeyStops);
   pointDestinations.setData(r,s,manifest,stops);
   if(origin){
-    startLayer.clearLayers();addPointPin(origin,true);
+    clearStart();addPointPin(origin,true);
     $('#start-data-gap').hidden=false;
     $('#start-data-gap').textContent=`Gångstart på kartlagd väg${origin.snapMetres>=1?`, ${Math.round(origin.snapMetres)} m från vald punkt`:''}. Gången till hållplats räknas in i restid och gånggräns.`;
   }
@@ -158,7 +155,7 @@ function renderResults(r: SearchResult,s: Settings) {
   walkingView.setData(r,s,manifest,stops);
   r.values.forEach((value,i)=>{
     const marker=markers[i];if(!marker)return;
-    (marker.getElement() as SVGElement).style.display=value?'':'none';
+    marker.setVisible(!!value);
     if(value)marker.setStyle({color:'#fff',fillColor:colorFor(value.seconds,s.maxMinutes),fillOpacity:1,weight:2,radius:7});
   });
   const count=r.values.filter((value,i)=>value&&i!==selected&&isMapStop(stops[i])).length;
@@ -176,7 +173,7 @@ async function calculate() {
     $('#cancel').hidden=false;$('#map-cancel').hidden=false;
     if(mobileLayout.matches)setMobileSearch(false);
     $('#map').dataset.searchState='loading';$('#map').setAttribute('aria-busy','true');$('#map-empty').hidden=true;previewActive=true;previewValues=stops.map(()=>null);
-    markers.forEach((marker,i)=>{if(marker)(marker.getElement() as SVGElement).style.display=i===selected?'':'none';});
+    markers.forEach((marker,i)=>marker?.setVisible(i===selected));
     mapProgress.update('1/3 · Laddar och verifierar data',0,1);
     status('Laddar tidtabell och gånganslutningar…');
     worker=new Worker(new URL('./worker.ts',import.meta.url),{type:'module'});
@@ -204,14 +201,17 @@ function popup(index: number) {
   detail.textContent = previewActive ? value ? `Preliminärt ${Math.ceil(value.seconds/60)} min · Beräkningen pågår` : 'Beräkningen pågår. Nåbarheten är ännu okänd.' : result ? value ? `${Math.ceil(value.seconds/60)} min · ${value.kind==='walk'?'Gång':`${Math.max(0,value.boardings-1)} byten`}${value.requestStop?' · Stopp på signal – meddela föraren':''} · Färdig beräkning` : (!manifest.demo&&!manifest.walkingCoverage?.reviewed?'Ingen känd resa. Gångunderlaget är ofullständigt, så nåbarheten är osäker.':'Ej nåbar inom valda gränser i tillgänglig data.') : 'Restid okänd – ingen färdig beräkning.';
   box.append(detail);
   if(value){const note=document.createElement('small');note.textContent='Utan initial väntan. Restiden gäller detta hållplatsläge.';box.append(note);}
-  const button=document.createElement('button');button.textContent='Res härifrån ↗';button.className='popup-start';button.onclick=()=>{map.closePopup();setStart(index,true);};box.append(button);
-  L.popup().setLatLng([stop.lat,stop.lon]).setContent(box).openOn(map);
+  const button=document.createElement('button');button.textContent='Res härifrån ↗';button.className='popup-start';button.onclick=()=>{closePopup();setStart(index,true);};box.append(button);
+  closePopup();currentPopup=new Popup().setLngLat(lngLat(stop)).setDOMContent(box).addTo(map);
 }
 
 function cancelOriginClick(){clearTimeout(originClick);}
-function addPointPin(point:{lat:number;lon:number},mapped=false){
-  L.marker([point.lat,point.lon],{bubblingMouseEvents:true,icon:L.divIcon({className:'start-pin',html:'<span>◎</span>',iconSize:[36,42],iconAnchor:[18,42]})}).addTo(startLayer).bindTooltip(mapped?'Start på kartlagd gångväg':'Vald startpunkt · gångvägen kontrolleras vid sökning');
+function addPointPin(point:{lat:number;lon:number},mapped=false,title?:string){
+  const el=document.createElement('div');el.className='start-pin';el.innerHTML='<span>◎</span>';
+  el.title=title??(mapped?'Start på kartlagd gångväg':'Vald startpunkt · gångvägen kontrolleras vid sökning');
+  startPin=new Marker({element:el,anchor:'bottom'}).setLngLat(lngLat(point)).addTo(map);
 }
+
 function setPointStart(point:{lat:number;lon:number},recalculate=true){
   if(!manifest.footpaths){showError('Gångnät för kartstart saknas i denna dataversion.');return;}
   cancelOriginClick();invalidate('Ny kartpunkt vald. Visa en ny restidskarta.');selected=-1;
@@ -219,20 +219,23 @@ function setPointStart(point:{lat:number;lon:number},recalculate=true){
   $('#stop-options').hidden=true;$('#stop-search').setAttribute('aria-expanded','false');
   $<HTMLInputElement>('#stop-search').value='Vald kartpunkt';
   $('#start-data-gap').hidden=false;$('#start-data-gap').textContent='Gång följer kartlagda vägar. Starten läggs på närmaste gångväg inom 25 m och visas på kartan. Saknas väg får du välja en ny punkt. Gången ingår i restid och gånggräns.';
-  startLayer.clearLayers();addPointPin(pointOrigin);$('#calculate').removeAttribute('disabled');$('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');
+  clearStart();addPointPin(pointOrigin);$('#calculate').removeAttribute('disabled');$('#share').removeAttribute('disabled');$('#reset-search').removeAttribute('disabled');
   $('#map-label').textContent='FRÅN VALD KARTPUNKT';$('#form-error').hidden=true;status('Kartpunkt vald. Redo att beräkna gångvägar och resor.');
   if(recalculate)void calculate();
 }
 // Delay selection until a double-click has had a chance to zoom instead.
-map.on('click',(event:L.LeafletMouseEvent)=>{
+map.on('click',(event:MapMouseEvent)=>{
   cancelOriginClick();
   if(event.originalEvent?.detail>1||pointDestinations.consumesOriginClick())return;
   const target=(event.originalEvent?.target as Element|null)?.closest?.('[data-stop-index]');
-  const index=target?Number(target.getAttribute('data-stop-index')):undefined;
+  const index=target?Number(target.getAttribute('data-stop-index')):hitStop(map,event.point);
   if(!manifest||(index===undefined&&!manifest.footpaths))return;
-  originClick=setTimeout(()=>{if(index!==undefined&&isMapStop(stops[index]))setStart(index,true);else setPointStart({lat:event.latlng.lat,lon:event.latlng.lng});},450);
+  originClick=setTimeout(()=>{if(index!==undefined&&isMapStop(stops[index]))setStart(index,true);else setPointStart({lat:event.lngLat.lat,lon:event.lngLat.lng});},450);
 });
-map.on('dblclick movestart contextmenu',cancelOriginClick);
+map.on('mousemove','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(Number.isInteger(index)){pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(index);}});
+map.on('mouseleave','stops',()=>journeyView.leave());
+map.on('contextmenu','stops',event=>{const index=Number(event.features?.[0]?.properties.index);if(result?.values[index]){closePopup();journeyView.pin(index);}});
+for(const type of ['dblclick','movestart','contextmenu'] as const)map.on(type,cancelOriginClick);
 map.getContainer().addEventListener('keydown',event=>{
   if(event.key==='Escape')cancelOriginClick();
   if(event.key==='Enter'&&event.target===map.getContainer()&&manifest?.footpaths){const p=map.getCenter();setPointStart({lat:p.lat,lon:p.lng});}
@@ -246,7 +249,7 @@ $('#max-time').addEventListener('input',()=>{$('#max-output').innerHTML=`${$<HTM
 $('#search-form').addEventListener('input',e=>{const target=e.target as HTMLInputElement;if(['date','time','window'].includes(target.id))invalidate();});
 $('#search-form').addEventListener('change',e=>{const target=e.target as HTMLInputElement;if(['date','time','walk','transfers','window'].includes(target.id)||target.name==='mode'){invalidate();if(target.id==='window'&&(selected>=0||pointOrigin)&&$<HTMLInputElement>('#window').checkValidity())void calculate();}});
 $('#stop-search').addEventListener('input',()=>{
-  cancelOriginClick();pointOrigin=undefined;invalidate();selected=-1;startLayer.clearLayers();$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');$('#start-data-gap').hidden=true;
+  cancelOriginClick();pointOrigin=undefined;invalidate();selected=-1;clearStart();$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');$('#start-data-gap').hidden=true;
   const query=$<HTMLInputElement>('#stop-search').value.trim().toLocaleLowerCase('sv');
   const names=searchStations(stops,query);
   const list=$('#stop-options');list.replaceChildren();activeOption=-1;
@@ -266,39 +269,41 @@ $('#stop-search').addEventListener('keydown',e=>{
 function mapFitPadding() {
   const bottom=40;
   // A short landscape map must still have space left after reserving controls.
-  const scale=Math.min(1,Math.max(0,map.getSize().y-80)/(130+bottom));
-  return {paddingTopLeft:L.point(30,130*scale),paddingBottomRight:L.point(30,bottom*scale)};
+  const scale=Math.min(1,Math.max(0,size(map).y-80)/(130+bottom));
+  return {padding:{top:130*scale,left:30,right:30,bottom:bottom*scale}};
 }
 function updateMapMinZoom() {
   if(!coverageBounds)return;
-  const padding=mapFitPadding();
-  // Leaflet clamps getBoundsZoom to the current minimum. Ignore that limit
-  // during calculation so a smaller viewport can lower its regional minimum.
-  const previous=map.options.minZoom;map.options.minZoom=0;
-  let minimum:number;
-  try{minimum=map.getBoundsZoom(coverageBounds,false,padding.paddingTopLeft.add(padding.paddingBottomRight));}
-  finally{map.options.minZoom=previous;}
-  map.setMinZoom(Math.max(0,minimum));
+  map.setMaxBounds(null);map.setMinZoom(0);
+  const camera=map.cameraForBounds(coverageBounds,{...mapFitPadding(),maxZoom:19});
+  const zoom=Math.max(0,camera?.zoom??0);map.setMinZoom(zoom);
+  // Expand the regional rectangle to the viewport aspect ratio so maxBounds
+  // does not crop network edges when fitting a narrow/landscape screen.
+  const center=worldProject(camera?.center??coverageBounds.getCenter(),zoom),viewport=size(map);
+  const a=worldUnproject({x:center.x-viewport.x/2,y:center.y-viewport.y/2},zoom),b=worldUnproject({x:center.x+viewport.x/2,y:center.y+viewport.y/2},zoom);
+  const limits=new LngLatBounds().extend(a).extend(b);limits.extend(coverageBounds.getSouthWest()).extend(coverageBounds.getNorthEast());
+  map.setMaxBounds(limits);
+
 }
 function constrainMapToStops() {
-  const extent=L.latLngBounds(publicStops.map(stop=>[stop.lat,stop.lon]));
+  const extent=boundsOf(publicStops.map(stop=>[stop.lat,stop.lon]));
   // At least ~2.8 km accommodates the supported 30-minute walking areas and
   // gives even single-stop datasets a non-degenerate navigable extent.
   const lat=Math.max((extent.getNorth()-extent.getSouth())*.04,.025);
   const lon=Math.max((extent.getEast()-extent.getWest())*.04,.025/Math.max(.1,Math.cos(extent.getCenter().lat*Math.PI/180)));
-  coverageBounds=L.latLngBounds([extent.getSouth()-lat,extent.getWest()-lon],[extent.getNorth()+lat,extent.getEast()+lon]);
+  coverageBounds=new LngLatBounds([extent.getWest()-lon,extent.getSouth()-lat],[extent.getEast()+lon,extent.getNorth()+lat]);
   map.setMaxBounds(coverageBounds);updateMapMinZoom();
   map.on('resize',updateMapMinZoom);
 }
 function fitCurrentStops() {
   const visible=stops.filter((stop,i)=>isMapStop(stop)&&(previewActive?previewValues[i]:!result||(result.values[i]&&result.values[i]!.seconds<=usedSettings!.maxMinutes*60)));if(!visible.length)return;
-  map.invalidateSize({pan:false});updateMapMinZoom();
-  const bounds=L.latLngBounds(visible.map(s=>[s.lat,s.lon]));if(pointOrigin)bounds.extend([pointOrigin.lat,pointOrigin.lon]);const walkingBounds=walkingView.bounds();if(walkingBounds)bounds.extend(walkingBounds);
-  map.fitBounds(bounds,{animate:false,maxZoom:14,...mapFitPadding()});
+  map.resize();updateMapMinZoom();
+  const bounds=boundsOf(visible.map(s=>[s.lat,s.lon]));if(pointOrigin)bounds.extend(lngLat(pointOrigin));const walkingBounds=walkingView.bounds();if(walkingBounds)bounds.extend(walkingBounds.getSouthWest()).extend(walkingBounds.getNorthEast());
+  map.fitBounds(bounds,{duration:0,maxZoom:13,...mapFitPadding()});
 }
 $('#fit').onclick=fitCurrentStops;
 function resetSearch() {
-  cancelOriginClick();pointOrigin=undefined;terminate();clearResults();selected=-1;startLayer.clearLayers();
+  cancelOriginClick();pointOrigin=undefined;terminate();clearResults();selected=-1;clearStart();
   $<HTMLInputElement>('#stop-search').value='';$('#stop-search').setAttribute('aria-expanded','false');$('#stop-search').removeAttribute('aria-activedescendant');
   $('#stop-options').replaceChildren();$('#stop-options').hidden=true;activeOption=-1;
   $('#start-data-gap').hidden=true;$('#form-error').hidden=true;$('#reset-search').setAttribute('disabled','');
@@ -317,10 +322,10 @@ function updateMobile(){
   const collapsed=document.body.classList.contains('panel-collapsed');
   $('#mobile-toggle').textContent=collapsed?(pointOrigin?'Kartpunkt · Ändra':selected>=0?stops[selected].name+' · Ändra':'Sök hållplats'):'Visa kartan';
   $('#mobile-toggle').setAttribute('aria-expanded',String(!collapsed));
-  setTimeout(()=>map.invalidateSize({pan:true}),0);
+  setTimeout(()=>map.resize(),0);
 }
 function setMobileSearch(open:boolean){
-  if(open){journeyView.close();map.closePopup();}
+  if(open){journeyView.close();closePopup();}
   document.body.classList.toggle('panel-collapsed',!open);updateMobile();
 }
 $('#mobile-toggle').onclick=()=>setMobileSearch(document.body.classList.contains('panel-collapsed'));
@@ -332,16 +337,16 @@ mobileLayout.addEventListener('change',()=>updateMobile());
 function dialog(title:string,html:string){$('#dialog-title').textContent=title;$('#dialog-body').innerHTML=html;$<HTMLDialogElement>('#info-dialog').showModal();}
 $('#dialog-close').onclick=()=>$<HTMLDialogElement>('#info-dialog').close();
 $('#about-open').onclick=()=>dialog('Så fungerar sliso',aboutHTML);
-$('#data-open').onclick=()=>{if(manifest)dialog('Data & begränsningar',`<p><strong>${manifest.demo?'Syntetisk testdata – ej reseplanering':'Planerad SL-trafik'}</strong></p><p>Uppdaterad: ${escape(manifest.sourceUpdated||manifest.updated.slice(0,10))}<br>Giltighet: ${manifest.validFrom} – ${manifest.validTo}<br>Gång: ${manifest.walkingMaxMinutes} minuter, ${manifest.walkingSpeedKmh} km/h<br>Gångversion: ${escape(manifest.walkingVersion)}${manifest.walkingCoverage?`<br>Gångkopplade lägen: ${manifest.walkingCoverage.boundStops} / ${manifest.walkingCoverage.totalStops}<br>Förberäknade gångpar: ${manifest.walkingCoverage.pairs}`:''}</p><ul>${manifest.warnings.map(w=>`<li>${escape(w)}</li>`).join('')}</ul><p>${manifest.attribution.map(escape).join('<br>')}</p><p>Bakgrundskarta: OpenStreetMap. Ingen analys eller central sökhistorik. Publicerade stationsbyten kan använda minsta bytestid som uppskattad gångtid; då saknas uppmätt avstånd. Gång mellan hållplatser med samma namn inom 250 meter och granskade stationspassager kan ha uppskattad tid och längd; sådana sträckor märks i resedetaljerna.</p>`);};
+$('#data-open').onclick=()=>{if(manifest)dialog('Data & begränsningar',`<p><strong>${manifest.demo?'Syntetisk testdata – ej reseplanering':'Planerad SL-trafik'}</strong></p><p>Uppdaterad: ${escape(manifest.sourceUpdated||manifest.updated.slice(0,10))}<br>Giltighet: ${manifest.validFrom} – ${manifest.validTo}<br>Gång: ${manifest.walkingMaxMinutes} minuter, ${manifest.walkingSpeedKmh} km/h<br>Gångversion: ${escape(manifest.walkingVersion)}${manifest.walkingCoverage?`<br>Gångkopplade lägen: ${manifest.walkingCoverage.boundStops} / ${manifest.walkingCoverage.totalStops}<br>Förberäknade gångpar: ${manifest.walkingCoverage.pairs}`:''}</p><ul>${manifest.warnings.map(w=>`<li>${escape(w)}</li>`).join('')}</ul><p>${manifest.attribution.map(escape).join('<br>')}</p><p>Bakgrundskarta: Maptoolkit.org och OpenStreetMap. Ingen analys eller central sökhistorik. Publicerade stationsbyten kan använda minsta bytestid som uppskattad gångtid; då saknas uppmätt avstånd. Gång mellan hållplatser med samma namn inom 250 meter och granskade stationspassager kan ha uppskattad tid och längd; sådana sträckor märks i resedetaljerna.</p>`);};
 async function restoreLink() {
   invalidate('Delningsinställningar laddas.');
   $('#form-error').hidden=true;
   const s=parseHash(location.hash);if(!s)return;
   applySettings(s);
-  if(s.origin==='point'){setPointStart(s,false);map.setView([s.lat,s.lon],16);validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);await calculate();return;}
+  if(s.origin==='point'){setPointStart(s,false);map.jumpTo({center:lngLat(s),zoom:15});validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);await calculate();return;}
   const index=stops.findIndex(stop=>stop.id===s.stop);
-  if(index<0||!isMapStop(stops[index])){invalidate();selected=-1;$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');startLayer.clearLayers();$<HTMLInputElement>('#stop-search').value=s.name;$('#start-data-gap').hidden=true;throw new Error(`Hållplatsläget ”${s.name}” (${s.stop}) ${index<0?'finns inte längre':'har utgått'}. Sök och välj ett aktivt läge; startpunkten har inte flyttats.`);}
-  setStart(index);map.setView([stops[index].lat,stops[index].lon],13);
+  if(index<0||!isMapStop(stops[index])){invalidate();selected=-1;$('#calculate').setAttribute('disabled','');$('#share').setAttribute('disabled','');clearStart();$<HTMLInputElement>('#stop-search').value=s.name;$('#start-data-gap').hidden=true;throw new Error(`Hållplatsläget ”${s.name}” (${s.stop}) ${index<0?'finns inte längre':'har utgått'}. Sök och välj ett aktivt läge; startpunkten har inte flyttats.`);}
+  setStart(index);map.jumpTo({center:lngLat(stops[index]),zoom:12});
   validateSettings(s,manifest.walkingMaxMinutes);validateDate(s.date,manifest.validFrom,manifest.validTo);
   await calculate();
 }
@@ -363,7 +368,7 @@ async function init(){
     if(manifest.warnings.length&&!manifest.demo)banner.textContent+=' · Databegränsningar finns, se Om datan.';
     if(!manifest.demo&&!manifest.walkingCoverage?.reviewed){banner.classList.add('demo');banner.textContent=`UTVECKLINGSLÄGE · Tidtabell ${manifest.sourceUpdated||manifest.updated.slice(0,10)}. Ofullständigt gångunderlag kan underskatta nåbarheten.`;$('#map-demo').hidden=false;$('#map-demo').textContent='UTVECKLING · Gångdata ofullständiga';}
     markers.length=stops.length;
-    stops.forEach((s,i)=>{if(!isMapStop(s))return;const m=L.circleMarker([s.lat,s.lon],{bubblingMouseEvents:true,radius:5,color:'#52766e',fillColor:'#f5f6f0',fillOpacity:.9,weight:1.5}).addTo(map);m.bindTooltip(escape(s.name)+' · '+escape(s.platform));m.on('mouseover',()=>{pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('contextmenu',()=>{if(result?.values[i]){map.closePopup();journeyView.pin(i);}});const el=m.getElement();if(el){el.setAttribute('data-stop-index',String(i));el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>{pointDestinations.pause();journeyView.hover(i);});el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();pointDestinations.pause();if(result?.values[i]){map.closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i,true);return;}popup(i);}}});}markers[i]=m;});
+    stops.forEach((s,i)=>{if(!isMapStop(s))return;const m=stopLayer.add(s,i);m.on('mouseover',()=>{pointDestinations.pause();if(matchMedia('(hover: hover)').matches)journeyView.hover(i);});m.on('mouseout',()=>journeyView.leave());m.on('contextmenu',()=>{if(result?.values[i]){closePopup();journeyView.pin(i);}});const el=m.getElement();if(el){el.setAttribute('data-stop-index',String(i));el.setAttribute('tabindex','0');el.setAttribute('role','button');el.setAttribute('aria-label',s.name+' · '+s.platform);el.addEventListener('focus',()=>{pointDestinations.pause();journeyView.hover(i);});el.addEventListener('blur',()=>journeyView.leave());el.addEventListener('keydown',e=>{if(['Enter',' '].includes((e as KeyboardEvent).key)){e.preventDefault();pointDestinations.pause();if(result?.values[i]){closePopup();journeyView.pin(i,true);}else{journeyView.close();if(!result&&!previewActive){setStart(i,true);return;}popup(i);}}});}markers[i]=m;});
     $('#stop-search').removeAttribute('disabled');
     if(!await cacheAvailable()){const p=document.createElement('p');p.className='hint';p.textContent='Lokal lagring är inte tillgänglig. Data hämtas på nytt vid behov.';banner.after(p);}
     void pruneCache(manifest);

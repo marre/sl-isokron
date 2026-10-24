@@ -1,9 +1,10 @@
+import {journeyLines} from './map-data';
 import {test,expect} from '@playwright/test';
 
 test('phone map stays clear while search and journey details open on demand',async({page},info)=>{
  test.skip(info.project.name!=='mobile','Touch layout');
  await page.route('https://tile.openstreetmap.org/**',r=>r.abort());
- await page.addInitScript(()=>{let leaflet:any;Object.defineProperty(window,'L',{get(){return leaflet;},set(value){leaflet=value;const create=value.map;value.map=(...args:any[])=>{const map=create(...args);(window as any).touchMap=map;return map;};}});});
+ await page.addInitScript(()=>{document.addEventListener('sliso:map-ready',event=>{if((event.target as HTMLElement).id==='map')(window as any).touchMap=(event as CustomEvent).detail;});});
  await page.goto('/');
  await expect(page.locator('#stop-search')).toBeEnabled();
  await expect(page.locator('#calculate')).toBeInViewport();
@@ -17,7 +18,8 @@ test('phone map stays clear while search and journey details open on demand',asy
  await page.locator('#fit').tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
  await page.getByRole('button',{name:'Zoom in',exact:true}).tap();
- await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).tap({trial:true});
+ await page.waitForFunction(()=>!(window as any).touchMap.isMoving());
+ await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeInViewport();
  const station=await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).boundingBox();
  const hold=await page.context().newCDPSession(page);
  await hold.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:station!.x+station!.width/2,y:station!.y+station!.height/2}]});
@@ -35,14 +37,14 @@ test('phone map stays clear while search and journey details open on demand',asy
  for(let step=1;step<=6;step++){await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+step*10,y:y+step*5}]});await page.waitForTimeout(25);}
  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
  await expect.poll(async()=>Math.abs(await page.evaluate(()=>(window as any).touchMap.getCenter().lng)-before)).toBeGreaterThan(.00001);
- await expect(page.locator('.journey-line').first()).toBeAttached();
+ await expect.poll(async()=>(await journeyLines(page)).length).toBeGreaterThan(0);
  await touch.detach();
  await page.locator('#journey-expand').tap();
  await expect(page.locator('#journey-content')).toBeVisible();
  expect((await page.locator('#journey-panel').boundingBox())!.height).toBeLessThan(page.viewportSize()!.height*.6);
  await page.locator('#journey-expand').tap();
  await expect(page.locator('#journey-content')).toBeHidden();
- await expect(page.locator('.journey-line').first()).toBeAttached();
+ await expect.poll(async()=>(await journeyLines(page)).length).toBeGreaterThan(0);
  await page.locator('#mobile-toggle').tap();
  await expect(page.locator('.panel')).toBeVisible();
  await expect(page.locator('#journey-panel')).toBeHidden();
