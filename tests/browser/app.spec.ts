@@ -146,12 +146,13 @@ test('destination route previews on hover, pins with keyboard, and recalculates 
 test('only known destinations remain after search; new search restores the map and retains filters',async({page})=>{
  await init(page);await select(page);
  const enabledMarkers=()=>page.locator('.map-stop').evaluateAll(items=>items.filter(e=>getComputedStyle(e).display!=='none').length);
+ await expect(page.locator('.map-stop').first()).toBeAttached();
  const before=await enabledMarkers();
  await page.locator('#options').evaluate((d:HTMLDetailsElement)=>d.open=true);
  await page.locator('#walk').selectOption('5');
  for(const c of await page.locator('[name=mode]').all())await c.uncheck();
  await page.locator('#calculate').click();await expect(page.locator('#map')).toHaveAttribute('data-search-state','complete');
- expect(await enabledMarkers()).toBeLessThan(before);
+ await expect.poll(enabledMarkers).toBeLessThan(before);
  await expect(page.getByRole('button',{name:'Universitetet · Testläge A',exact:true})).toBeHidden();
  await expect(page.locator('#walking-status')).toContainText('Ungefärliga gångområden');
  await expect(page.locator('canvas.walking-raster').first()).toBeAttached();
@@ -161,7 +162,9 @@ test('only known destinations remain after search; new search restores the map a
  await expect(page.locator('#stop-search')).toHaveValue('');await expect(page.locator('#calculate')).toBeDisabled();
  await expect(page.locator('#walk')).toHaveValue('5');await expect(page.locator('#time')).toHaveValue('08:00');
  expect(new URL(page.url()).hash).toBe('');
- expect(await enabledMarkers()).toBe(before);
+ // Keyboard targets are remounted on the renderer's animation frame.
+ // Reset updates the form first; wait for the complete map state, not a fixed delay.
+ await expect.poll(enabledMarkers).toBe(before);
  await page.getByRole('button',{name:'Universitetet · Testläge A',exact:true}).press('Enter');
  await expect(page.locator('#map-label')).toContainText('UNIVERSITETET');
  await expect(page.locator('#calculate')).toBeEnabled();
